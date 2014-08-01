@@ -34,6 +34,12 @@
     <ClCompile Include="clrprofiler_i.c">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="profilermain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CorProfilerCallbackImplementation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -54,6 +60,12 @@
     <ClInclude Include="clrprofiler_i.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
+    <ClInclude Include="profilermain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CorProfilerCallbackImplementation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="clrprofiler.rc">
@@ -69,6 +81,9 @@
     </None>
     <None Include="clrprofiler.def">
       <Filter>Source Files</Filter>
+    </None>
+    <None Include="profilermain.rgs">
+      <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

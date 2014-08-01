@@ -9,10 +9,22 @@ import "ocidl.idl";
 
 [
 	uuid(5FA629D0-CDAB-4678-99F3-22A0F71E5DEF),
-	version(1.0),
+	version(0.1),
+	
 ]
 library clrprofilerLib
 {
 	importlib("stdole2.tlb");
+	[
+		uuid(41DB4CB9-F3A1-44B2-87DC-52BF4E8E8EB2),
+		helpstring("Opensource CLR Profiler"),
+		version(0.1)
+
+	]
+	coclass profilermain
+	{
+		
+		[default] interface IUnknown;
+	};
 };
 
