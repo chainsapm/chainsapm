@@ -1,0 +1,18 @@
+// clrprofiler.idl : IDL source for clrprofiler
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (clrprofiler.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	uuid(5FA629D0-CDAB-4678-99F3-22A0F71E5DEF),
+	version(1.0),
+]
+library clrprofilerLib
+{
+	importlib("stdole2.tlb");
+};
+
