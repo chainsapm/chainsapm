@@ -17,6 +17,21 @@
       <UniqueIdentifier>{6b2c9be5-2e52-4791-a7cd-d5d5fd430dd7}</UniqueIdentifier>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
+    <Filter Include="x64 Function Hooks">
+      <UniqueIdentifier>{d19d0038-7ca3-43fb-89ec-cc98e046fc1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x86 Function Hooks">
+      <UniqueIdentifier>{e72ade28-3235-4b1e-afa6-f7c6b9f7d765}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helpers">
+      <UniqueIdentifier>{1206c891-4454-4a53-bdf5-3d5bcd9dfe7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Profiler Info Callbacks">
+      <UniqueIdentifier>{2930fa9c-5c94-4490-8a58-17e0b9dd3f07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Structures">
+      <UniqueIdentifier>{ace1e0a3-8308-4007-954d-6176de8ee9f2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -39,6 +54,9 @@
     </ClCompile>
     <ClCompile Include="CorProfilerCallbackImplementation.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MetadataHelpers.cpp">
+      <Filter>Helpers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -66,6 +84,15 @@
     <ClInclude Include="CorProfilerCallbackImplementation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MetadataHelpers.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="ICorProlfileInfoCallbacks.hpp">
+      <Filter>Profiler Info Callbacks</Filter>
+    </ClInclude>
+    <ClInclude Include="commonstructures.h">
+      <Filter>Structures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="clrprofiler.rc">
@@ -85,10 +112,24 @@
     <None Include="profilermain.rgs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="registry.bin">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="clrprofiler.idl">
       <Filter>Source Files</Filter>
     </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="etl_enter_x64.asm">
+      <Filter>x64 Function Hooks</Filter>
+    </MASM>
+    <MASM Include="etl_leave_x64.asm">
+      <Filter>x64 Function Hooks</Filter>
+    </MASM>
+    <MASM Include="etl_tail_x64.asm">
+      <Filter>x64 Function Hooks</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

@@ -2,10 +2,11 @@
 
 #pragma once
 #include "resource.h"       // main symbols
-
-
+#include "CorProfilerCallbackImplementation.h"
+#include "MetadataHelpers.h"
 
 #include "clrprofiler_i.h"
+
 
 
 
@@ -20,18 +21,23 @@ using namespace ATL;
 
 class ATL_NO_VTABLE Cprofilermain :
 	public CComObjectRootEx<CComSingleThreadModel>,
-	public CComCoClass<Cprofilermain, &CLSID_profilermain>
+	public CComCoClass<Cprofilermain, &CLSID_profilermain>,
+	public CorProfilerCallbackImplementation
 {
 public:
-	Cprofilermain()
-	{
-	}
 
-DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERMAIN)
+	Cprofilermain();
+	~Cprofilermain();
+	DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERMAIN)
 
 
-BEGIN_COM_MAP(Cprofilermain)
-END_COM_MAP()
+	BEGIN_COM_MAP(Cprofilermain)
+		COM_INTERFACE_ENTRY(ICorProfilerCallback)
+		COM_INTERFACE_ENTRY(ICorProfilerCallback2)
+		COM_INTERFACE_ENTRY(ICorProfilerCallback3)
+		COM_INTERFACE_ENTRY(ICorProfilerCallback4)
+		COM_INTERFACE_ENTRY(ICorProfilerCallback5)
+	END_COM_MAP()
 
 
 
@@ -46,10 +52,24 @@ END_COM_MAP()
 	{
 	}
 
-public:
+	
+	STDMETHOD(Initialize)(IUnknown *pICorProfilerInfoUnk);
+	STDMETHOD(AppDomainCreationStarted)(AppDomainID appDomainId);
+	STDMETHOD(ThreadCreated)(ThreadID threadId);
+	STDMETHOD(ThreadDestroyed)(ThreadID threadId);
+	STDMETHOD(SetMask)();
+	STDMETHOD(GetFullMethodName)(FunctionID functionID, std::string *methodName, int cMethod);
+	STDMETHOD(GetFuncArgs)(FunctionID functionID, COR_PRF_FRAME_INFO frameinfo);
 
-
-
+private:
+	// container for ICorProfilerInfo reference
+	CComQIPtr<ICorProfilerInfo> m_pICorProfilerInfo;
+	// container for ICorProfilerInfo2 reference
+	CComQIPtr<ICorProfilerInfo2> m_pICorProfilerInfo2;
+	// container for ICorProfilerInfo3 reference
+	CComQIPtr<ICorProfilerInfo3> m_pICorProfilerInfo3;
+	// container for ICorProfilerInfo4 reference
+	CComQIPtr<ICorProfilerInfo4> m_pICorProfilerInfo4;
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(profilermain), Cprofilermain)

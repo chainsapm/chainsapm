@@ -23,3 +23,6 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlctl.h>
+#include <exception>
+#include <stdexcept>
+#include <unordered_set>
