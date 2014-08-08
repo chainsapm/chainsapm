@@ -58,6 +58,15 @@
     <ClCompile Include="MetadataHelpers.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
+    <ClCompile Include="commonstructures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="leave_x86.cpp">
+      <Filter>x86 Function Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="GlobalMembers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -92,6 +101,9 @@
     </ClInclude>
     <ClInclude Include="commonstructures.h">
       <Filter>Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalMembers.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

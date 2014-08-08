@@ -1,11 +1,10 @@
-#include <cor.h>
-#include <corprof.h>
-#include <map>
-#include <memory>
+#ifndef METADATAHELPERS_H
+#define METADATAHELPERS_H
 #include "commonstructures.h"
 
+
 #define MAX_LENGTH 2048
-#pragma once
+
 class MetadataHelpers
 {
 public:
@@ -16,8 +15,12 @@ public:
 	MetadataHelpers(ICorProfilerInfo4 *profilerInfo);
 	~MetadataHelpers();
 
-	STDMETHOD(GetFunctionInformation)(FunctionID funcId, pFunctionInformation funcInfo);
-	PCCOR_SIGNATURE ParseElementType(std::shared_ptr<IMetaDataImport> pMDImport, PCCOR_SIGNATURE signature, std::wstring *buffer);
+	STDMETHOD(GetCurrentThread)(ThreadID* threadId);
+	STDMETHOD(GetFunctionInformation)(FunctionID funcId, FunctionInfo* funcInfo);
+	STDMETHOD(GetArguments)(FunctionID funcId, mdToken MethodDataToken);
+
+
+	PCCOR_SIGNATURE ParseElementType(const std::unique_ptr<IMetaDataImport>& pMDImport, PCCOR_SIGNATURE signature, std::wstring* buffer);
 private:
 	// container for ICorProfilerInfo reference
 	ATL::CComQIPtr<ICorProfilerInfo> m_pICorProfilerInfo;
@@ -28,11 +31,12 @@ private:
 	// container for ICorProfilerInfo4 reference
 	ATL::CComQIPtr<ICorProfilerInfo4> m_pICorProfilerInfo4;
 
-	// Map of function information
-	std::map<FunctionID, pFunctionInformation> m_MethodLookupMap;
+	void GetMetaDataInterfaceFromFunction(FunctionID funcId, mdMethodDef* funcToken, 
+		const std::unique_ptr<IMetaDataImport>& _MetaDataImport, 
+		const std::unique_ptr<IMetaDataImport2>& _MetaDataImport2);
+
 	
-
-
 
 };
 
+#endif

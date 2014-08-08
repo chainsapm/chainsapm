@@ -1,4 +1,10 @@
+#include "stdafx.h"
+#include <cor.h>
+#include <corprof.h>
 
+#if X64
+
+#else
 
 // @@TODO: Change the declaration to match the function you're implementing
 void __declspec(naked) __stdcall FunctionLeave2(FunctionID id, UINT_PTR clientData, COR_PRF_FRAME_INFO frame, COR_PRF_FUNCTION_ARGUMENT_RANGE* retvalRange)
@@ -89,3 +95,4 @@ RestoreFPRegsDone:
         ret SIZE id + SIZE clientData + SIZE frame + SIZE retvalRange
     }
 }
+#endif

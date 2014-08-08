@@ -1,24 +1,55 @@
 // profilermain.cpp : Implementation of Cprofilermain
-
+#pragma once
 #include "stdafx.h"
-#include "profilermain.h"
+#include "MetadataHelpers.h"
+#include "commonstructures.h"
 #include "ICorProlfileInfoCallbacks.hpp"
+#include "profilermain.h"
 
-
-// Cprofilermain
 
 
 Cprofilermain::Cprofilermain()
 {
-	g_FunctionSet = new std::map<FunctionID, FunctionInformation>();
-	g_FunctionNameSet = new std::unordered_set<std::string>();
+	g_FunctionSet = new std::map<FunctionID, FunctionInfo>();
+	g_ThreadStackMap = new std::map<ThreadID, std::queue<ThreadStackItem>>();
+	g_FunctionNameSet = new std::unordered_set<std::wstring>();
+	this->AddCommonFunctions();
 }
+
+
+struct no_separator : std::numpunct<char> {
+protected:
+	virtual std::string do_grouping() const
+	{
+		return "\000";
+	} // groups of 0 (disable)
+};
+
 
 Cprofilermain::~Cprofilermain()
 {
+	WriteLogFile();
+
 	delete g_FunctionNameSet;
 	delete g_FunctionSet;
+	delete g_ThreadStackMap;
 	delete g_MetadataHelpers;
+	if (m_pICorProfilerInfo != NULL)
+	{
+		m_pICorProfilerInfo.Release();
+	}
+	if (m_pICorProfilerInfo2 != NULL)
+	{
+		m_pICorProfilerInfo2.Release();
+	}
+	if (m_pICorProfilerInfo3 != NULL)
+	{
+		m_pICorProfilerInfo3.Release();
+	}
+	if (m_pICorProfilerInfo4 != NULL)
+	{
+		m_pICorProfilerInfo4.Release();
+	}
 	g_ProfilerCallback->Shutdown();
 }
 
@@ -28,51 +59,57 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 
 	// set up our global access pointer
 	g_ProfilerCallback = this;
-
 	// get the ICorProfilerInfo interface
-	HRESULT hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo, (LPVOID*)&m_pICorProfilerInfo);
+	HRESULT hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo, (LPVOID*)&this->m_pICorProfilerInfo);
 	if (FAILED(hr))
 		return E_FAIL;
 
 	// determine if this object implements ICorProfilerInfo2
-	hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo2, (LPVOID*)&m_pICorProfilerInfo2);
+	hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo2, (LPVOID*)&this->m_pICorProfilerInfo2);
 	if (FAILED(hr))
 	{
 		// we still want to work if this call fails, might be an older .NET version
-		m_pICorProfilerInfo2.p = NULL;
+		this->m_pICorProfilerInfo2.p = NULL;
 	}
 
 	// determine if this object implements ICorProfilerInfo3
-	hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo3, (LPVOID*)&m_pICorProfilerInfo3);
+	hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo3, (LPVOID*)&this->m_pICorProfilerInfo3);
 	if (FAILED(hr))
 	{
 		// we still want to work if this call fails, might be an older .NET version
-		m_pICorProfilerInfo3.p = NULL;
+		this->m_pICorProfilerInfo3.p = NULL;
 	}
 
 	// determine if this object implements ICorProfilerInfo4
-	hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo4, (LPVOID*)&m_pICorProfilerInfo4);
+	hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo4, (LPVOID*)&this->m_pICorProfilerInfo4);
 	if (FAILED(hr))
 	{
 		// we still want to work if this call fails, might be an older .NET version
-		m_pICorProfilerInfo4.p = NULL;
+		this->m_pICorProfilerInfo4.p = NULL;
 	}
 
-	if (m_pICorProfilerInfo4 != NULL)
+	if (this->m_pICorProfilerInfo4 != NULL)
 	{
-		g_MetadataHelpers = new MetadataHelpers(m_pICorProfilerInfo4);
+		g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo4);
 	}
-	else if (m_pICorProfilerInfo4 == NULL && m_pICorProfilerInfo3 != NULL)
+	else if (this->m_pICorProfilerInfo4 == NULL && this->m_pICorProfilerInfo3 != NULL)
 	{
-		g_MetadataHelpers = new MetadataHelpers(m_pICorProfilerInfo3);
+		g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo3);
 	}
-	else if (m_pICorProfilerInfo3 == NULL && m_pICorProfilerInfo2 != NULL)
+	else if (this->m_pICorProfilerInfo3 == NULL && this->m_pICorProfilerInfo2 != NULL)
 	{
-		g_MetadataHelpers = new MetadataHelpers(m_pICorProfilerInfo2);
+		g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo2);
 	}
-	else if (m_pICorProfilerInfo2 == NULL && m_pICorProfilerInfo != NULL)
+	else if (this->m_pICorProfilerInfo2 == NULL && this->m_pICorProfilerInfo != NULL)
 	{
-		g_MetadataHelpers = new MetadataHelpers(m_pICorProfilerInfo);
+		g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo);
+	}
+
+	hr = pICorProfilerInfoUnk->QueryInterface(IID_IMethodMalloc, (LPVOID*)&this->m_pIMethodMalloc);
+	if (FAILED(hr))
+	{
+		// we still want to work if this call fails, might be an older .NET version
+		this->m_pICorProfilerInfo4.p = NULL;
 	}
 
 
@@ -123,6 +160,7 @@ STDMETHODIMP Cprofilermain::AppDomainCreationStarted(AppDomainID appDomainId)
 
 STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 {
+	g_ThreadStackMap->insert(std::pair<ThreadID, std::queue<ThreadStackItem>>(threadId, std::queue<ThreadStackItem>()));
 	return S_OK;
 }
 
@@ -180,7 +218,8 @@ STDMETHODIMP Cprofilermain::SetMask()
 		| COR_PRF_MONITOR_ENTERLEAVE
 		| COR_PRF_ENABLE_FRAME_INFO
 		| COR_PRF_ENABLE_FUNCTION_ARGS
-		| COR_PRF_ENABLE_FUNCTION_RETVAL);
+		| COR_PRF_ENABLE_FUNCTION_RETVAL
+		| COR_PRF_MONITOR_THREADS);
 	return m_pICorProfilerInfo->SetEventMask(eventMask);
 }
 
@@ -247,4 +286,82 @@ STDMETHODIMP Cprofilermain::GetFuncArgs(FunctionID functionID, COR_PRF_FRAME_INF
 		typeArgs);
 
 	return hr;
+}
+
+void Cprofilermain::WriteLogFile()
+{
+	std::wofstream outFile("C:\\stackTrace.txt");
+	if (outFile)
+	{
+
+		for (std::map<ThreadID, std::queue<ThreadStackItem>>::const_iterator it = g_ThreadStackMap->begin();
+			it != g_ThreadStackMap->end(); it++)
+		{
+			int depth = 0;
+			UINT_PTR highPart = 0xFFFFFFFF00000000 & it->first;
+			UINT_PTR lowPart = 0x00000000FFFFFFFF & it->first;
+
+			std::locale loc("");
+
+			// imbue loc and add your own facet:
+			outFile.imbue(std::locale(loc, new no_separator()));
+			std::cout.imbue(std::locale(loc, new no_separator()));
+			std::cout << "Thread: " << boost::format("0x%08x`%08x") % highPart % lowPart << std::endl;
+
+			outFile << std::wstring(40, '=') << std::endl;
+			outFile << "Thread: " << boost::wformat(TEXT("0x%08x`%08x")) % highPart % lowPart << std::endl;
+			outFile << std::wstring(40, '=') << std::endl;
+			outFile << std::endl;
+
+			std::queue<ThreadStackItem> st = it->second;
+			while (!st.empty())
+			{
+				ThreadStackItem tsi = st.front();
+				std::map<FunctionID, FunctionInfo>::const_iterator itFunc
+					= g_FunctionSet->find(tsi.ItemFunctionID());
+
+				if (itFunc != g_FunctionSet->end())
+				{
+					/*switch (tsi.ItemStackReason())
+					{
+					case ThreadStackReason::ENTER:
+						depth++;
+						break;
+					default:
+						break;
+					}*/
+
+					if (depth < 0)
+					{
+						depth = 0;
+					}
+					FunctionInfo fi = itFunc->second;
+
+					std::wstring spaces(depth, ' ');
+					//outFile << spaces << fi.SignatureString() << tsi.ItemStackReason() << std::endl;
+					outFile << spaces << fi.SignatureString()  << std::endl;
+					outFile << boost::wformat(TEXT("Total time: %d\tProfiling Time: %d")) % tsi.ItemRunTime().total_microseconds() % tsi.ProfilingOverhead().total_microseconds() << std::endl;
+					/*switch (tsi.ItemStackReason())
+					{
+					case ThreadStackReason::EXIT:
+					depth--;
+					break;
+					default:
+					break;
+					}*/
+				}
+				st.pop();
+			}
+		}
+	}
+}
+
+void Cprofilermain::AddCommonFunctions()
+{
+	g_FunctionNameSet->insert(TEXT("AddNumbers"));
+	//g_FunctionNameSet->insert(TEXT("Main"));
+	//g_FunctionNameSet->insert(TEXT("ThreadStart"));
+	//g_FunctionNameSet->insert(TEXT("Start"));
+	//g_FunctionNameSet->insert(TEXT(".ctor"));
+	//g_FunctionNameSet->insert(TEXT(".cctor"));
 }

@@ -23,6 +23,23 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlctl.h>
+// Cor Profiling Libraries
+#include <cor.h>
+#include <corprof.h>
+// STL Libraries
+#include <map>
+#include <stack>
+#include <string>
+#include <vector>
+#include <queue>
 #include <exception>
 #include <stdexcept>
 #include <unordered_set>
+#include <iostream>
+#include <fstream> 
+#include <locale>
+
+// Boost Libraries
+#include <boost/date_time.hpp>
+#include <boost/format.hpp>
+

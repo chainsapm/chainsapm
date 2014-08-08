@@ -1,10 +1,10 @@
 // profilermain.h : Declaration of the Cprofilermain
+#ifndef PROFILERMAIN_H
+#define PROFILERMAIN_H
 
 #pragma once
 #include "resource.h"       // main symbols
 #include "CorProfilerCallbackImplementation.h"
-#include "MetadataHelpers.h"
-
 #include "clrprofiler_i.h"
 
 
@@ -28,6 +28,9 @@ public:
 
 	Cprofilermain();
 	~Cprofilermain();
+
+
+
 	DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERMAIN)
 
 
@@ -60,6 +63,8 @@ public:
 	STDMETHOD(SetMask)();
 	STDMETHOD(GetFullMethodName)(FunctionID functionID, std::string *methodName, int cMethod);
 	STDMETHOD(GetFuncArgs)(FunctionID functionID, COR_PRF_FRAME_INFO frameinfo);
+	void WriteLogFile();
+	void AddCommonFunctions();
 
 private:
 	// container for ICorProfilerInfo reference
@@ -70,6 +75,12 @@ private:
 	CComQIPtr<ICorProfilerInfo3> m_pICorProfilerInfo3;
 	// container for ICorProfilerInfo4 reference
 	CComQIPtr<ICorProfilerInfo4> m_pICorProfilerInfo4;
+	// container for IL allocation
+	CComQIPtr<IMethodMalloc> m_pIMethodMalloc;
+	//std::map<FunctionID, FunctionInfo> m_FunctionInfoMap;
+	
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(profilermain), Cprofilermain)
+
+#endif
