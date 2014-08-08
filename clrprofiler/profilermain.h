@@ -63,6 +63,9 @@ public:
 	STDMETHOD(SetMask)();
 	STDMETHOD(GetFullMethodName)(FunctionID functionID, std::string *methodName, int cMethod);
 	STDMETHOD(GetFuncArgs)(FunctionID functionID, COR_PRF_FRAME_INFO frameinfo);
+	STDMETHOD(ModuleLoadStarted)(ModuleID moduleId);
+	STDMETHOD(ModuleLoadFinished)(ModuleID moduleId, HRESULT hrStatus);
+	STDMETHOD(ClassLoadFinished)(ClassID classId, HRESULT hrStatus);
 	void WriteLogFile();
 	void AddCommonFunctions();
 

@@ -150,6 +150,8 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 
 	SetMask();
 
+	
+
 	return S_OK;
 }
 
@@ -219,7 +221,8 @@ STDMETHODIMP Cprofilermain::SetMask()
 		| COR_PRF_ENABLE_FRAME_INFO
 		| COR_PRF_ENABLE_FUNCTION_ARGS
 		| COR_PRF_ENABLE_FUNCTION_RETVAL
-		| COR_PRF_MONITOR_THREADS);
+		| COR_PRF_MONITOR_THREADS
+		| COR_PRF_MONITOR_CLASS_LOADS);
 	return m_pICorProfilerInfo->SetEventMask(eventMask);
 }
 
@@ -364,4 +367,25 @@ void Cprofilermain::AddCommonFunctions()
 	//g_FunctionNameSet->insert(TEXT("Start"));
 	//g_FunctionNameSet->insert(TEXT(".ctor"));
 	//g_FunctionNameSet->insert(TEXT(".cctor"));
+}
+
+STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleId, HRESULT hrStatus)
+{
+
+	//g_MetadataHelpers->InjectFieldToModule(moduleId, std::wstring(L"test"));
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::ModuleLoadStarted(ModuleID moduleId)
+{
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::ClassLoadFinished(ClassID classId, HRESULT hrStatus)
+{
+	ModuleID classModuleId;
+	mdTypeDef classTypeDef;
+	this->m_pICorProfilerInfo2->GetClassIDInfo(classId, &classModuleId, &classTypeDef);
+	g_MetadataHelpers->InjectFieldToModule(classModuleId, classTypeDef, std::wstring(L"test"));
+	return S_OK;
 }

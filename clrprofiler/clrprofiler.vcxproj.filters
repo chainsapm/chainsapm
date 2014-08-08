@@ -32,6 +32,9 @@
     <Filter Include="Structures">
       <UniqueIdentifier>{ace1e0a3-8308-4007-954d-6176de8ee9f2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ILBodyHelpers">
+      <UniqueIdentifier>{f275989c-f8b3-413b-b1e9-1082ec8392ac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -66,6 +69,9 @@
     </ClCompile>
     <ClCompile Include="GlobalMembers.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="static_il_bodies.cpp">
+      <Filter>ILBodyHelpers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -104,6 +110,9 @@
     </ClInclude>
     <ClInclude Include="GlobalMembers.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="static_il_bodies.h">
+      <Filter>ILBodyHelpers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

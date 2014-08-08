@@ -28,7 +28,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-	<LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerEnvironment>COR_ENABLE_PROFILING=0x1
 $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
@@ -38,7 +38,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-	 <LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommandArguments>
     </LocalDebuggerCommandArguments>
@@ -50,7 +50,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-	 <LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerEnvironment>COR_ENABLE_PROFILING=0x1
 $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
@@ -60,7 +60,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-	 <LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerEnvironment>COR_ENABLE_PROFILING=0x1
 $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
@@ -275,6 +275,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClCompile Include="leave_x86.cpp" />
     <ClCompile Include="MetadataHelpers.cpp" />
     <ClCompile Include="profilermain.cpp" />
+    <ClCompile Include="static_il_bodies.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -306,6 +307,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="profilermain.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ICorProlfileInfoCallbacks.hpp" />
+    <ClInclude Include="static_il_bodies.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="xdlldata.h" />

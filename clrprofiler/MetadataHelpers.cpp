@@ -48,7 +48,76 @@ MetadataHelpers::~MetadataHelpers()
 	}
 }
 
+STDMETHODIMP MetadataHelpers::InjectFieldToModule(const ModuleID& ModuleId, const mdTypeDef& classTypeDef,
+	const std::wstring& fieldName)
+{
+	std::unique_ptr<IMetaDataEmit> _MetaDataEmit;
+	std::unique_ptr<IMetaDataEmit2> _MetaDataEmit2;
+	std::unique_ptr<IMetaDataImport> _MetaDataImport;
+	std::unique_ptr<IMetaDataImport2> _MetaDataImport2;
 
+	this->GetMetaDataEmitInterFaceFromModule(ModuleId, _MetaDataEmit, _MetaDataEmit2);
+	this->GetMetaDataImportInterfaceFromModule(ModuleId, _MetaDataImport, _MetaDataImport2);
+
+	if (_MetaDataImport == NULL)
+	{
+		_MetaDataImport.reset(_MetaDataImport2.get());
+	}
+
+	if (_MetaDataEmit == NULL)
+	{
+		_MetaDataEmit.reset(_MetaDataEmit2.get());
+	}
+
+	if (_MetaDataEmit != NULL && _MetaDataImport != NULL)
+	{
+		MDUTF8CSTR typeDefName;
+
+		_MetaDataImport->GetNameFromToken(classTypeDef, &typeDefName);
+		std::string typeDefString(typeDefName);
+
+		WCHAR szClassName[MAX_LENGTH];
+		DWORD flags;
+		ULONG typeDefPointer;
+		mdToken extends;
+
+		_MetaDataImport->GetTypeDefProps(
+			classTypeDef,
+			szClassName,
+			2048,
+			&typeDefPointer,
+			&flags,
+			&extends);
+		std::wstring moduleString(szClassName);
+
+		if (moduleString == L"System.Threading.Thread")
+		{
+			COR_SIGNATURE testSig[] = {
+				ELEMENT_TYPE_I
+			};
+
+			mdFieldDef fieldOut;
+
+			_MetaDataEmit->DefineField(
+				classTypeDef,
+				fieldName.c_str(),
+				CorFieldAttr::fdPrivate,
+				testSig,
+				sizeof(testSig),
+				0,
+				0,
+				0,
+				&fieldOut);
+
+			_MetaDataEmit->Save(L"C:\\test.dll", NULL);
+		}
+	}
+	_MetaDataEmit.release();
+	_MetaDataEmit2.release();
+	_MetaDataImport.release();
+	_MetaDataImport2.release();
+	return S_OK;
+}
 
 STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, FunctionInfo* funcInfo)
 {
@@ -58,7 +127,7 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Function
 	std::unique_ptr<IMetaDataImport> _MetaDataImport;
 	std::unique_ptr<IMetaDataImport2> _MetaDataImport2;
 
-	this->GetMetaDataInterfaceFromFunction(funcId, &funcToken, _MetaDataImport, _MetaDataImport2);
+	this->GetMetaDataImportInterfaceFromFunction(funcId, &funcToken, _MetaDataImport, _MetaDataImport2);
 
 	if (_MetaDataImport == NULL)
 	{
@@ -107,6 +176,7 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Function
 		funcInfo->FunctionId(funcId);
 		funcInfo->FunctionName(*(new std::wstring(szMethodName)));
 		funcInfo->SignatureRaw(sigBlob); // Create a clone
+
 		/*
 		MSDN link for GetTypeDefProps
 		http://msdn.microsoft.com/en-us/library/ms230143(v=vs.110).aspx
@@ -469,7 +539,7 @@ PCCOR_SIGNATURE MetadataHelpers::ParseElementType(const std::unique_ptr<IMetaDat
 
 } // BASEHELPER::ParseElementType
 
-void MetadataHelpers::GetMetaDataInterfaceFromFunction(FunctionID funcId, mdMethodDef* funcToken,
+STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromFunction(FunctionID funcId, mdMethodDef* funcToken,
 	const std::unique_ptr<IMetaDataImport>& _MetaDataImport, const std::unique_ptr<IMetaDataImport2>& _MetaDataImport2)
 {
 
@@ -497,7 +567,9 @@ void MetadataHelpers::GetMetaDataInterfaceFromFunction(FunctionID funcId, mdMeth
 			this->m_pICorProfilerInfo->GetTokenAndMetaDataFromFunction(funcId, IID_IMetaDataImport,
 				(IUnknown **)&_MetaDataImport, funcToken);
 		}
+		return S_OK;
 	}
+	return E_FAIL;
 }
 
 STDMETHODIMP MetadataHelpers::GetCurrentThread(ThreadID* threadId)
@@ -511,3 +583,68 @@ STDMETHODIMP MetadataHelpers::GetArguments(FunctionID funcId, mdToken MethodData
 	return S_OK;
 }
 
+STDMETHODIMP MetadataHelpers::GetMetaDataEmitInterFaceFromModule(ModuleID ModuleId, 
+	const std::unique_ptr<IMetaDataEmit>& _MetaDataEmit, const std::unique_ptr<IMetaDataEmit2>& _MetaDataEmit2)
+{
+	if (_MetaDataEmit == NULL)
+	{
+		HRESULT hr;
+		if (m_pICorProfilerInfo4.p != NULL)
+		{
+			hr = this->m_pICorProfilerInfo4->GetModuleMetaData(ModuleId, CorOpenFlags::ofReadWriteMask,  IID_IMetaDataEmit2,
+				(IUnknown **)&_MetaDataEmit2);
+		}
+		else if (this->m_pICorProfilerInfo4.p == NULL && this->m_pICorProfilerInfo3.p != NULL)
+		{
+			hr = this->m_pICorProfilerInfo4->GetModuleMetaData(ModuleId, CorOpenFlags::ofReadWriteMask, IID_IMetaDataEmit2,
+				(IUnknown **)&_MetaDataEmit2);
+		}
+		else if (this->m_pICorProfilerInfo3.p == NULL && this->m_pICorProfilerInfo2.p != NULL)
+		{
+
+			hr = this->m_pICorProfilerInfo2->GetModuleMetaData(ModuleId, CorOpenFlags::ofReadWriteMask, IID_IMetaDataEmit2,
+				(IUnknown **)&_MetaDataEmit2);
+		}
+		else if (this->m_pICorProfilerInfo2.p == NULL && this->m_pICorProfilerInfo.p != NULL)
+		{
+			hr = this->m_pICorProfilerInfo->GetModuleMetaData(ModuleId, CorOpenFlags::ofReadWriteMask, IID_IMetaDataEmit,
+				(IUnknown **)&_MetaDataEmit2);
+		}
+		return S_OK;
+	}
+	return E_FAIL;
+}
+
+STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromModule(ModuleID ModuleId,
+	const std::unique_ptr<IMetaDataImport>& _MetaDataImport,
+	const std::unique_ptr<IMetaDataImport2>& _MetaDataImport2)
+{
+
+	if (_MetaDataImport == NULL)
+	{
+		HRESULT hr;
+		if (m_pICorProfilerInfo4.p != NULL)
+		{
+			hr = this->m_pICorProfilerInfo4->GetModuleMetaData(ModuleId, 0, IID_IMetaDataImport2,
+				(IUnknown **)&_MetaDataImport2);
+		}
+		else if (this->m_pICorProfilerInfo4.p == NULL && this->m_pICorProfilerInfo3.p != NULL)
+		{
+			hr = this->m_pICorProfilerInfo4->GetModuleMetaData(ModuleId, 0, IID_IMetaDataImport2,
+				(IUnknown **)&_MetaDataImport2);
+		}
+		else if (this->m_pICorProfilerInfo3.p == NULL && this->m_pICorProfilerInfo2.p != NULL)
+		{
+
+			hr = this->m_pICorProfilerInfo2->GetModuleMetaData(ModuleId, 0, IID_IMetaDataImport2,
+				(IUnknown **)&_MetaDataImport2);
+		}
+		else if (this->m_pICorProfilerInfo2.p == NULL && this->m_pICorProfilerInfo.p != NULL)
+		{
+			hr = this->m_pICorProfilerInfo->GetModuleMetaData(ModuleId, 0, IID_IMetaDataImport,
+				(IUnknown **)&_MetaDataImport);
+		}
+		return S_OK;
+	}
+	return E_FAIL;
+}
