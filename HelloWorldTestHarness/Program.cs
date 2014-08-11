@@ -41,18 +41,36 @@ namespace HelloWorldTestHarness
             System.Console.WriteLine(AddNumbers(ref i, ref b));
             System.Console.WriteLine(AddNumbers(ref i, ref b));
             System.Console.WriteLine(AddNumbers(ref i, ref b));
+            for (int f = 0; f < 20; f++)
+            {
 
-            var t = new System.Threading.Thread(new System.Threading.ThreadStart(
-           () =>
-           {
-               System.Console.WriteLine("Hello world from another thread!");
-           }));
-            t.Start();
-            t.Join();
+                var t = new System.Threading.Thread(new System.Threading.ThreadStart(
+               () =>
+               {
+                   System.Console.WriteLine("Hello world from another thread!");
+                   System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
+                   System.Console.WriteLine(AddNumbers(ref i, ref b));
+                   System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
+                   System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
+                   System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
+                   System.Console.WriteLine(AddNumbers(ref i, ref b));
+                   System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
+                   System.Console.WriteLine(AddNumbers(ref i, ref b));
+                   System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
+                   System.Console.WriteLine(AddNumbers(ref i, ref b));
+                   System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
+                   System.Console.WriteLine(AddNumbers(ref i, ref b));
+                   System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
+                   System.Console.WriteLine(AddNumbers(ref i, ref b));
+                   System.Console.WriteLine(AddNumbers(ref i, ref b));
+                   System.Console.WriteLine(AddNumbers(ref i, ref b));
+               }));
+                t.Start();
+            }
 
             // var wr = System.Net.HttpWebRequest.Create("http://www.google.com");
             // wr.BeginGetResponse(syncCB, wr);
-            // Console.ReadLine();
+            Console.ReadLine();
 
         }
         static int AddNumbers(int i, int b)

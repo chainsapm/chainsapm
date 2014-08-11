@@ -4,6 +4,7 @@
 
 MetadataHelpers::MetadataHelpers()
 {
+	InitializeCriticalSection(&m_ThreadCS);
 	// TODO Check to see if containers are valid.
 }
 
@@ -30,6 +31,7 @@ MetadataHelpers::MetadataHelpers(ICorProfilerInfo4 *profilerInfo) : MetadataHelp
 
 MetadataHelpers::~MetadataHelpers()
 {
+	DeleteCriticalSection(&m_ThreadCS);
 	if (m_pICorProfilerInfo != NULL)
 	{
 		m_pICorProfilerInfo.Release();
@@ -174,7 +176,8 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Function
 		DWORD NumberOfParams = sigBlobBytes;
 		
 		funcInfo->FunctionId(funcId);
-		funcInfo->FunctionName(*(new std::wstring(szMethodName)));
+		std::wstring copyString = std::wstring(szMethodName);
+		funcInfo->FunctionName(copyString);
 		funcInfo->SignatureRaw(sigBlob); // Create a clone
 
 		/*
@@ -197,7 +200,7 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Function
 			&flags,
 			&extends);
 
-		funcInfo->ClassName(*(new std::wstring(szClassName)));
+		funcInfo->ClassName(std::wstring(szClassName));
 
 		/*
 		MSDN link for GetParamForMethodIndex
@@ -262,16 +265,17 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Function
 
 				//
 				// Get the parameters
-				//								
+				//			
+				std::wstring sigHolder;
 				for (ULONG i = 0;
 					(SUCCEEDED(hr) && (sigBlob != NULL) && (i < (argCount)));
 					i++)
 				{
-					std::wstring *sigHolder = new std::wstring();
+					
 					ParameterInfo paramInfo;
-
-					sigBlob = ParseElementType(_MetaDataImport, sigBlob, sigHolder);
-					paramInfo.ParameterTypeString(*sigHolder);
+					sigHolder.clear();
+					sigBlob = ParseElementType(_MetaDataImport, sigBlob, &sigHolder);
+					paramInfo.ParameterTypeString(sigHolder);
 
 					mdParamDef paramDef;
 					mdMethodDef funcTokenOut;
@@ -309,6 +313,8 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Function
 		_MetaDataImport2.release();
 		return S_OK;
 	}
+	_MetaDataImport.release();
+	_MetaDataImport2.release();
 	return E_FAIL;
 }
 
@@ -574,6 +580,7 @@ STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromFunction(FunctionID 
 
 STDMETHODIMP MetadataHelpers::GetCurrentThread(ThreadID* threadId)
 {
+	
 	return this->m_pICorProfilerInfo2->GetCurrentThreadID(threadId);
 }
 
@@ -648,3 +655,4 @@ STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromModule(ModuleID Modu
 	}
 	return E_FAIL;
 }
+

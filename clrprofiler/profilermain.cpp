@@ -13,7 +13,9 @@ Cprofilermain::Cprofilermain()
 	g_FunctionSet = new std::map<FunctionID, FunctionInfo>();
 	g_ThreadStackMap = new std::map<ThreadID, std::queue<ThreadStackItem>>();
 	g_FunctionNameSet = new std::unordered_set<std::wstring>();
+	g_ThreadStackDepth = new std::map<ThreadID, int>();
 	this->AddCommonFunctions();
+	InitializeCriticalSection(&g_ThreadingCriticalSection);
 }
 
 
@@ -30,10 +32,10 @@ Cprofilermain::~Cprofilermain()
 {
 	WriteLogFile();
 
-	delete g_FunctionNameSet;
+	/*delete g_FunctionNameSet;
 	delete g_FunctionSet;
 	delete g_ThreadStackMap;
-	delete g_MetadataHelpers;
+	delete g_MetadataHelpers;*/
 	if (m_pICorProfilerInfo != NULL)
 	{
 		m_pICorProfilerInfo.Release();
@@ -51,6 +53,7 @@ Cprofilermain::~Cprofilermain()
 		m_pICorProfilerInfo4.Release();
 	}
 	g_ProfilerCallback->Shutdown();
+	DeleteCriticalSection(&g_ThreadingCriticalSection);
 }
 
 
@@ -150,7 +153,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 
 	SetMask();
 
-	
+
 
 	return S_OK;
 }
@@ -163,6 +166,7 @@ STDMETHODIMP Cprofilermain::AppDomainCreationStarted(AppDomainID appDomainId)
 STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 {
 	g_ThreadStackMap->insert(std::pair<ThreadID, std::queue<ThreadStackItem>>(threadId, std::queue<ThreadStackItem>()));
+	g_ThreadStackDepth->insert(std::pair<ThreadID, int>(threadId, 0));
 	return S_OK;
 }
 
@@ -215,14 +219,12 @@ STDMETHODIMP Cprofilermain::SetMask()
 	*/
 	// set the event mask 
 	DWORD eventMask = (DWORD)(
-		COR_PRF_MONITOR_ASSEMBLY_LOADS
-		| COR_PRF_MONITOR_APPDOMAIN_LOADS
+		COR_PRF_MONITOR_APPDOMAIN_LOADS
 		| COR_PRF_MONITOR_ENTERLEAVE
 		| COR_PRF_ENABLE_FRAME_INFO
 		| COR_PRF_ENABLE_FUNCTION_ARGS
 		| COR_PRF_ENABLE_FUNCTION_RETVAL
-		| COR_PRF_MONITOR_THREADS
-		| COR_PRF_MONITOR_CLASS_LOADS);
+		| COR_PRF_MONITOR_THREADS);
 	return m_pICorProfilerInfo->SetEventMask(eventMask);
 }
 
@@ -296,65 +298,49 @@ void Cprofilermain::WriteLogFile()
 	std::wofstream outFile("C:\\stackTrace.txt");
 	if (outFile)
 	{
+		std::map<ThreadID, std::queue<ThreadStackItem>>::iterator it;
+		std::locale loc("");
+		UINT_PTR highPart;
+		UINT_PTR lowPart;
+		outFile.imbue(std::locale(loc, new no_separator()));
+		std::map<FunctionID, FunctionInfo>::iterator itFunc;
 
-		for (std::map<ThreadID, std::queue<ThreadStackItem>>::const_iterator it = g_ThreadStackMap->begin();
-			it != g_ThreadStackMap->end(); it++)
+		for (it = g_ThreadStackMap->begin();
+			it != g_ThreadStackMap->end();
+			it++)
 		{
 			int depth = 0;
-			UINT_PTR highPart = 0xFFFFFFFF00000000 & it->first;
-			UINT_PTR lowPart = 0x00000000FFFFFFFF & it->first;
-
-			std::locale loc("");
-
-			// imbue loc and add your own facet:
-			outFile.imbue(std::locale(loc, new no_separator()));
-			std::cout.imbue(std::locale(loc, new no_separator()));
-			std::cout << "Thread: " << boost::format("0x%08x`%08x") % highPart % lowPart << std::endl;
+			int previousDepth = 0;
+			highPart = 0xFFFFFFFF00000000 & it->first;
+			lowPart = 0x00000000FFFFFFFF & it->first;
 
 			outFile << std::wstring(40, '=') << std::endl;
 			outFile << "Thread: " << boost::wformat(TEXT("0x%08x`%08x")) % highPart % lowPart << std::endl;
 			outFile << std::wstring(40, '=') << std::endl;
 			outFile << std::endl;
 
-			std::queue<ThreadStackItem> st = it->second;
-			while (!st.empty())
+
+			EnterCriticalSection(&g_ThreadingCriticalSection);
+			std::deque<ThreadStackItem>::const_iterator constIt;
+			std::deque<ThreadStackItem>::iterator deqIT = it->second._Get_container()._Make_iter(constIt);
+			std::wstring spaces;
+			while (deqIT != it->second._Get_container().end())
 			{
-				ThreadStackItem tsi = st.front();
-				std::map<FunctionID, FunctionInfo>::const_iterator itFunc
-					= g_FunctionSet->find(tsi.ItemFunctionID());
+				itFunc = g_FunctionSet->find(deqIT->ItemFunctionID());
 
 				if (itFunc != g_FunctionSet->end())
 				{
-					/*switch (tsi.ItemStackReason())
+					if (deqIT->Depth() >= 0)
 					{
-					case ThreadStackReason::ENTER:
-						depth++;
-						break;
-					default:
-						break;
-					}*/
-
-					if (depth < 0)
-					{
-						depth = 0;
+						depth = deqIT->Depth();
 					}
-					FunctionInfo fi = itFunc->second;
-
-					std::wstring spaces(depth, ' ');
-					//outFile << spaces << fi.SignatureString() << tsi.ItemStackReason() << std::endl;
-					outFile << spaces << fi.SignatureString()  << std::endl;
-					outFile << boost::wformat(TEXT("Total time: %d\tProfiling Time: %d")) % tsi.ItemRunTime().total_microseconds() % tsi.ProfilingOverhead().total_microseconds() << std::endl;
-					/*switch (tsi.ItemStackReason())
-					{
-					case ThreadStackReason::EXIT:
-					depth--;
-					break;
-					default:
-					break;
-					}*/
+					spaces.swap(std::wstring(depth, ' '));
+					outFile << spaces << itFunc->second.SignatureString() << std::endl;
+					outFile << spaces << boost::wformat(TEXT("Total time: %d\tProfiling Time: %d")) % deqIT->ItemRunTime().total_microseconds() % deqIT->ProfilingOverhead().total_microseconds() << std::endl;
 				}
-				st.pop();
-			}
+				deqIT++;
+			};
+			LeaveCriticalSection(&g_ThreadingCriticalSection);
 		}
 	}
 }
@@ -362,11 +348,11 @@ void Cprofilermain::WriteLogFile()
 void Cprofilermain::AddCommonFunctions()
 {
 	g_FunctionNameSet->insert(TEXT("AddNumbers"));
-	//g_FunctionNameSet->insert(TEXT("Main"));
-	//g_FunctionNameSet->insert(TEXT("ThreadStart"));
-	//g_FunctionNameSet->insert(TEXT("Start"));
-	//g_FunctionNameSet->insert(TEXT(".ctor"));
-	//g_FunctionNameSet->insert(TEXT(".cctor"));
+	g_FunctionNameSet->insert(TEXT("Main"));
+	g_FunctionNameSet->insert(TEXT("Thread"));
+	g_FunctionNameSet->insert(TEXT("Start"));
+	g_FunctionNameSet->insert(TEXT(".ctor"));
+	g_FunctionNameSet->insert(TEXT(".cctor"));
 }
 
 STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleId, HRESULT hrStatus)
@@ -383,9 +369,9 @@ STDMETHODIMP Cprofilermain::ModuleLoadStarted(ModuleID moduleId)
 
 STDMETHODIMP Cprofilermain::ClassLoadFinished(ClassID classId, HRESULT hrStatus)
 {
-	ModuleID classModuleId;
+	/*ModuleID classModuleId;
 	mdTypeDef classTypeDef;
 	this->m_pICorProfilerInfo2->GetClassIDInfo(classId, &classModuleId, &classTypeDef);
-	g_MetadataHelpers->InjectFieldToModule(classModuleId, classTypeDef, std::wstring(L"test"));
+	g_MetadataHelpers->InjectFieldToModule(classModuleId, classTypeDef, std::wstring(L"test"));*/
 	return S_OK;
 }

@@ -8,7 +8,9 @@
 
 ParameterInfo::ParameterInfo()
 {
-
+	std::wstring m_ParameterName;
+	std::wstring m_ParameterTypeString;
+	std::wstring m_ParameterValue;
 }
 
 ParameterInfo::~ParameterInfo()
@@ -23,7 +25,7 @@ const std::wstring& ParameterInfo::ParameterName()
 
 void ParameterInfo::ParameterName(const std::wstring& string)
 {
-	this->m_ParameterName.assign(string);
+	this->m_ParameterName = *new std::wstring(string);
 }
 
 const std::wstring& ParameterInfo::ParameterTypeString()
@@ -33,7 +35,7 @@ const std::wstring& ParameterInfo::ParameterTypeString()
 
 void ParameterInfo::ParameterTypeString(const std::wstring& paramTypeString)
 {
-	this->m_ParameterTypeString.assign(paramTypeString);
+	this->m_ParameterTypeString = *new std::wstring(paramTypeString);
 }
 
 const CorElementType& ParameterInfo::ParameterType()
@@ -54,7 +56,6 @@ FunctionInfo::FunctionInfo()
 
 FunctionInfo::~FunctionInfo()
 {
-
 }
 
 const std::wstring& FunctionInfo::ClassName()
@@ -150,7 +151,7 @@ const std::vector<ParameterInfo>& FunctionInfo::Parameters()
 
 void FunctionInfo::AddParameters(const ParameterInfo& addParameter)
 {
-	this->m_Parameters.push_back(addParameter);
+	this->m_Parameters.push_back(*new ParameterInfo(addParameter));
 }
 
 ThreadStackItem::ThreadStackItem()
@@ -163,12 +164,15 @@ ThreadStackItem::ThreadStackItem(ThreadID tid, FunctionID funcId, ThreadStackRea
 	this->m_FunctionID = funcId;
 	this->m_LastReason = reason;
 	this->m_EnterTime = boost::posix_time::microsec_clock::universal_time();
+	this->m_GCReasons = std::vector<COR_PRF_GC_REASON>();
+	this->m_SuspensionReasons = std::vector<COR_PRF_SUSPEND_REASON>();
 }
 
 
 ThreadStackItem::~ThreadStackItem()
 {
-
+	this->m_GCReasons.empty();
+	this->m_SuspensionReasons.empty();
 }
 
 ThreadID ThreadStackItem::ItemThreadID()
@@ -187,9 +191,9 @@ boost::posix_time::ptime ThreadStackItem::ItemStartTime()
 	return this->m_EnterTime;
 }
 
-void ThreadStackItem::UpdateItemStackReason(ThreadStackReason)
+void ThreadStackItem::UpdateItemStackReason(ThreadStackReason stackReason)
 {
-
+	this->m_LastReason = stackReason;
 }
 
 byte* ThreadStackItem::ItemStackParameters()
@@ -222,13 +226,28 @@ boost::posix_time::time_duration ThreadStackItem::ItemRunTime()
 
 void ThreadStackItem::UpdateLeaveTime()
 {
-	this->m_ItemTotal = boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time() 
+	this->m_ItemTotal = boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time()
 		- this->m_EnterTime);
 }
 
 boost::posix_time::time_duration ThreadStackItem::ProfilingOverhead()
 {
 	return this->m_ProfilingOverheadTotal;
+}
+
+int ThreadStackItem::Depth()
+{
+	return this->m_Depth;
+}
+
+void ThreadStackItem::Depth(int depth)
+{
+	this->m_Depth = depth;
+}
+
+const ThreadStackReason& ThreadStackItem::LastReason()
+{
+	return this->m_LastReason;
 }
 
 TimerItem::TimerItem()
@@ -259,11 +278,11 @@ TimerItem::~TimerItem()
 	{
 		if (m_GCSuspendReason != INT_FAST32_MAX)
 		{
-			if (this->m_SuspensionAction = SUSPEND_START)
+			if (this->m_SuspensionAction == SUSPEND_START)
 			{
 				m_ThreadStackItem->m_GarbageCollectionTimeStart = boost::posix_time::microsec_clock::universal_time();
 			}
-			else if (this->m_SuspensionAction = SUSPEND_END)
+			else if (this->m_SuspensionAction == SUSPEND_END)
 			{
 				m_ThreadStackItem->m_GarbageCollectionTimeEnd = boost::posix_time::microsec_clock::universal_time();
 				m_ThreadStackItem->m_GarbageCollectionTotal +=
@@ -272,35 +291,36 @@ TimerItem::~TimerItem()
 		}
 		else if (m_RuntimeSuspendReason != INT_FAST32_MAX)
 		{
-			if (this->m_SuspensionAction = SUSPEND_START)
+			if (this->m_SuspensionAction == SUSPEND_START)
 			{
 				m_ThreadStackItem->m_RuntimeSuspensionStart = boost::posix_time::microsec_clock::universal_time();
 			}
-			else if (this->m_SuspensionAction = SUSPEND_END)
+			else if (this->m_SuspensionAction == SUSPEND_END)
 			{
 				m_ThreadStackItem->m_RuntimeSuspensionEnd = boost::posix_time::microsec_clock::universal_time();
-				m_ThreadStackItem->m_SuspensionTotal += 
+				m_ThreadStackItem->m_SuspensionTotal +=
 					(m_ThreadStackItem->m_RuntimeSuspensionEnd - m_ThreadStackItem->m_RuntimeSuspensionStart);
 			}
 		}
 		else {
-			if (this->m_ThreadStackReason = EXIT)
+			if (this->m_ThreadStackReason == EXIT | this->m_ThreadStackReason == TAIL)
 			{
 				m_ThreadStackItem->UpdateLeaveTime();
 			}
 		}
 
 		// This is always last since EVERYTHING is additional overhead
-		this->m_ThreadStackItem->m_ProfilingOverheadTotal += 
+		this->m_ThreadStackItem->m_ProfilingOverheadTotal +=
 			(boost::posix_time::microsec_clock::universal_time() - this->startTime);
 
 	}
-	
+
 }
 
 void TimerItem::AddThreadStackItem(ThreadStackItem* stackItem)
 {
 	this->m_ThreadStackItem = stackItem;
-	
+	this->m_ThreadStackItem->UpdateItemStackReason(this->m_ThreadStackReason);
+
 }
 

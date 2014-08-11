@@ -42,6 +42,8 @@ private:
 	ATL::CComQIPtr<ICorProfilerInfo3> m_pICorProfilerInfo3;
 	// container for ICorProfilerInfo4 reference
 	ATL::CComQIPtr<ICorProfilerInfo4> m_pICorProfilerInfo4;
+	//boost::mutex m_ThreadIdMutex;
+	CRITICAL_SECTION m_ThreadCS;
 
 };
 

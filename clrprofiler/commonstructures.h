@@ -33,9 +33,12 @@ public:
 	FunctionID ItemFunctionID();
 
 	void UpdateItemStackReason(ThreadStackReason);
-
+	const ThreadStackReason& LastReason();
 	byte* ItemStackParameters();
 	void ItemStackReturnValue(byte* input);
+
+	int Depth();
+	void Depth(int depth);
 
 	boost::posix_time::time_duration ItemRunTime();
 	boost::posix_time::time_duration GCSuspensionTime();
@@ -69,6 +72,8 @@ private:
 
 	byte* m_RawParameterData;
 	byte* m_RawReturnData;
+
+	int m_Depth;
 };
 
 class ParameterInfo
