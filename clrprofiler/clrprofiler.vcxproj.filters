@@ -29,34 +29,31 @@
     <Filter Include="Profiler Info Callbacks">
       <UniqueIdentifier>{2930fa9c-5c94-4490-8a58-17e0b9dd3f07}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Structures">
+    <Filter Include="IL Rewriting">
+      <UniqueIdentifier>{a1739379-5a12-4104-8abe-eecf507a5687}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ICorProfilerImpl Callback">
+      <UniqueIdentifier>{9de2cb39-7741-43b4-89d1-7517db85b8db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DLLMain">
+      <UniqueIdentifier>{312be530-08bb-474f-9f3b-9f5b3e2e1971}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CProfilerClass">
+      <UniqueIdentifier>{e2ebb73e-5802-480b-bcae-70a787e14b7e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common Classes">
       <UniqueIdentifier>{ace1e0a3-8308-4007-954d-6176de8ee9f2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ILBodyHelpers">
+    <Filter Include="IL Rewriting\IL Body Helpers">
       <UniqueIdentifier>{f275989c-f8b3-413b-b1e9-1082ec8392ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="IL Rewriting\Factory Class">
+      <UniqueIdentifier>{93825141-6d0f-4774-b6b2-cd34e988a1f7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="clrprofiler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dllmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="xdlldata.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="clrprofiler_i.c">
       <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="profilermain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CorProfilerCallbackImplementation.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MetadataHelpers.cpp">
       <Filter>Helpers</Filter>
@@ -64,40 +61,46 @@
     <ClCompile Include="leave_x86.cpp">
       <Filter>x86 Function Hooks</Filter>
     </ClCompile>
-    <ClCompile Include="GlobalMembers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="static_il_bodies.cpp">
-      <Filter>ILBodyHelpers</Filter>
+      <Filter>IL Rewriting\IL Body Helpers</Filter>
     </ClCompile>
-    <ClCompile Include="commonstructures.cpp">
-      <Filter>Structures</Filter>
+    <ClCompile Include="CorProfilerCallbackImplementation.cpp">
+      <Filter>ICorProfilerImpl Callback</Filter>
+    </ClCompile>
+    <ClCompile Include="xdlldata.c">
+      <Filter>DLLMain</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>DLLMain</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>DLLMain</Filter>
+    </ClCompile>
+    <ClCompile Include="clrprofiler.cpp">
+      <Filter>DLLMain</Filter>
+    </ClCompile>
+    <ClCompile Include="profilermain.cpp">
+      <Filter>CProfilerClass</Filter>
+    </ClCompile>
+    <ClCompile Include="ParameterInfo.cpp">
+      <Filter>Common Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="FunctionInfo.cpp">
+      <Filter>Common Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreadStackItem.cpp">
+      <Filter>Common Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="TimerItem.cpp">
+      <Filter>Common Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="ILFactory.cpp">
+      <Filter>IL Rewriting\Factory Class</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dllmain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="xdlldata.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="clrprofiler_i.h">
       <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="profilermain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CorProfilerCallbackImplementation.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MetadataHelpers.h">
       <Filter>Helpers</Filter>
@@ -106,13 +109,34 @@
       <Filter>Profiler Info Callbacks</Filter>
     </ClInclude>
     <ClInclude Include="commonstructures.h">
-      <Filter>Structures</Filter>
-    </ClInclude>
-    <ClInclude Include="GlobalMembers.h">
-      <Filter>Header Files</Filter>
+      <Filter>Common Classes</Filter>
     </ClInclude>
     <ClInclude Include="static_il_bodies.h">
-      <Filter>ILBodyHelpers</Filter>
+      <Filter>IL Rewriting\IL Body Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="CorProfilerCallbackImplementation.h">
+      <Filter>ICorProfilerImpl Callback</Filter>
+    </ClInclude>
+    <ClInclude Include="dllmain.h">
+      <Filter>DLLMain</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>DLLMain</Filter>
+    </ClInclude>
+    <ClInclude Include="xdlldata.h">
+      <Filter>DLLMain</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>DLLMain</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="profilermain.h">
+      <Filter>CProfilerClass</Filter>
+    </ClInclude>
+    <ClInclude Include="ILFactory.h">
+      <Filter>IL Rewriting\Factory Class</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -127,20 +151,15 @@
     <None Include="clrprofiler.rgs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="clrprofiler.def">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="profilermain.rgs">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="registry.bin">
       <Filter>Resource Files</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Midl Include="clrprofiler.idl">
-      <Filter>Source Files</Filter>
-    </Midl>
+    <None Include="clrprofiler.def">
+      <Filter>DLLMain</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="etl_enter_x64.asm">
@@ -152,5 +171,10 @@
     <MASM Include="etl_tail_x64.asm">
       <Filter>x64 Function Hooks</Filter>
     </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="clrprofiler.idl">
+      <Filter>DLLMain</Filter>
+    </Midl>
   </ItemGroup>
 </Project>

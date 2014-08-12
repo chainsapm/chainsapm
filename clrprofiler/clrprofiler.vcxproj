@@ -257,7 +257,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="commonstructures.cpp" />
     <ClCompile Include="CorProfilerCallbackImplementation.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -273,9 +272,11 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="GlobalMembers.cpp" />
+    <ClCompile Include="FunctionInfo.cpp" />
+    <ClCompile Include="ILFactory.cpp" />
     <ClCompile Include="leave_x86.cpp" />
     <ClCompile Include="MetadataHelpers.cpp" />
+    <ClCompile Include="ParameterInfo.cpp" />
     <ClCompile Include="profilermain.cpp" />
     <ClCompile Include="static_il_bodies.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -284,6 +285,8 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ThreadStackItem.cpp" />
+    <ClCompile Include="TimerItem.cpp" />
     <ClCompile Include="xdlldata.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
@@ -304,7 +307,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="commonstructures.h" />
     <ClInclude Include="CorProfilerCallbackImplementation.h" />
     <ClInclude Include="dllmain.h" />
-    <ClInclude Include="GlobalMembers.h" />
+    <ClInclude Include="ILFactory.h" />
     <ClInclude Include="MetadataHelpers.h" />
     <ClInclude Include="profilermain.h" />
     <ClInclude Include="Resource.h" />

@@ -2,7 +2,6 @@
 #define METADATAHELPERS_H
 #include "commonstructures.h"
 
-
 #define MAX_LENGTH 2048
 
 class MetadataHelpers

@@ -20,57 +20,62 @@ EXTERN_C void FunctionLeave2_Wrapper_x64(FunctionID funcId, UINT_PTR clientData,
 
 EXTERN_C void FunctionTail2_Wrapper_x64(FunctionID funcId, UINT_PTR clientData, COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentInfo);
 
-namespace staticMethods
+// Static methods for specific profiler callbacks. Namely the Mapper and Enter/Leave/Tail
+namespace StaticProfilerMethods
 {
 
-
+	// Mapper function to create the collection of FunctionInfo items
 	UINT_PTR __stdcall Mapper1(FunctionID funcId, BOOL *pbHookFunction)
 	{
-		/*EnterCriticalSection(&g_ThreadingCriticalSection);
+		EnterCriticalSection(&g_ThreadingCriticalSection);
 		FunctionInfo funcInfo;
 		g_MetadataHelpers->GetFunctionInformation(funcId, &funcInfo);
 		g_FunctionSet->insert(std::pair<FunctionID, FunctionInfo>(funcId, funcInfo));
 		*pbHookFunction = TRUE;
-		LeaveCriticalSection(&g_ThreadingCriticalSection);*/
-		EnterCriticalSection(&g_ThreadingCriticalSection);
-		std::map<FunctionID, FunctionInfo>::const_iterator it = g_FunctionSet->find(funcId);
-		if (it == g_FunctionSet->end())
-		{
-
-			// declared in this block so they are not created if the function is found
-
-			FunctionInfo funcInfo;
-
-			g_MetadataHelpers->GetFunctionInformation(funcId, &funcInfo);
-			std::unordered_set<std::wstring>::const_iterator findName =
-				g_FunctionNameSet->find(funcInfo.FunctionName());
-			if (findName != g_FunctionNameSet->end())
-			{
-				g_FunctionSet->insert(std::pair<FunctionID, FunctionInfo>(funcId, funcInfo));
-				*pbHookFunction = TRUE;
-			}
-			else {
-				*pbHookFunction = FALSE;
-			}
-
-		}
 		LeaveCriticalSection(&g_ThreadingCriticalSection);
+		//EnterCriticalSection(&g_ThreadingCriticalSection);
+		//std::map<FunctionID, FunctionInfo>::const_iterator it = g_FunctionSet->find(funcId);
+		//if (it == g_FunctionSet->end())
+		//{
+
+		//	// declared in this block so they are not created if the function is found
+
+		//	FunctionInfo funcInfo;
+
+		//	g_MetadataHelpers->GetFunctionInformation(funcId, &funcInfo);
+		//	std::unordered_set<std::wstring>::const_iterator findName =
+		//		g_FunctionNameSet->find(funcInfo.FunctionName());
+		//	if (findName != g_FunctionNameSet->end())
+		//	{
+		//		g_FunctionSet->insert(std::pair<FunctionID, FunctionInfo>(funcId, funcInfo));
+		//		*pbHookFunction = TRUE;
+		//	}
+		//	else {
+		//		*pbHookFunction = FALSE;
+		//	}
+
+		//}
+		//LeaveCriticalSection(&g_ThreadingCriticalSection);
 		return (UINT_PTR)funcId;
 
 	}
 
+	// Implementation of Mapper2. Just calls Mapper1
 	UINT_PTR __stdcall Mapper2(FunctionID funcId, void * clientData, BOOL *pbHookFunction)
 	{
 		return Mapper1(funcId, pbHookFunction);
 	}
 
-	/*
-	MSDN Article that describes the ELT methods and what COR flags need to be set.
-	http://msdn.microsoft.com/en-us/magazine/cc300553.aspx
-	*/
+	// Enter hook function for creating shadow stacks
 	EXTERN_C void FunctionEnter2_CPP_Helper(FunctionID funcId, UINT_PTR clientData,
 		COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
 	{
+
+		/*
+		MSDN Article that describes the ELT methods and what COR flags need to be set.
+		http://msdn.microsoft.com/en-us/magazine/cc300553.aspx
+		*/
+
 		TimerItem ti(ThreadStackReason::ENTER);
 		EnterCriticalSection(&g_ThreadingCriticalSection);
 		std::map<FunctionID, FunctionInfo>::const_iterator it = g_FunctionSet->find(funcId);
@@ -100,6 +105,7 @@ namespace staticMethods
 		//TODO Implement function callbacks
 	}
 
+	// Leave hook function for creating shadow stacks
 	EXTERN_C void FunctionLeave2_CPP_Helper(FunctionID funcId, UINT_PTR clientData,
 		COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentRange)
 	{
@@ -133,7 +139,8 @@ namespace staticMethods
 		LeaveCriticalSection(&g_ThreadingCriticalSection);
 		//TODO Implement function callbacks
 	}
-
+	
+	// Tail hook function for creating shadow stacks
 	EXTERN_C void FunctionTail2_CPP_Helper(FunctionID funcId, UINT_PTR clientData,
 		COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
 	{

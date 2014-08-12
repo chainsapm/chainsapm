@@ -119,7 +119,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 	INT clientData = 0xDEADBEEF;
 	if (m_pICorProfilerInfo2 != NULL)
 	{
-		m_pICorProfilerInfo2->SetFunctionIDMapper((FunctionIDMapper*)&staticMethods::Mapper1);
+		m_pICorProfilerInfo2->SetFunctionIDMapper((FunctionIDMapper*)&StaticProfilerMethods::Mapper1);
 #ifdef X64
 		m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_Wrapper_x64, (FunctionLeave2*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall2*)&FunctionTail2_Wrapper_x64);
 #else
@@ -129,7 +129,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 	if (m_pICorProfilerInfo3 != NULL)
 	{
 		INT clientData = 0xDEADBEEF;
-		m_pICorProfilerInfo3->SetFunctionIDMapper2((FunctionIDMapper2*)&staticMethods::Mapper2, &clientData);
+		m_pICorProfilerInfo3->SetFunctionIDMapper2((FunctionIDMapper2*)&StaticProfilerMethods::Mapper2, &clientData);
 #ifdef X64
 		m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks3((FunctionEnter3*)&FunctionEnter2_Wrapper_x64, (FunctionLeave3*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall3*)&FunctionTail2_Wrapper_x64);
 #else
@@ -139,7 +139,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 	if (m_pICorProfilerInfo4 != NULL)
 	{
 		INT clientData = 0xDEADBEEF;
-		m_pICorProfilerInfo4->SetFunctionIDMapper2((FunctionIDMapper2*)&staticMethods::Mapper2, &clientData);
+		m_pICorProfilerInfo4->SetFunctionIDMapper2((FunctionIDMapper2*)&StaticProfilerMethods::Mapper2, &clientData);
 #ifdef X64
 		m_pICorProfilerInfo4->SetEnterLeaveFunctionHooks3((FunctionEnter3*)&FunctionEnter2_Wrapper_x64, (FunctionLeave3*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall3*)&FunctionTail2_Wrapper_x64);
 #else

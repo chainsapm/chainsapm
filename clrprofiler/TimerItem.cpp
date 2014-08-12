@@ -5,7 +5,7 @@
 
 
 
-#define NAME_BUFFER_SIZE 2048
+
 
 
 TimerItem::TimerItem()
@@ -61,7 +61,7 @@ TimerItem::~TimerItem()
 			}
 		}
 		else {
-			if (this->m_ThreadStackReason == EXIT | this->m_ThreadStackReason == TAIL)
+			if ((this->m_ThreadStackReason == EXIT) | (this->m_ThreadStackReason == TAIL))
 			{
 				m_ThreadStackItem->UpdateLeaveTime();
 			}
