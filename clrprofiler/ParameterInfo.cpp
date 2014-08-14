@@ -1,6 +1,6 @@
 #pragma once
 #include "stdafx.h"
-#include "commonstructures.h"
+#include "ParameterInfo.h"
 
 
 ParameterInfo::ParameterInfo()

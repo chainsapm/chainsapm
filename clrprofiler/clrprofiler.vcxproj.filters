@@ -138,6 +138,18 @@
     <ClInclude Include="ILFactory.h">
       <Filter>IL Rewriting\Factory Class</Filter>
     </ClInclude>
+    <ClInclude Include="FunctionInfo.h">
+      <Filter>Common Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="ParameterInfo.h">
+      <Filter>Common Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadStackItem.h">
+      <Filter>Common Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="TimerItem.h">
+      <Filter>Common Classes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="clrprofiler.rc">

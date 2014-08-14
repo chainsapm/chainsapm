@@ -1,23 +1,8 @@
 // profilermain.cpp : Implementation of Cprofilermain
 #pragma once
 #include "stdafx.h"
-#include "MetadataHelpers.h"
-#include "commonstructures.h"
 #include "ICorProlfileInfoCallbacks.hpp"
 #include "profilermain.h"
-
-
-
-Cprofilermain::Cprofilermain()
-{
-	g_FunctionSet = new std::map<FunctionID, FunctionInfo>();
-	g_ThreadStackMap = new std::map<ThreadID, std::queue<ThreadStackItem>>();
-	g_FunctionNameSet = new std::unordered_set<std::wstring>();
-	g_ThreadStackDepth = new std::map<ThreadID, int>();
-	this->AddCommonFunctions();
-	InitializeCriticalSection(&g_ThreadingCriticalSection);
-}
-
 
 struct no_separator : std::numpunct<char> {
 protected:
@@ -28,10 +13,37 @@ protected:
 };
 
 
+Cprofilermain::Cprofilermain()
+{
+	g_FunctionSet = new std::map<FunctionID, FunctionInfo>();
+	g_ThreadStackMap = new std::map<ThreadID, std::queue<StackItemBase*>>();
+	g_FunctionNameSet = new std::unordered_set<std::wstring>();
+	g_ClassNameSet = new std::unordered_set<std::wstring>();
+	g_ThreadStackDepth = new std::map<ThreadID, int>();
+	if (g_InstanceMap == NULL)
+	{
+		g_InstanceMap = new std::map<DWORD, Cprofilermain*>();
+	}
+	this->m_ProcessId = GetCurrentProcessId();
+	g_InstanceMap->insert(std::pair<DWORD, Cprofilermain*>(this->m_ProcessId, this));
+	this->AddCommonFunctions();
+	WCHAR imageName[MAX_PATH];
+	GetModuleFileName(NULL, imageName, MAX_PATH);
+	std::wstringstream stringStream(imageName);
+	std::wstring lastItem;
+	for (std::wstring item; std::getline(stringStream, item, L'\\');)
+	{
+		lastItem.assign(item);
+	}
+	this->m_ProcessName.assign(lastItem);
+	
+	
+	InitializeCriticalSection(&g_ThreadingCriticalSection);
+}
+
 Cprofilermain::~Cprofilermain()
 {
 	WriteLogFile();
-
 	/*delete g_FunctionNameSet;
 	delete g_FunctionSet;
 	delete g_ThreadStackMap;
@@ -55,7 +67,6 @@ Cprofilermain::~Cprofilermain()
 	g_ProfilerCallback->Shutdown();
 	DeleteCriticalSection(&g_ThreadingCriticalSection);
 }
-
 
 STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 {
@@ -150,7 +161,6 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 
 
 
-
 	SetMask();
 
 
@@ -165,13 +175,57 @@ STDMETHODIMP Cprofilermain::AppDomainCreationStarted(AppDomainID appDomainId)
 
 STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 {
-	g_ThreadStackMap->insert(std::pair<ThreadID, std::queue<ThreadStackItem>>(threadId, std::queue<ThreadStackItem>()));
+	TimerItem firstTimer(THREAD_START);
+	ThreadStackItem firstItem = ThreadStackItem(threadId, THREAD_START);
+	MAINCSENTER;
+	g_ThreadStackMap->insert(std::pair<ThreadID, std::queue<StackItemBase*>>(threadId, std::queue<StackItemBase*>()));
+	firstTimer.AddThreadStackItem(&firstItem);
+	//g_ThreadStackMap->at(threadId)->push(new StackItemBase(firstItem));
+	g_ThreadStackMap->at(threadId).push(new ThreadStackItem(firstItem));
 	g_ThreadStackDepth->insert(std::pair<ThreadID, int>(threadId, 0));
+	MAINCSLEAVE;
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::ThreadDestroyed(ThreadID threadId)
 {
+	TimerItem lastTimer(THREAD_END);
+	MAINCSENTER;
+	std::map<ThreadID, std::queue<StackItemBase*>>::iterator itStack = g_ThreadStackMap->find(threadId);
+	if (itStack != g_ThreadStackMap->end())
+	{
+		// The front item should ALWAYS be the thread stack start item
+		// If it's not some how something inserted a TSI before the top item and that is not likely.
+		lastTimer.AddThreadStackItem(g_ThreadStackMap->at(threadId).front());
+	}
+	MAINCSLEAVE;
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::ThreadNameChanged(ThreadID threadId, ULONG cchName, _In_reads_opt_(cchName) WCHAR name[])
+{
+	MAINCSENTER;
+	std::map<ThreadID, std::queue<StackItemBase*>>::iterator itStack = g_ThreadStackMap->find(threadId);
+	if (itStack != g_ThreadStackMap->end())
+	{
+		// The front item should ALWAYS be the thread stack start item
+		// If it's not some how something inserted a TSI before the top item and that is not likely.
+
+		ThreadStackItem* testItemConverted = NULL;
+		try
+		{
+			testItemConverted = dynamic_cast<ThreadStackItem*>(g_ThreadStackMap->at(threadId).front());
+		}
+		catch (std::bad_cast* e)
+		{
+		}
+
+		if (testItemConverted != NULL)
+		{
+			testItemConverted->ThreadName(name);
+		}
+	}
+	MAINCSLEAVE;
 	return S_OK;
 }
 
@@ -224,7 +278,9 @@ STDMETHODIMP Cprofilermain::SetMask()
 		| COR_PRF_ENABLE_FRAME_INFO
 		| COR_PRF_ENABLE_FUNCTION_ARGS
 		| COR_PRF_ENABLE_FUNCTION_RETVAL
-		| COR_PRF_MONITOR_THREADS);
+		| COR_PRF_MONITOR_THREADS
+		| COR_PRF_MONITOR_GC
+		| COR_PRF_MONITOR_SUSPENDS);
 	return m_pICorProfilerInfo->SetEventMask(eventMask);
 }
 
@@ -293,66 +349,19 @@ STDMETHODIMP Cprofilermain::GetFuncArgs(FunctionID functionID, COR_PRF_FRAME_INF
 	return hr;
 }
 
-void Cprofilermain::WriteLogFile()
-{
-	std::wofstream outFile("C:\\stackTrace.txt");
-	if (outFile)
-	{
-		std::map<ThreadID, std::queue<ThreadStackItem>>::iterator it;
-		std::locale loc("");
-		UINT_PTR highPart;
-		UINT_PTR lowPart;
-		outFile.imbue(std::locale(loc, new no_separator()));
-		std::map<FunctionID, FunctionInfo>::iterator itFunc;
-
-		for (it = g_ThreadStackMap->begin();
-			it != g_ThreadStackMap->end();
-			it++)
-		{
-			int depth = 0;
-			int previousDepth = 0;
-			highPart = 0xFFFFFFFF00000000 & it->first;
-			lowPart = 0x00000000FFFFFFFF & it->first;
-
-			outFile << std::wstring(40, '=') << std::endl;
-			outFile << "Thread: " << boost::wformat(TEXT("0x%08x`%08x")) % highPart % lowPart << std::endl;
-			outFile << std::wstring(40, '=') << std::endl;
-			outFile << std::endl;
-
-
-			EnterCriticalSection(&g_ThreadingCriticalSection);
-			std::deque<ThreadStackItem>::const_iterator constIt;
-			std::deque<ThreadStackItem>::iterator deqIT = it->second._Get_container()._Make_iter(constIt);
-			std::wstring spaces;
-			while (deqIT != it->second._Get_container().end())
-			{
-				itFunc = g_FunctionSet->find(deqIT->ItemFunctionID());
-
-				if (itFunc != g_FunctionSet->end())
-				{
-					if (deqIT->Depth() >= 0)
-					{
-						depth = deqIT->Depth();
-					}
-					spaces.swap(std::wstring(depth, ' '));
-					outFile << spaces << itFunc->second.SignatureString() << std::endl;
-					outFile << spaces << boost::wformat(TEXT("Total time: %d\tProfiling Time: %d")) % deqIT->ItemRunTime().total_microseconds() % deqIT->ProfilingOverhead().total_microseconds() << std::endl;
-				}
-				deqIT++;
-			};
-			LeaveCriticalSection(&g_ThreadingCriticalSection);
-		}
-	}
-}
-
+// Edit this list to add in functions by name (anywhere in the function name)
+// or by the entire class.
 void Cprofilermain::AddCommonFunctions()
 {
-	g_FunctionNameSet->insert(TEXT("AddNumbers"));
+	/*g_ClassNameSet->insert(TEXT("System.Threading.Thread"));
+	g_ClassNameSet->insert(TEXT("System.Threading.ThreadStart"));
+	g_ClassNameSet->insert(TEXT("System.Threading.ThreadHelper"));*/
+	g_FunctionNameSet->insert(TEXT("AddNumbers"));/*
 	g_FunctionNameSet->insert(TEXT("Main"));
-	g_FunctionNameSet->insert(TEXT("Thread"));
-	g_FunctionNameSet->insert(TEXT("Start"));
-	g_FunctionNameSet->insert(TEXT(".ctor"));
-	g_FunctionNameSet->insert(TEXT(".cctor"));
+	g_FunctionNameSet->insert(TEXT("ThreadStart"));
+	g_FunctionNameSet->insert(TEXT("Start"));*/
+	//g_FunctionNameSet->insert(TEXT(".ctor"));
+	//g_FunctionNameSet->insert(TEXT(".cctor"));
 }
 
 STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleId, HRESULT hrStatus)
@@ -374,4 +383,197 @@ STDMETHODIMP Cprofilermain::ClassLoadFinished(ClassID classId, HRESULT hrStatus)
 	this->m_pICorProfilerInfo2->GetClassIDInfo(classId, &classModuleId, &classTypeDef);
 	g_MetadataHelpers->InjectFieldToModule(classModuleId, classTypeDef, std::wstring(L"test"));*/
 	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::RuntimeThreadSuspended(ThreadID threadId)
+{
+	TimerItem ti;
+	// For all other runtime suspensions we'd like to know
+	ti = TimerItem(m_CurrentSuspendReason, SUSPEND_START);
+
+	MAINCSENTER;
+	std::map<ThreadID, std::queue<StackItemBase*>>::iterator itStack = g_ThreadStackMap->find(threadId);
+
+	if (itStack != g_ThreadStackMap->end())
+	{
+		ti.AddThreadStackItem(itStack->second.back());
+	}
+	MAINCSLEAVE;
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::RuntimeThreadResumed(ThreadID threadId)
+{
+	TimerItem ti(m_CurrentSuspendReason, SUSPEND_END);
+	MAINCSENTER;
+	std::map<ThreadID, std::queue<StackItemBase*>>::iterator itStack = g_ThreadStackMap->find(threadId);
+
+	if (itStack != g_ThreadStackMap->end())
+	{
+		ti.AddThreadStackItem(itStack->second.back());
+	}
+	MAINCSLEAVE;
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::GarbageCollectionStarted(int cGenerations, BOOL generationCollected[], COR_PRF_GC_REASON reason)
+{
+	m_CurrentGCReason = reason;
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::GarbageCollectionFinished(void)
+{
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::RuntimeSuspendStarted(COR_PRF_SUSPEND_REASON suspendReason)
+{
+	m_IsRuntimeSuspended = TRUE;
+	m_CurrentSuspendReason = suspendReason;
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::RuntimeSuspendFinished(void)
+{
+	m_IsRuntimeSuspended = FALSE;
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::RuntimeSuspendAborted(void)
+{
+	m_IsRuntimeSuspended = FALSE;
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::RuntimeResumeStarted(void)
+{
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::RuntimeResumeFinished(void)
+{
+	return S_OK;
+}
+
+
+
+void Cprofilermain::WriteLogFile()
+{
+	//std::string fileName = ;
+	std::wstring fileName(str(boost::wformat(L"%d_%s.log") % m_ProcessId % m_ProcessName));
+	std::wofstream outFile(fileName);
+	if (outFile)
+	{
+		std::map<ThreadID, std::queue<StackItemBase*>>::iterator it;
+		std::locale loc("");
+		UINT_PTR highPart;
+		UINT_PTR lowPart;
+		UINT highPartParam;
+		UINT lowPartParam;
+		UINT highPartReturn;
+		UINT lowPartReturn;
+		outFile.imbue(std::locale(loc, new no_separator()));
+		std::map<FunctionID, FunctionInfo>::iterator itFunc;
+		std::wstring spaces;
+		std::wstring separator(80, '=');
+		outFile << separator << std::endl;
+		outFile << this->m_ProcessName << L" " << boost::wformat(L"%u") % this->m_ProcessId << std::endl;
+		outFile << separator << std::endl;
+		outFile << std::endl;
+		for (it = g_ThreadStackMap->begin();
+			it != g_ThreadStackMap->end();
+			it++)
+		{
+			int depth = 0;
+			int previousDepth = 0;
+			highPart = (0xFFFFFFFF00000000 & it->first) >> 32;
+			lowPart = 0x00000000FFFFFFFF & it->first;
+
+
+			EnterCriticalSection(&g_ThreadingCriticalSection);
+
+			std::deque<StackItemBase*>::const_iterator constIt;
+			std::deque<StackItemBase*>::iterator deqIT = it->second._Get_container()._Make_iter(constIt);
+
+			ThreadStackItem* threadStackItem = NULL;
+			try
+			{
+				threadStackItem = dynamic_cast<ThreadStackItem*>(*deqIT);
+			}
+			catch (std::bad_cast* e)
+			{
+				outFile << _T("Bad cast exception?");
+			}
+			outFile << separator << std::endl;
+			if (threadStackItem != NULL)
+			{
+				outFile << "Thread: " << threadStackItem->ThreadName() << boost::wformat(TEXT(" (0x%08x`%08x)")) % highPart % lowPart << std::endl;
+			}
+			else {
+				outFile << "Thread: " << boost::wformat(TEXT("0x%08x`%08x")) % highPart % lowPart << std::endl;
+			}
+			outFile << separator << std::endl;
+			outFile << std::endl;
+			ULONGLONG totalTime = 0;
+			ULONGLONG profilerTime = 0;
+
+			while (deqIT != it->second._Get_container().end())
+			{
+
+				FunctionStackItem* testItemConverted = NULL;
+				try
+				{
+					testItemConverted = dynamic_cast<FunctionStackItem*>(*deqIT);
+				}
+				catch (std::bad_cast* e)
+				{
+					outFile << _T("Bad cast exception?");
+				}
+
+				if (testItemConverted != NULL)
+				{
+					itFunc = g_FunctionSet->find(testItemConverted->FunctionId());
+
+					if (&itFunc != NULL && itFunc != g_FunctionSet->end())
+					{
+						if ((*deqIT)->Depth() >= 0)
+						{
+							depth = (*deqIT)->Depth();
+						}
+						spaces.swap(std::wstring(depth * 2, ' '));
+						outFile << spaces << itFunc->second.SignatureString();
+						if ((*deqIT)->LastReason() == TAIL)
+						{
+							outFile << _T(" !!TAIL CALL!! ");
+						}
+						outFile << std::endl;
+						if (testItemConverted->ParameterCount() != 0)
+						{
+							outFile << spaces;
+							for (ULONG i = 0; i < testItemConverted->ParameterCount(); i++)
+							{
+								highPartParam = (0xFFFFFFFF00000000 & testItemConverted->ItemStackParameters()[i]) >> 32;
+								lowPartParam = 0x00000000FFFFFFFF & testItemConverted->ItemStackParameters()[i];
+								outFile << "Parameter " << i << ": " << boost::wformat(TEXT("0x%08x`%08x")) % highPartParam % lowPartParam << " ";
+							}
+							outFile << std::endl;
+						}
+						highPartReturn = (0xFFFFFFFF00000000 & testItemConverted->ReturnValue()) >> 32;
+						lowPartReturn = 0x00000000FFFFFFFF & testItemConverted->ReturnValue();
+						outFile << spaces << "Return: " << boost::wformat(TEXT("0x%08x`%08x")) % highPartReturn % lowPartReturn << std::endl;
+						outFile << spaces << boost::wformat(TEXT("Total time: %uus\tProfiling Time: %uus")) % (*deqIT)->ItemRunTime() % (*deqIT)->ProfilingOverhead() << std::endl;
+						totalTime += (*deqIT)->ItemRunTime();
+						profilerTime += (*deqIT)->ProfilingOverhead();
+					}
+				}
+
+				deqIT++;
+			};
+			outFile << separator << std::endl;
+			outFile << boost::wformat(TEXT("Total time: %uus\tProfiling Time: %uus")) % totalTime % profilerTime << std::endl;
+			outFile << separator << std::endl;
+			LeaveCriticalSection(&g_ThreadingCriticalSection);
+		}
+	}
 }

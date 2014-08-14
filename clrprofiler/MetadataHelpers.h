@@ -1,6 +1,8 @@
 #ifndef METADATAHELPERS_H
 #define METADATAHELPERS_H
 #include "commonstructures.h"
+#include "FunctionInfo.h"
+#include "ParameterInfo.h"
 
 #define MAX_LENGTH 2048
 

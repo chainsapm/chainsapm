@@ -1,6 +1,7 @@
 #include "stdafx.h"
+
 #include "MetadataHelpers.h"
-#include "commonstructures.h"
+
 
 MetadataHelpers::MetadataHelpers()
 {
@@ -580,7 +581,6 @@ STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromFunction(FunctionID 
 
 STDMETHODIMP MetadataHelpers::GetCurrentThread(ThreadID* threadId)
 {
-	
 	return this->m_pICorProfilerInfo2->GetCurrentThreadID(threadId);
 }
 
@@ -655,4 +655,5 @@ STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromModule(ModuleID Modu
 	}
 	return E_FAIL;
 }
+
 

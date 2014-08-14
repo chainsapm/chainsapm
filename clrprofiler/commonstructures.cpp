@@ -61,7 +61,7 @@ TimerItem::~TimerItem()
 			}
 		}
 		else {
-			if (this->m_ThreadStackReason == EXIT | this->m_ThreadStackReason == TAIL)
+			if (this->m_ThreadStackReason == EXIT | this->m_ThreadStackReason == TAIL | this->m_ThreadStackReason == THREAD_END)
 			{
 				m_ThreadStackItem->UpdateLeaveTime();
 			}
@@ -81,4 +81,5 @@ void TimerItem::AddThreadStackItem(ThreadStackItem* stackItem)
 	this->m_ThreadStackItem->UpdateItemStackReason(this->m_ThreadStackReason);
 
 }
+
 

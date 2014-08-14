@@ -4,10 +4,21 @@
 
 #pragma once
 #include "resource.h"       // main symbols
+#include <cor.h>
 #include "CorProfilerCallbackImplementation.h"
+#include "MetadataHelpers.h"
+#include "commonstructures.h"
+#include "ThreadStackItem.h"
+#include "FunctionInfo.h"
+#include "TimerItem.h"
 #include "clrprofiler_i.h"
 
+#include <cor.h>
+#include <corprof.h>
 
+#define MAINCSENTER EnterCriticalSection(&g_ThreadingCriticalSection)
+#define MAINCSLEAVE LeaveCriticalSection(&g_ThreadingCriticalSection)
+	
 
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
@@ -60,12 +71,26 @@ public:
 	STDMETHOD(AppDomainCreationStarted)(AppDomainID appDomainId);
 	STDMETHOD(ThreadCreated)(ThreadID threadId);
 	STDMETHOD(ThreadDestroyed)(ThreadID threadId);
+	STDMETHOD(ThreadNameChanged)(ThreadID threadId, ULONG cchName, _In_reads_opt_(cchName) WCHAR name[]);
 	STDMETHOD(SetMask)();
 	STDMETHOD(GetFullMethodName)(FunctionID functionID, std::string *methodName, int cMethod);
 	STDMETHOD(GetFuncArgs)(FunctionID functionID, COR_PRF_FRAME_INFO frameinfo);
 	STDMETHOD(ModuleLoadStarted)(ModuleID moduleId);
 	STDMETHOD(ModuleLoadFinished)(ModuleID moduleId, HRESULT hrStatus);
 	STDMETHOD(ClassLoadFinished)(ClassID classId, HRESULT hrStatus);
+
+	STDMETHOD(GarbageCollectionStarted)(int cGenerations, BOOL generationCollected[], COR_PRF_GC_REASON reason);
+	STDMETHOD(GarbageCollectionFinished)(void);
+
+	STDMETHOD(RuntimeThreadSuspended)(ThreadID threadId);
+	STDMETHOD(RuntimeThreadResumed)(ThreadID threadId);
+
+	STDMETHOD(RuntimeSuspendStarted)(COR_PRF_SUSPEND_REASON suspendReason);
+	STDMETHOD(RuntimeSuspendFinished)(void);
+	STDMETHOD(RuntimeSuspendAborted)(void);
+	STDMETHOD(RuntimeResumeStarted)(void);
+	STDMETHOD(RuntimeResumeFinished)(void);
+
 	void WriteLogFile();
 	void AddCommonFunctions();
 
@@ -81,6 +106,11 @@ private:
 	// container for IL allocation
 	CComQIPtr<IMethodMalloc> m_pIMethodMalloc;
 	//std::map<FunctionID, FunctionInfo> m_FunctionInfoMap;
+	COR_PRF_SUSPEND_REASON m_CurrentSuspendReason;
+	COR_PRF_GC_REASON m_CurrentGCReason;
+	BOOL m_IsRuntimeSuspended;
+	std::wstring m_ProcessName;
+	DWORD m_ProcessId;
 	
 };
 

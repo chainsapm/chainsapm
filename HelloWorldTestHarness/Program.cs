@@ -16,6 +16,8 @@ namespace HelloWorldTestHarness
         }
         static void Main(string[] args)
         {
+            Console.ReadLine();
+            System.Threading.Thread.CurrentThread.Name = "Main";
             System.Console.WriteLine("Hello World!");
             //System.Collections.SortedList sList = new System.Collections.SortedList(System.Environment.GetEnvironmentVariables());
             //foreach (System.Collections.DictionaryEntry item in sList)
@@ -26,27 +28,31 @@ namespace HelloWorldTestHarness
             int b = 0x48484848;
 
             System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
+            GC.Collect(0);
             System.Console.WriteLine(AddNumbers(ref i, ref b));
+            GC.Collect(1);
             System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
+            GC.Collect(2);
             System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
-            System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
-            System.Console.WriteLine(AddNumbers(ref i, ref b));
-            System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
-            System.Console.WriteLine(AddNumbers(ref i, ref b));
-            System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
-            System.Console.WriteLine(AddNumbers(ref i, ref b));
             System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
             System.Console.WriteLine(AddNumbers(ref i, ref b));
             System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
             System.Console.WriteLine(AddNumbers(ref i, ref b));
+            System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
+            System.Console.WriteLine(AddNumbers(ref i, ref b));
+            System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
+            System.Console.WriteLine(AddNumbers(ref i, ref b));
+            System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
             System.Console.WriteLine(AddNumbers(ref i, ref b));
             System.Console.WriteLine(AddNumbers(ref i, ref b));
-            for (int f = 0; f < 20; f++)
+            System.Console.WriteLine(AddNumbers(ref i, ref b));
+            for (int f = 0; f < 1; f++)
             {
 
                 var t = new System.Threading.Thread(new System.Threading.ThreadStart(
                () =>
                {
+                   System.Threading.Thread.CurrentThread.Name = string.Format("Worker Thread {0}", f);
                    System.Console.WriteLine("Hello world from another thread!");
                    System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
                    System.Console.WriteLine(AddNumbers(ref i, ref b));

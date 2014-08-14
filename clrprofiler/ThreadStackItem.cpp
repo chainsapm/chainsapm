@@ -1,101 +1,173 @@
 #pragma once
 #include "stdafx.h"
-#include "commonstructures.h"
+#include "ThreadStackItem.h"
 
 
-
-ThreadStackItem::ThreadStackItem()
+// Default constructor for Thread Stack Item
+StackItemBase::StackItemBase()
 {
-
-}
-ThreadStackItem::ThreadStackItem(ThreadID tid, FunctionID funcId, ThreadStackReason reason, byte* byteData)
-{
-	this->m_ThreadID = tid;
-	this->m_FunctionID = funcId;
-	this->m_LastReason = reason;
-	this->m_EnterTime = boost::posix_time::microsec_clock::universal_time();
-	this->m_GCReasons = std::vector<COR_PRF_GC_REASON>();
+	QueryPerformanceCounter(&this->m_EnterTime);
+	this->m_GCReasons = std::vector<GC_REASON>();
 	this->m_SuspensionReasons = std::vector<COR_PRF_SUSPEND_REASON>();
+	m_StartWallTime = boost::posix_time::second_clock::universal_time();
 }
 
 
-ThreadStackItem::~ThreadStackItem()
+StackItemBase::~StackItemBase()
 {
 	this->m_GCReasons.empty();
 	this->m_SuspensionReasons.empty();
 }
 
-ThreadID ThreadStackItem::ItemThreadID()
+
+
+
+ULONGLONG StackItemBase::ItemStartTime()
 {
-	return this->m_ThreadID;
+	return this->m_EnterTime.QuadPart;
 }
 
-FunctionID ThreadStackItem::ItemFunctionID()
-{
-	return this->m_FunctionID;
-}
-
-
-boost::posix_time::ptime ThreadStackItem::ItemStartTime()
-{
-	return this->m_EnterTime;
-}
-
-void ThreadStackItem::UpdateItemStackReason(ThreadStackReason stackReason)
+void StackItemBase::UpdateItemStackReason(ThreadStackReason stackReason)
 {
 	this->m_LastReason = stackReason;
 }
 
-byte* ThreadStackItem::ItemStackParameters()
+
+
+ULONGLONG StackItemBase::GCSuspensionTime()
 {
-	return this->m_RawParameterData;
+	//this->m_GarbageCollectionTotal = m_GarbageCollectionTimeEnd.QuadPart - m_GarbageCollectionTimeStart.QuadPart;
+	return this->m_GarbageCollectionTotal;
 }
 
-void ThreadStackItem::ItemStackReturnValue(byte* input)
+ULONGLONG StackItemBase::OtherSuspensionTime()
 {
-	this->m_RawReturnData = input;
-}
-
-boost::posix_time::time_duration ThreadStackItem::GCSuspensionTime()
-{
-	this->m_GarbageCollectionTotal = m_GarbageCollectionTimeEnd - m_GarbageCollectionTimeStart;
+	//this->m_SuspensionTotal = m_RuntimeSuspensionEnd.QuadPart - m_RuntimeSuspensionStart.QuadPart;
 	return this->m_SuspensionTotal;
 }
 
-boost::posix_time::time_duration ThreadStackItem::OtherSuspensionTime()
-{
-	this->m_SuspensionTotal = m_RuntimeSuspensionEnd - m_RuntimeSuspensionStart;
-	return this->m_SuspensionTotal;
-}
-
-boost::posix_time::time_duration ThreadStackItem::ItemRunTime()
+ULONGLONG StackItemBase::ItemRunTime()
 {
 	//this->m_ItemTotal = m_LeaveTime - m_EnterTime;
 	return this->m_ItemTotal;
 }
 
-void ThreadStackItem::UpdateLeaveTime()
+void StackItemBase::UpdateLeaveTime()
 {
-	this->m_ItemTotal = boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time()
-		- this->m_EnterTime);
+	LARGE_INTEGER leaveTime;
+	QueryPerformanceCounter(&leaveTime);
+	this->m_ItemTotal = leaveTime.QuadPart - this->m_EnterTime.QuadPart;
 }
 
-boost::posix_time::time_duration ThreadStackItem::ProfilingOverhead()
+ULONGLONG StackItemBase::ProfilingOverhead()
 {
 	return this->m_ProfilingOverheadTotal;
 }
 
-int ThreadStackItem::Depth()
+int StackItemBase::Depth()
 {
 	return this->m_Depth;
 }
 
-void ThreadStackItem::Depth(int depth)
+void StackItemBase::Depth(int depth)
 {
 	this->m_Depth = depth;
 }
 
-const ThreadStackReason& ThreadStackItem::LastReason()
+const ThreadStackReason& StackItemBase::LastReason()
 {
 	return this->m_LastReason;
+}
+
+void StackItemBase::PolyDummy()
+{
+
+}
+
+FunctionStackItem::FunctionStackItem(FunctionID funcId, ThreadStackReason reason, const COR_PRF_FUNCTION_ARGUMENT_INFO& byteData)
+{
+	this->m_FunctionID = funcId;
+	this->m_LastReason = reason;
+
+	if (byteData.numRanges != 0)
+	{
+		this->m_ParameterInfo = COR_PRF_FUNCTION_ARGUMENT_INFO(byteData);
+		for (ULONG parameterCount = 0; parameterCount < this->m_ParameterInfo.numRanges; parameterCount++)
+		{
+			this->m_ParameterRanges[parameterCount]
+				= COR_PRF_FUNCTION_ARGUMENT_RANGE(byteData.ranges[parameterCount]);
+			if (this->m_ParameterRanges[parameterCount].startAddress != NULL)
+			{
+				this->m_ParameterValues[parameterCount]
+					= *(UINT_PTR*)this->m_ParameterRanges[parameterCount].startAddress;
+			}
+		}
+	}
+}
+
+
+const ULONG FunctionStackItem::ParameterCount()
+{
+	return this->m_ParameterInfo.numRanges;
+
+}
+const UINT_PTR* FunctionStackItem::ItemStackParameters()
+{
+	return this->m_ParameterValues;
+}
+
+void FunctionStackItem::ReturnValue(const COR_PRF_FUNCTION_ARGUMENT_RANGE& input)
+{
+	if (input.startAddress != NULL)
+	{
+		this->m_ReturnData = *(UINT_PTR*)input.startAddress;
+	}
+
+}
+
+const UINT_PTR& FunctionStackItem::ReturnValue()
+{
+	return m_ReturnData;
+
+}
+
+const FunctionID FunctionStackItem::FunctionId()
+{
+	return this->m_FunctionID;
+}
+
+
+
+// Generic runtime suspension creation
+RuntimeSuspensionStackItem::RuntimeSuspensionStackItem(COR_PRF_SUSPEND_REASON suspensionReason) : StackItemBase()
+{
+	this->m_SuspensionReasons.push_back(suspensionReason);
+}
+
+// Generic garbage collection suspension creation
+GarbageCollectionStackItem::GarbageCollectionStackItem(COR_PRF_GC_REASON suspensionReason, int maxGenerationCollected) : StackItemBase()
+{
+	this->m_GCReasons.push_back(GC_REASON(suspensionReason, maxGenerationCollected));
+}
+
+ThreadStackItem::ThreadStackItem(ThreadID threadId, ThreadStackReason reason) : StackItemBase()
+{
+	this->m_ThreadID = threadId;
+	this->m_LastReason = reason;
+	//this->m_ThreadName.assign(ThreadName);
+}
+
+const std::wstring& ThreadStackItem::ThreadName()
+{
+	return this->m_ThreadName;
+}
+
+void ThreadStackItem::ThreadName(const std::wstring& threadName)
+{
+	this->m_ThreadName.assign(threadName);
+}
+
+const ThreadID ThreadStackItem::ThreadId()
+{
+	return this->m_ThreadID;
 }

@@ -307,14 +307,18 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="commonstructures.h" />
     <ClInclude Include="CorProfilerCallbackImplementation.h" />
     <ClInclude Include="dllmain.h" />
+    <ClInclude Include="FunctionInfo.h" />
     <ClInclude Include="ILFactory.h" />
     <ClInclude Include="MetadataHelpers.h" />
+    <ClInclude Include="ParameterInfo.h" />
     <ClInclude Include="profilermain.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ICorProlfileInfoCallbacks.hpp" />
     <ClInclude Include="static_il_bodies.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="ThreadStackItem.h" />
+    <ClInclude Include="TimerItem.h" />
     <ClInclude Include="xdlldata.h" />
   </ItemGroup>
   <ItemGroup>
