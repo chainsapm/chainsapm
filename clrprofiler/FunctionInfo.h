@@ -36,6 +36,9 @@ public:
 	const std::vector<ParameterInfo>& Parameters();
 	void AddParameters(const ParameterInfo& addParameter);
 
+	const BOOL IsStatic();
+	void IsStatic(BOOL);
+
 private:
 	std::wstring m_ClassName;
 	std::wstring m_FunctionName;
@@ -45,6 +48,7 @@ private:
 	std::wstring m_SignatureString;
 	std::wstring m_CallingConvention;
 	std::vector<ParameterInfo> m_Parameters;
+	BOOL m_IsStatic;
 };
 
 

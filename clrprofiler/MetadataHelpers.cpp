@@ -221,6 +221,7 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Function
 			// Is the method static ?
 			//
 			(isStatic) = (BOOL)((methodAttr & mdStatic) != 0);
+			funcInfo->IsStatic(isStatic);
 
 			//
 			// Make sure we have a method signature.

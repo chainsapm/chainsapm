@@ -107,3 +107,13 @@ void FunctionInfo::AddParameters(const ParameterInfo& addParameter)
 {
 	this->m_Parameters.push_back(*new ParameterInfo(addParameter));
 }
+
+const BOOL FunctionInfo::IsStatic()
+{
+	return this->m_IsStatic;
+}
+
+void FunctionInfo::IsStatic(BOOL isStatic)
+{
+	this->m_IsStatic = isStatic;
+}

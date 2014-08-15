@@ -551,11 +551,19 @@ void Cprofilermain::WriteLogFile()
 						if (testItemConverted->ParameterCount() != 0)
 						{
 							outFile << spaces;
-							for (ULONG i = 0; i < testItemConverted->ParameterCount(); i++)
+							for (ULONG i = 0, paramNumber = 1; i < testItemConverted->ParameterCount(); i++, paramNumber++)
 							{
 								highPartParam = (0xFFFFFFFF00000000 & testItemConverted->ItemStackParameters()[i]) >> 32;
 								lowPartParam = 0x00000000FFFFFFFF & testItemConverted->ItemStackParameters()[i];
-								outFile << "Parameter " << i << ": " << boost::wformat(TEXT("0x%08x`%08x")) % highPartParam % lowPartParam << " ";
+								if (itFunc->second.IsStatic() == FALSE && i == 0)
+								{
+									outFile << "Class Pointer: ";
+									paramNumber--;
+								}
+								else {
+									outFile << "Parameter " << paramNumber << ": ";
+								}
+								outFile << boost::wformat(TEXT("0x%08x`%08x")) % highPartParam % lowPartParam << " ";
 							}
 							outFile << std::endl;
 						}
