@@ -50,4 +50,6 @@
 
 //#include <boost/thread.hpp>
 
-
+#define __STR2__(x) #x
+#define __STR1__(x) __STR2__(x)
+#define __TODO__ __FILE__ "("__STR1__(__LINE__)") : warning TODO: "

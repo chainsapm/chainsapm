@@ -19,7 +19,7 @@ Cprofilermain::Cprofilermain()
 	g_ThreadStackMap = new std::map<ThreadID, std::queue<StackItemBase*>>();
 	g_FunctionNameSet = new std::unordered_set<std::wstring>();
 	g_ClassNameSet = new std::unordered_set<std::wstring>();
-	g_ThreadStackDepth = new std::map<ThreadID, int>();
+	g_ThreadStackDepth = new std::map<ThreadID, volatile unsigned int>();
 	if (g_InstanceMap == NULL)
 	{
 		g_InstanceMap = new std::map<DWORD, Cprofilermain*>();
@@ -177,12 +177,15 @@ STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 {
 	TimerItem firstTimer(THREAD_START);
 	ThreadStackItem firstItem = ThreadStackItem(threadId, THREAD_START);
+#pragma message(__TODO__"Add and or change the critical section to use something more specific.")
 	MAINCSENTER;
 	g_ThreadStackMap->insert(std::pair<ThreadID, std::queue<StackItemBase*>>(threadId, std::queue<StackItemBase*>()));
 	firstTimer.AddThreadStackItem(&firstItem);
 	//g_ThreadStackMap->at(threadId)->push(new StackItemBase(firstItem));
+#pragma message(__TODO__"Add and or change the critical section to use something more specific.")
 	g_ThreadStackMap->at(threadId).push(new ThreadStackItem(firstItem));
-	g_ThreadStackDepth->insert(std::pair<ThreadID, int>(threadId, 0));
+#pragma message(__TODO__"Add and or change the critical section to use something more specific.")
+	g_ThreadStackDepth->insert(std::pair<ThreadID, volatile unsigned int>(threadId, 0));
 	MAINCSLEAVE;
 	return S_OK;
 }
@@ -191,6 +194,7 @@ STDMETHODIMP Cprofilermain::ThreadDestroyed(ThreadID threadId)
 {
 	TimerItem lastTimer(THREAD_END);
 	MAINCSENTER;
+#pragma message(__TODO__"Add and or change the critical section to use something more specific.")
 	std::map<ThreadID, std::queue<StackItemBase*>>::iterator itStack = g_ThreadStackMap->find(threadId);
 	if (itStack != g_ThreadStackMap->end())
 	{
@@ -205,6 +209,7 @@ STDMETHODIMP Cprofilermain::ThreadDestroyed(ThreadID threadId)
 STDMETHODIMP Cprofilermain::ThreadNameChanged(ThreadID threadId, ULONG cchName, _In_reads_opt_(cchName) WCHAR name[])
 {
 	MAINCSENTER;
+#pragma message(__TODO__"Add and or change the critical section to use something more specific.")
 	std::map<ThreadID, std::queue<StackItemBase*>>::iterator itStack = g_ThreadStackMap->find(threadId);
 	if (itStack != g_ThreadStackMap->end())
 	{
@@ -225,6 +230,7 @@ STDMETHODIMP Cprofilermain::ThreadNameChanged(ThreadID threadId, ULONG cchName, 
 			testItemConverted->ThreadName(name);
 		}
 	}
+#pragma message(__TODO__"Add and or change the critical section to use something more specific.")
 	MAINCSLEAVE;
 	return S_OK;
 }
