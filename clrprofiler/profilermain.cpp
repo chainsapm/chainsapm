@@ -223,6 +223,7 @@ STDMETHODIMP Cprofilermain::ThreadNameChanged(ThreadID threadId, ULONG cchName, 
 		}
 		catch (std::bad_cast* e)
 		{
+			e->what();
 		}
 
 		if (testItemConverted != NULL)
@@ -509,7 +510,8 @@ void Cprofilermain::WriteLogFile()
 			}
 			catch (std::bad_cast* e)
 			{
-				outFile << _T("Bad cast exception?");
+				
+				outFile << e->what();
 			}
 			outFile << separator << std::endl;
 			if (threadStackItem != NULL)
@@ -534,7 +536,7 @@ void Cprofilermain::WriteLogFile()
 				}
 				catch (std::bad_cast* e)
 				{
-					outFile << _T("Bad cast exception?");
+					outFile << e->what();
 				}
 
 				if (testItemConverted != NULL)
