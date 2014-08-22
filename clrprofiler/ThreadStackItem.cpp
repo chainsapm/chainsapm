@@ -19,7 +19,7 @@ StackItemBase::~StackItemBase()
 	this->m_SuspensionReasons.empty();
 }
 
-int StackItemBase::SequenceNumber()
+int StackItemBase::SequenceNumber() const
 {
 	return this->m_SequenceNumber;
 }
@@ -30,7 +30,7 @@ void StackItemBase::SequenceNumber(int seqNumber)
 }
 
 
-ULONGLONG StackItemBase::ItemStartTime()
+ULONGLONG StackItemBase::ItemStartTime() const
 {
 	return this->m_EnterTime.QuadPart;
 }
@@ -42,19 +42,19 @@ void StackItemBase::UpdateItemStackReason(ThreadStackReason stackReason)
 
 
 
-ULONGLONG StackItemBase::GCSuspensionTime()
+ULONGLONG StackItemBase::GCSuspensionTime() const
 {
 	//this->m_GarbageCollectionTotal = m_GarbageCollectionTimeEnd.QuadPart - m_GarbageCollectionTimeStart.QuadPart;
 	return this->m_GarbageCollectionTotal;
 }
 
-ULONGLONG StackItemBase::OtherSuspensionTime()
+ULONGLONG StackItemBase::OtherSuspensionTime() const
 {
 	//this->m_SuspensionTotal = m_RuntimeSuspensionEnd.QuadPart - m_RuntimeSuspensionStart.QuadPart;
 	return this->m_SuspensionTotal;
 }
 
-ULONGLONG StackItemBase::ItemRunTime()
+ULONGLONG StackItemBase::ItemRunTime() const
 {
 	//this->m_ItemTotal = m_LeaveTime - m_EnterTime;
 	return this->m_ItemTotal;
@@ -67,12 +67,12 @@ void StackItemBase::UpdateLeaveTime()
 	this->m_ItemTotal = leaveTime.QuadPart - this->m_EnterTime.QuadPart;
 }
 
-ULONGLONG StackItemBase::ProfilingOverhead()
+ULONGLONG StackItemBase::ProfilingOverhead() const
 {
 	return this->m_ProfilingOverheadTotal;
 }
 
-int StackItemBase::Depth()
+int StackItemBase::Depth() const
 {
 	return this->m_Depth;
 }
@@ -114,12 +114,12 @@ FunctionStackItem::FunctionStackItem(FunctionID funcId, ThreadStackReason reason
 }
 
 
-const ULONG FunctionStackItem::ParameterCount()
+ULONG FunctionStackItem::ParameterCount() const
 {
 	return this->m_ParameterInfo.numRanges;
 
 }
-const UINT_PTR* FunctionStackItem::ItemStackParameters()
+const UINT_PTR* FunctionStackItem::ItemStackParameters() const
 {
 	return this->m_ParameterValues;
 }
@@ -133,13 +133,13 @@ void FunctionStackItem::ReturnValue(const COR_PRF_FUNCTION_ARGUMENT_RANGE& input
 
 }
 
-const UINT_PTR& FunctionStackItem::ReturnValue()
+UINT_PTR FunctionStackItem::ReturnValue() const
 {
 	return m_ReturnData;
 
 }
 
-const FunctionID FunctionStackItem::FunctionId()
+FunctionID FunctionStackItem::FunctionId() const
 {
 	return this->m_FunctionID;
 }
@@ -165,7 +165,7 @@ ThreadStackItem::ThreadStackItem(ThreadID threadId, ThreadStackReason reason) : 
 	//this->m_ThreadName.assign(ThreadName);
 }
 
-const std::wstring& ThreadStackItem::ThreadName()
+const std::wstring& ThreadStackItem::ThreadName() const
 {
 	return this->m_ThreadName;
 }
@@ -175,7 +175,7 @@ void ThreadStackItem::ThreadName(const std::wstring& threadName)
 	this->m_ThreadName.assign(threadName);
 }
 
-const ThreadID ThreadStackItem::ThreadId()
+ThreadID ThreadStackItem::ThreadId() const
 {
 	return this->m_ThreadID;
 }

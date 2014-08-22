@@ -1,6 +1,7 @@
 #pragma once
 #include "commonstructures.h"
 
+// Base item entry for all stack objects. This provides a consistent way to access the data.
 class StackItemBase
 {
 	
@@ -15,17 +16,26 @@ public:
 	void UpdateItemStackReason(ThreadStackReason);
 	const ThreadStackReason& LastReason();
 
-	int Depth();
+	// Gets the current stack depth. Used primarily for stack recreation.
+	int Depth() const;
+	// Sets the current stack depth.
 	void Depth(int depth);
 
-	int SequenceNumber();
+	// Gets the sequence number of the stack item. Used for identification when rebuilding the stack.
+	int SequenceNumber() const;
+	// Sets the sequence number of the stack item.
 	void SequenceNumber(int seqNumber);
 
-	ULONGLONG ItemRunTime();
-	ULONGLONG GCSuspensionTime();
-	ULONGLONG OtherSuspensionTime();
-	ULONGLONG ProfilingOverhead();
-	ULONGLONG ItemStartTime();
+	// Total calculated run time of this stack item.
+	ULONGLONG ItemRunTime() const;
+	// Total calculated GC caused suspension time of this stack item.
+	ULONGLONG GCSuspensionTime() const;
+	// Total calculated suspension time of this stack item. Does not include GC.
+	ULONGLONG OtherSuspensionTime() const;
+	// Total calculated overhead added by the profiler.
+	ULONGLONG ProfilingOverhead() const;
+	// The GMT wall clock time of this item start
+	ULONGLONG ItemStartTime() const;
 	
 
 protected:
@@ -57,29 +67,27 @@ protected:
 	/* 
 	Flag to tell the Network Client to send data. 
 	The idea is that it's always false until something updates the times or other properties at that time it will be set to true
-	and the network client will update the field to false
+	and the network client will update the field to false.
 	*/
 	BOOL m_NeedsToBeSent; 
-
-
-
 
 	int m_Depth;
 };
 
+// Defines a terse version of a function on the stack. The pointers are used to look up more verbose information.
 class FunctionStackItem : public StackItemBase
 {
 public:
 
 	FunctionStackItem(FunctionID, ThreadStackReason, const COR_PRF_FUNCTION_ARGUMENT_INFO& byteData);
 	// Array of parameters
-	const UINT_PTR* ItemStackParameters();
+	const UINT_PTR* ItemStackParameters() const;
 
 	void ReturnValue(const COR_PRF_FUNCTION_ARGUMENT_RANGE& input);
-	const UINT_PTR& ReturnValue();
+	UINT_PTR ReturnValue() const;
 	// Count of parameters
-	const ULONG ParameterCount();
-	const FunctionID FunctionId();
+	ULONG ParameterCount() const;
+	FunctionID FunctionId() const;
 private:
 	COR_PRF_FUNCTION_ARGUMENT_INFO m_ParameterInfo;
 	COR_PRF_FUNCTION_ARGUMENT_RANGE m_ParameterRanges[255];
@@ -89,19 +97,21 @@ private:
 
 };
 
+// This class defines the "header" or first item in the thread stack
 class ThreadStackItem : public StackItemBase
 {
 public:
 	ThreadStackItem(ThreadID threadId, ThreadStackReason reason);
 	// Thread name getter and setter
-	const std::wstring& ThreadName();
+	const std::wstring& ThreadName() const;
 	void ThreadName(const std::wstring&);
-	const ThreadID ThreadId();
+	ThreadID ThreadId() const;
 private:
 	std::wstring m_ThreadName;
 	ThreadID m_ThreadID;
 };
 
+// A notification stack item that is used in suspension calculation
 class RuntimeSuspensionStackItem : public StackItemBase
 {
 public:
@@ -109,11 +119,12 @@ public:
 	COR_PRF_SUSPEND_REASON SuspensionReason;
 };
 
+// A notification stack item that is used in GC caused suspension calculation
 class GarbageCollectionStackItem : public StackItemBase
 {
 public:
 	GarbageCollectionStackItem(COR_PRF_GC_REASON suspensionReason, int maxGenerationCollected);
-	GC_REASON GetGCReason();
+	GC_REASON GetGCReason() const;
 private:
 	COR_PRF_GC_REASON m_GCReason;
 	int m_MaxGenerationsCollected;
