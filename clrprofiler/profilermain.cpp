@@ -3,8 +3,9 @@
 #include "stdafx.h"
 #include "ICorProlfileInfoCallbacks.hpp"
 #include "profilermain.h"
+#include "NetworkClient.h"
 
-struct no_separator : std::numpunct<char> {
+struct no_separator : std::numpunct < char > {
 protected:
 	virtual std::string do_grouping() const
 	{
@@ -15,11 +16,14 @@ protected:
 
 Cprofilermain::Cprofilermain()
 {
+	
 	g_FunctionSet = new std::map<FunctionID, FunctionInfo>();
 	g_ThreadStackMap = new std::map<ThreadID, std::queue<StackItemBase*>>();
 	g_FunctionNameSet = new std::unordered_set<std::wstring>();
 	g_ClassNameSet = new std::unordered_set<std::wstring>();
 	g_ThreadStackDepth = new std::map<ThreadID, volatile unsigned int>();
+	g_ThreadStackSequence = new std::map<ThreadID, volatile unsigned int>();
+
 	if (g_InstanceMap == NULL)
 	{
 		g_InstanceMap = new std::map<DWORD, Cprofilermain*>();
@@ -36,8 +40,7 @@ Cprofilermain::Cprofilermain()
 		lastItem.assign(item);
 	}
 	this->m_ProcessName.assign(lastItem);
-	
-	
+	m_NetworkClient = new NetworkClient(this, TEXT("localhost"), TEXT("5600"));
 	InitializeCriticalSection(&g_ThreadingCriticalSection);
 }
 
@@ -186,6 +189,7 @@ STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 	g_ThreadStackMap->at(threadId).push(new ThreadStackItem(firstItem));
 #pragma message(__TODO__"Add and or change the critical section to use something more specific.")
 	g_ThreadStackDepth->insert(std::pair<ThreadID, volatile unsigned int>(threadId, 0));
+	g_ThreadStackSequence->insert(std::pair<ThreadID, volatile unsigned int>(threadId, 0));
 	MAINCSLEAVE;
 	return S_OK;
 }
@@ -510,7 +514,7 @@ void Cprofilermain::WriteLogFile()
 			}
 			catch (std::bad_cast* e)
 			{
-				
+
 				outFile << e->what();
 			}
 			outFile << separator << std::endl;

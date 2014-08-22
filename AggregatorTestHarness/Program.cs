@@ -10,6 +10,8 @@ namespace AggregatorTestHarness
     {
         static void Main(string[] args)
         {
+            new aggregator.Listener.Listener();
+            Console.ReadLine();
         }
     }
 }

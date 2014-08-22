@@ -7,9 +7,6 @@ class StackItemBase
 public:
 	friend class TimerItem;
 	
-	
-	
-	
 	StackItemBase();
 	~StackItemBase();
 
@@ -20,6 +17,9 @@ public:
 
 	int Depth();
 	void Depth(int depth);
+
+	int SequenceNumber();
+	void SequenceNumber(int seqNumber);
 
 	ULONGLONG ItemRunTime();
 	ULONGLONG GCSuspensionTime();
@@ -32,6 +32,7 @@ protected:
 	void UpdateLeaveTime();
 	void virtual PolyDummy();
 	boost::posix_time::ptime m_StartWallTime;
+	int m_SequenceNumber;
 	LARGE_INTEGER m_EnterTime;
 	LARGE_INTEGER m_LeaveTime;
 	
@@ -52,6 +53,14 @@ protected:
 
 	std::vector<GC_REASON> m_GCReasons;
 	std::vector<COR_PRF_SUSPEND_REASON> m_SuspensionReasons;
+
+	/* 
+	Flag to tell the Network Client to send data. 
+	The idea is that it's always false until something updates the times or other properties at that time it will be set to true
+	and the network client will update the field to false
+	*/
+	BOOL m_NeedsToBeSent; 
+
 
 
 

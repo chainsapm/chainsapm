@@ -19,7 +19,7 @@ namespace aggregator
 
         protected override void OnStart(string[] args)
         {
-            new Listener.Listener();
+            new aggregator.Listener.Listener();
         }
 
         protected override void OnStop()

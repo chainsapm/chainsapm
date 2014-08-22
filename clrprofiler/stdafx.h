@@ -42,11 +42,9 @@
 // Boost Libraries
 #include <boost/date_time.hpp>
 #include <boost/format.hpp>
-//#include <boost/exception/all.hpp>
-//#pragma comment(lib, "libboost_system-vc120-mt-gd-1_55.lib")
-//#pragma comment(lib, "libboost_thread-vc120-mt-gd-1_55.lib")
-//#pragma comment(lib, "libboost_exception-vc120-mt-gd-1_55.lib")
 #pragma comment(lib, "corguids.lib")
+#pragma comment(lib, "Ws2_32.lib")
+
 
 //#include <boost/thread.hpp>
 

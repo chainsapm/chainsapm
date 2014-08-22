@@ -12,13 +12,14 @@
 #include "FunctionInfo.h"
 #include "TimerItem.h"
 #include "clrprofiler_i.h"
-
+//#include "NetworkClient.h"
 #include <cor.h>
 #include <corprof.h>
 
 #define MAINCSENTER EnterCriticalSection(&g_ThreadingCriticalSection)
 #define MAINCSLEAVE LeaveCriticalSection(&g_ThreadingCriticalSection)
-	
+
+class NetworkClient;
 
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
@@ -91,6 +92,8 @@ public:
 	STDMETHOD(RuntimeResumeStarted)(void);
 	STDMETHOD(RuntimeResumeFinished)(void);
 
+	
+
 	void WriteLogFile();
 	void AddCommonFunctions();
 
@@ -111,9 +114,36 @@ private:
 	BOOL m_IsRuntimeSuspended;
 	std::wstring m_ProcessName;
 	DWORD m_ProcessId;
+	NetworkClient *m_NetworkClient = NULL;
 	
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(profilermain), Cprofilermain)
+
+class NetworkClient
+{
+public:
+	NetworkClient(Cprofilermain *profMain, std::wstring hostName, std::wstring port);
+	~NetworkClient();
+	static SOCKET m_SocketConnection;
+
+private:
+	// Create a singleton socket so we can control what happens if this
+	// class is instantiated more than once.
+
+	std::wstring m_HostName;
+	std::wstring m_HostPort;
+	// This is the main loop that will be used for sending and receving data. When a call comes in we will have a callback to a correct processor
+	void ControllerLoop();
+public:
+	// Start the network client when we're ready.
+	void Start();
+	HRESULT SendData(const char& packet);
+	HRESULT RecvData(char& packet);
+	LPWSAOVERLAPPED_COMPLETION_ROUTINE m_DataSent;
+	LPWSAOVERLAPPED_COMPLETION_ROUTINE m_DataReceived;
+};
+
+
 
 #endif

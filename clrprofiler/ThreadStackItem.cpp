@@ -19,7 +19,15 @@ StackItemBase::~StackItemBase()
 	this->m_SuspensionReasons.empty();
 }
 
+int StackItemBase::SequenceNumber()
+{
+	return this->m_SequenceNumber;
+}
 
+void StackItemBase::SequenceNumber(int seqNumber)
+{
+	this->m_SequenceNumber = seqNumber;
+}
 
 
 ULONGLONG StackItemBase::ItemStartTime()

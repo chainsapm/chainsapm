@@ -50,6 +50,9 @@
     <Filter Include="IL Rewriting\Factory Class">
       <UniqueIdentifier>{93825141-6d0f-4774-b6b2-cd34e988a1f7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Network Client">
+      <UniqueIdentifier>{a4e23f61-673d-4da0-8588-c259badd8510}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clrprofiler_i.c">
@@ -96,6 +99,9 @@
     </ClCompile>
     <ClCompile Include="ILFactory.cpp">
       <Filter>IL Rewriting\Factory Class</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkClient.cpp">
+      <Filter>Network Client</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -149,6 +155,9 @@
     </ClInclude>
     <ClInclude Include="TimerItem.h">
       <Filter>Common Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkClient.h">
+      <Filter>Network Client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

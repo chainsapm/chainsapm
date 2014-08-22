@@ -18,6 +18,8 @@ std::map<FunctionID, FunctionInfo> * g_FunctionSet = NULL;
 std::map<ThreadID, std::queue<StackItemBase*>> * g_ThreadStackMap = NULL;
 // Holds the current depth of the stack based on the Enter / Leave / Tail calls
 std::map<ThreadID, volatile unsigned int> * g_ThreadStackDepth = NULL;
+// Holds the current sequence of the stack items
+std::map<ThreadID, volatile unsigned int> * g_ThreadStackSequence = NULL;
 // Holds the current number of functions that we've entered and exited. This will be used to stop
 // further additions to the stack. This really won't change performance too drastically, however it
 // will allow us to save memory
@@ -100,6 +102,7 @@ namespace StaticProfilerMethods
 				// Causes and update to this map and can be called from multiple threads.
 				EnterCriticalSection(&g_ThreadingCriticalSection);
 				g_FunctionSet->insert(std::pair<FunctionID, FunctionInfo>(funcId, funcInfo));
+				
 				LeaveCriticalSection(&g_ThreadingCriticalSection);
 				*pbHookFunction = TRUE;
 			}
@@ -155,6 +158,7 @@ namespace StaticProfilerMethods
 				
 				FunctionStackItem tsi(funcId, ThreadStackReason::ENTER, *argumentInfo);
 				tsi.Depth(g_ThreadStackDepth->at(threadId));
+				tsi.SequenceNumber(g_ThreadStackSequence->at(threadId));
 				ti.AddThreadStackItem(&tsi);
 				// We *shouldn't* need to lock this as only one thread can act on this list.
 				itStack->second.push(new FunctionStackItem(tsi));
@@ -162,6 +166,7 @@ namespace StaticProfilerMethods
 				{
 					// use the MS way of incrementing a mapped value
 					InterlockedIncrement(&g_ThreadStackDepth->at(threadId));
+					InterlockedIncrement(&g_ThreadStackSequence->at(threadId));
 					//g_ThreadStackDepth->at(threadId)++;
 				}
 			}
