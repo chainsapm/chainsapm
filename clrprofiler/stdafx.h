@@ -38,6 +38,8 @@
 #include <iostream>
 #include <fstream> 
 #include <locale>
+#include <memory>
+#include <allocators>
 
 // Boost Libraries
 #include <boost/date_time.hpp>

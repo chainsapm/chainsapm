@@ -28,9 +28,13 @@ void CALLBACK DataSent(
 {
 
 }
-
+/**
+*
+*
+*/
 NetworkClient::NetworkClient(Cprofilermain *profMain, std::wstring hostName, std::wstring port)
 {
+	
 	this->m_HostName.assign(hostName);
 	this->m_HostPort.assign(port);
 

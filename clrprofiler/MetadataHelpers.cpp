@@ -286,7 +286,7 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Function
 					DWORD cplusTypeFlags;
 					WCHAR szParamName[MAX_LENGTH];
 					ULONG szParamNameLen;
-					UVCP_CONSTANT constVal = new UVCP_CONSTANT();
+					UVCP_CONSTANT constVal;
 					ULONG constValueLen;
 
 					_MetaDataImport->GetParamForMethodIndex(funcToken, i + 1, &paramDef);
@@ -306,7 +306,6 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Function
 					paramInfo.ParameterName(szParamName);
 					funcInfo->AddParameters(paramInfo);
 
-					delete constVal;
 
 				}
 			}
@@ -582,7 +581,23 @@ STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromFunction(FunctionID 
 
 STDMETHODIMP MetadataHelpers::GetCurrentThread(ThreadID* threadId)
 {
-	return this->m_pICorProfilerInfo2->GetCurrentThreadID(threadId);
+	if (this->m_pICorProfilerInfo4.p != NULL)
+	{
+		return this->m_pICorProfilerInfo4->GetCurrentThreadID(threadId);
+	}
+	else if (this->m_pICorProfilerInfo4.p == NULL && this->m_pICorProfilerInfo3.p != NULL)
+	{
+		return this->m_pICorProfilerInfo3->GetCurrentThreadID(threadId);
+	}
+	else if (this->m_pICorProfilerInfo3.p == NULL && this->m_pICorProfilerInfo2.p != NULL)
+	{
+		return this->m_pICorProfilerInfo2->GetCurrentThreadID(threadId);
+	}
+	else if (this->m_pICorProfilerInfo2.p == NULL && this->m_pICorProfilerInfo.p != NULL)
+	{
+		return this->m_pICorProfilerInfo->GetCurrentThreadID(threadId);
+	}
+	
 }
 
 STDMETHODIMP MetadataHelpers::GetArguments(FunctionID funcId, mdToken MethodDataToken)

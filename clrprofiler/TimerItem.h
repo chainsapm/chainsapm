@@ -1,7 +1,7 @@
 #pragma once
 #include "commonstructures.h"
-#include "ThreadStackItem.h"
 
+class StackItemBase;
 class TimerItem
 {
 

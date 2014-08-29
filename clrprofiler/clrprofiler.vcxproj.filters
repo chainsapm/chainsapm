@@ -26,14 +26,8 @@
     <Filter Include="Helpers">
       <UniqueIdentifier>{1206c891-4454-4a53-bdf5-3d5bcd9dfe7c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Profiler Info Callbacks">
-      <UniqueIdentifier>{2930fa9c-5c94-4490-8a58-17e0b9dd3f07}</UniqueIdentifier>
-    </Filter>
     <Filter Include="IL Rewriting">
       <UniqueIdentifier>{a1739379-5a12-4104-8abe-eecf507a5687}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ICorProfilerImpl Callback">
-      <UniqueIdentifier>{9de2cb39-7741-43b4-89d1-7517db85b8db}</UniqueIdentifier>
     </Filter>
     <Filter Include="DLLMain">
       <UniqueIdentifier>{312be530-08bb-474f-9f3b-9f5b3e2e1971}</UniqueIdentifier>
@@ -53,6 +47,12 @@
     <Filter Include="Network Client">
       <UniqueIdentifier>{a4e23f61-673d-4da0-8588-c259badd8510}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CorProfilerCallback">
+      <UniqueIdentifier>{b780124e-f465-4063-af4e-87fa6d554549}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WebengineHelpers">
+      <UniqueIdentifier>{4d5af967-5f37-4c07-b387-1b2d73f60b2a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clrprofiler_i.c">
@@ -66,9 +66,6 @@
     </ClCompile>
     <ClCompile Include="static_il_bodies.cpp">
       <Filter>IL Rewriting\IL Body Helpers</Filter>
-    </ClCompile>
-    <ClCompile Include="CorProfilerCallbackImplementation.cpp">
-      <Filter>ICorProfilerImpl Callback</Filter>
     </ClCompile>
     <ClCompile Include="xdlldata.c">
       <Filter>DLLMain</Filter>
@@ -100,8 +97,20 @@
     <ClCompile Include="ILFactory.cpp">
       <Filter>IL Rewriting\Factory Class</Filter>
     </ClCompile>
-    <ClCompile Include="NetworkClient.cpp">
-      <Filter>Network Client</Filter>
+    <ClCompile Include="critsec_helper.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="srw_helper.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="CorProfilerCallbackImplementation.cpp">
+      <Filter>CorProfilerCallback</Filter>
+    </ClCompile>
+    <ClCompile Include="ContainerClass.cpp">
+      <Filter>Common Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="webengine4helper.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -111,17 +120,11 @@
     <ClInclude Include="MetadataHelpers.h">
       <Filter>Helpers</Filter>
     </ClInclude>
-    <ClInclude Include="ICorProlfileInfoCallbacks.hpp">
-      <Filter>Profiler Info Callbacks</Filter>
-    </ClInclude>
     <ClInclude Include="commonstructures.h">
       <Filter>Common Classes</Filter>
     </ClInclude>
     <ClInclude Include="static_il_bodies.h">
       <Filter>IL Rewriting\IL Body Helpers</Filter>
-    </ClInclude>
-    <ClInclude Include="CorProfilerCallbackImplementation.h">
-      <Filter>ICorProfilerImpl Callback</Filter>
     </ClInclude>
     <ClInclude Include="dllmain.h">
       <Filter>DLLMain</Filter>
@@ -156,8 +159,20 @@
     <ClInclude Include="TimerItem.h">
       <Filter>Common Classes</Filter>
     </ClInclude>
-    <ClInclude Include="NetworkClient.h">
-      <Filter>Network Client</Filter>
+    <ClInclude Include="critsec_helper.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="srw_helper.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="CorProfilerCallbackImplementation.h">
+      <Filter>CorProfilerCallback</Filter>
+    </ClInclude>
+    <ClInclude Include="ContainerClass.h">
+      <Filter>Common Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="webengine4helper.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

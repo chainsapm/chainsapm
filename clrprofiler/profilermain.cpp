@@ -1,10 +1,46 @@
 // profilermain.cpp : Implementation of Cprofilermain
 #pragma once
 #include "stdafx.h"
-#include "ICorProlfileInfoCallbacks.hpp"
+#include "ContainerClass.h"
 #include "profilermain.h"
-#include "NetworkClient.h"
+#include "srw_helper.h"
+#include "critsec_helper.h"
+#include "webengine4helper.h"
 
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Definition of static members of the Cprofilermain class
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//MetadataHelpers *  Cprofilermain::g_MetadataHelpers;
+//
+//
+//std::map<FunctionID, FunctionInfo> * Cprofilermain::g_FunctionSet = new std::map<FunctionID, FunctionInfo>();
+//std::map<ThreadID, std::queue<StackItemBase*>> * Cprofilermain::g_ThreadStackMap = new std::map<ThreadID, std::queue<StackItemBase*>>();
+//std::map<ThreadID, volatile unsigned int> * Cprofilermain::g_ThreadStackDepth = new std::map<ThreadID, volatile unsigned int>();
+//std::map<ThreadID, volatile unsigned int> * Cprofilermain::g_ThreadStackSequence = new std::map<ThreadID, volatile unsigned int>();
+//std::map<ThreadID, volatile unsigned int> * Cprofilermain::g_ThreadFunctionCount = new std::map<ThreadID, volatile unsigned int>();
+//
+//
+//std::unordered_set<std::wstring> * Cprofilermain::g_FunctionNameSet = new std::unordered_set<std::wstring>();
+//std::unordered_set<std::wstring> * Cprofilermain::g_ClassNameSet = new std::unordered_set<std::wstring>();
+//
+//std::map<ThreadID, UINT_PTR> * Cprofilermain::g_ThreadSpawnMap = NULL;
+//
+//CRITICAL_SECTION Cprofilermain::g_ThreadingCriticalSection;
+//CRITICAL_SECTION Cprofilermain::g_ThreadStackSequenceCriticalSection;
+//CRITICAL_SECTION Cprofilermain::g_ThreadStackDepthCriticalSection;
+//CRITICAL_SECTION Cprofilermain::g_FunctionSetCriticalSection;
+
+std::map<UINT_PTR, Cprofilermain*> * Cprofilermain::g_StaticContainerClass = new std::map<UINT_PTR, Cprofilermain*>();
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Remove the separator (,) and digit grouping on numbers like 1,000,000
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct no_separator : std::numpunct < char > {
 protected:
 	virtual std::string do_grouping() const
@@ -14,39 +50,97 @@ protected:
 };
 
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Global methods for specific profiler callbacks. Namely the Mapper and Enter/Leave/Tail
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Enter hook function for creating shadow stacks
+void FunctionEnter2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
+	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
+{
+	Cprofilermain * pContainerClass = (Cprofilermain*)clientData;
+	if (funcId == clientData)
+	{
+		pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
+	}
+
+
+	pContainerClass->FunctionEnterHook2(funcId, clientData, func, argumentInfo);
+}
+
+// Leave hook function for creating shadow stacks
+void FunctionLeave2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
+	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentRange)
+{
+	Cprofilermain * pContainerClass = (Cprofilermain*)clientData;
+	if (funcId == clientData)
+	{
+		pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
+	}
+
+	pContainerClass->FunctionLeaveHook2(funcId, clientData, func, argumentRange);
+}
+
+// Tail hook function for creating shadow stacks
+void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
+	COR_PRF_FRAME_INFO func)
+{
+
+	Cprofilermain * pContainerClass = (Cprofilermain*)clientData;
+	if (funcId == clientData)
+	{
+		pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
+	}
+
+	pContainerClass->FunctionTailHook2(funcId, clientData, func);
+}
+
+DWORD WINAPI MyThreadFunction(LPVOID lpParam)
+{
+	INT counter = 1;
+	while (true)
+	{
+		Cprofilermain * pCprof = (Cprofilermain*)lpParam;
+		pCprof->WriteLogFile(counter++);
+		Sleep(10000);
+	}
+	return S_OK;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Constructor and Destructor
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 Cprofilermain::Cprofilermain()
 {
 	
-	g_FunctionSet = new std::map<FunctionID, FunctionInfo>();
-	g_ThreadStackMap = new std::map<ThreadID, std::queue<StackItemBase*>>();
-	g_FunctionNameSet = new std::unordered_set<std::wstring>();
-	g_ClassNameSet = new std::unordered_set<std::wstring>();
-	g_ThreadStackDepth = new std::map<ThreadID, volatile unsigned int>();
-	g_ThreadStackSequence = new std::map<ThreadID, volatile unsigned int>();
 
-	if (g_InstanceMap == NULL)
+
+	this->SetProcessName();
+	if ((this->m_ProcessName.compare(L"w3wp.exe") == 0)
+		|| (this->m_ProcessName.compare(L"HelloWorldTestHarness.exe") == 0)
+		|| (this->m_ProcessName.compare(L"iisexpress.exe") == 0))
 	{
-		g_InstanceMap = new std::map<DWORD, Cprofilermain*>();
+		// No reason to execute this code if the process is not what we're looking for.
+		this->m_Container = new ContainerClass();
+		this->m_ProcessId = GetCurrentProcessId();
+		this->AddCommonFunctions();
+		//m_NetworkClient = new NetworkClient(this, TEXT("localhost"), TEXT("5600"));
+		InitializeCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
 	}
-	this->m_ProcessId = GetCurrentProcessId();
-	g_InstanceMap->insert(std::pair<DWORD, Cprofilermain*>(this->m_ProcessId, this));
-	this->AddCommonFunctions();
-	WCHAR imageName[MAX_PATH];
-	GetModuleFileName(NULL, imageName, MAX_PATH);
-	std::wstringstream stringStream(imageName);
-	std::wstring lastItem;
-	for (std::wstring item; std::getline(stringStream, item, L'\\');)
-	{
-		lastItem.assign(item);
-	}
-	this->m_ProcessName.assign(lastItem);
-	m_NetworkClient = new NetworkClient(this, TEXT("localhost"), TEXT("5600"));
-	InitializeCriticalSection(&g_ThreadingCriticalSection);
+	DWORD tID = 0;
+	HANDLE tHandle = CreateThread(
+		NULL,                   // default security attributes
+		0,                      // use default stack size  
+		MyThreadFunction,       // thread function name
+		this,					// argument to thread function 
+		0,                      // use default creation flags 
+		&tID);
 }
 
 Cprofilermain::~Cprofilermain()
 {
-	WriteLogFile();
+	WriteLogFile(0);
 	/*delete g_FunctionNameSet;
 	delete g_FunctionSet;
 	delete g_ThreadStackMap;
@@ -67,177 +161,168 @@ Cprofilermain::~Cprofilermain()
 	{
 		m_pICorProfilerInfo4.Release();
 	}
-	g_ProfilerCallback->Shutdown();
-	DeleteCriticalSection(&g_ThreadingCriticalSection);
+	this->Shutdown();
+	DeleteCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
 }
 
-STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// These are helper methods and have nothing to do with the core profiling.
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Cprofilermain::AddCommonFunctions()
 {
+	 /*g_ClassNameSet->insert(TEXT("System.Threading.Thread"));
+	g_ClassNameSet->insert(TEXT("System.Threading.ThreadStart"));
+	g_ClassNameSet->insert(TEXT("System.Threading.ThreadHelper"));*/
 
-	// set up our global access pointer
-	g_ProfilerCallback = this;
-	// get the ICorProfilerInfo interface
-	HRESULT hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo, (LPVOID*)&this->m_pICorProfilerInfo);
-	if (FAILED(hr))
-		return E_FAIL;
+	//this->m_Container->g_FunctionNameSet->insert(TEXT("ProcessRequest"));
+	this->m_Container->g_FunctionNameSet->insert(TEXT("ProcessRequestNotificationHelper"));
 
-	// determine if this object implements ICorProfilerInfo2
-	hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo2, (LPVOID*)&this->m_pICorProfilerInfo2);
-	if (FAILED(hr))
-	{
-		// we still want to work if this call fails, might be an older .NET version
-		this->m_pICorProfilerInfo2.p = NULL;
-	}
+	/*	this->m_Container->g_FunctionNameSet->insert(TEXT("ThreadStart"));
+		this->m_Container->g_FunctionNameSet->insert(TEXT("Start"))*/;
 
-	// determine if this object implements ICorProfilerInfo3
-	hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo3, (LPVOID*)&this->m_pICorProfilerInfo3);
-	if (FAILED(hr))
-	{
-		// we still want to work if this call fails, might be an older .NET version
-		this->m_pICorProfilerInfo3.p = NULL;
-	}
-
-	// determine if this object implements ICorProfilerInfo4
-	hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo4, (LPVOID*)&this->m_pICorProfilerInfo4);
-	if (FAILED(hr))
-	{
-		// we still want to work if this call fails, might be an older .NET version
-		this->m_pICorProfilerInfo4.p = NULL;
-	}
-
-	if (this->m_pICorProfilerInfo4 != NULL)
-	{
-		g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo4);
-	}
-	else if (this->m_pICorProfilerInfo4 == NULL && this->m_pICorProfilerInfo3 != NULL)
-	{
-		g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo3);
-	}
-	else if (this->m_pICorProfilerInfo3 == NULL && this->m_pICorProfilerInfo2 != NULL)
-	{
-		g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo2);
-	}
-	else if (this->m_pICorProfilerInfo2 == NULL && this->m_pICorProfilerInfo != NULL)
-	{
-		g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo);
-	}
-
-	hr = pICorProfilerInfoUnk->QueryInterface(IID_IMethodMalloc, (LPVOID*)&this->m_pIMethodMalloc);
-	if (FAILED(hr))
-	{
-		// we still want to work if this call fails, might be an older .NET version
-		this->m_pICorProfilerInfo4.p = NULL;
-	}
-
-
-	INT clientData = 0xDEADBEEF;
-	if (m_pICorProfilerInfo2 != NULL)
-	{
-		m_pICorProfilerInfo2->SetFunctionIDMapper((FunctionIDMapper*)&StaticProfilerMethods::Mapper1);
-#ifdef X64
-		m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_Wrapper_x64, (FunctionLeave2*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall2*)&FunctionTail2_Wrapper_x64);
-#else
-		m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2();
-#endif
-	}
-	if (m_pICorProfilerInfo3 != NULL)
-	{
-		INT clientData = 0xDEADBEEF;
-		m_pICorProfilerInfo3->SetFunctionIDMapper2((FunctionIDMapper2*)&StaticProfilerMethods::Mapper2, &clientData);
-#ifdef X64
-		m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks3((FunctionEnter3*)&FunctionEnter2_Wrapper_x64, (FunctionLeave3*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall3*)&FunctionTail2_Wrapper_x64);
-#else
-		m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks3();
-#endif
-	}
-	if (m_pICorProfilerInfo4 != NULL)
-	{
-		INT clientData = 0xDEADBEEF;
-		m_pICorProfilerInfo4->SetFunctionIDMapper2((FunctionIDMapper2*)&StaticProfilerMethods::Mapper2, &clientData);
-#ifdef X64
-		m_pICorProfilerInfo4->SetEnterLeaveFunctionHooks3((FunctionEnter3*)&FunctionEnter2_Wrapper_x64, (FunctionLeave3*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall3*)&FunctionTail2_Wrapper_x64);
-#else
-		m_pICorProfilerInfo4->SetEnterLeaveFunctionHooks3();
-#endif
-	}
-
-
-
-
-	SetMask();
-
-
-
-	return S_OK;
 }
 
-STDMETHODIMP Cprofilermain::AppDomainCreationStarted(AppDomainID appDomainId)
+void Cprofilermain::WriteLogFile(int fileNum)
 {
-	return S_OK;
-}
-
-STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
-{
-	TimerItem firstTimer(THREAD_START);
-	ThreadStackItem firstItem = ThreadStackItem(threadId, THREAD_START);
-#pragma message(__TODO__"Add and or change the critical section to use something more specific.")
-	MAINCSENTER;
-	g_ThreadStackMap->insert(std::pair<ThreadID, std::queue<StackItemBase*>>(threadId, std::queue<StackItemBase*>()));
-	firstTimer.AddThreadStackItem(&firstItem);
-	//g_ThreadStackMap->at(threadId)->push(new StackItemBase(firstItem));
-#pragma message(__TODO__"Add and or change the critical section to use something more specific.")
-	g_ThreadStackMap->at(threadId).push(new ThreadStackItem(firstItem));
-#pragma message(__TODO__"Add and or change the critical section to use something more specific.")
-	g_ThreadStackDepth->insert(std::pair<ThreadID, volatile unsigned int>(threadId, 0));
-	g_ThreadStackSequence->insert(std::pair<ThreadID, volatile unsigned int>(threadId, 0));
-	MAINCSLEAVE;
-	return S_OK;
-}
-
-STDMETHODIMP Cprofilermain::ThreadDestroyed(ThreadID threadId)
-{
-	TimerItem lastTimer(THREAD_END);
-	MAINCSENTER;
-#pragma message(__TODO__"Add and or change the critical section to use something more specific.")
-	std::map<ThreadID, std::queue<StackItemBase*>>::iterator itStack = g_ThreadStackMap->find(threadId);
-	if (itStack != g_ThreadStackMap->end())
+	//std::string fileName = ;
+	std::wstring fileName(str(boost::wformat(L"C:\\logifles\\%d_%d_%s.log") % fileNum % m_ProcessId % m_ProcessName));
+	std::wofstream outFile(fileName);
+	if (outFile)
 	{
-		// The front item should ALWAYS be the thread stack start item
-		// If it's not some how something inserted a TSI before the top item and that is not likely.
-		lastTimer.AddThreadStackItem(g_ThreadStackMap->at(threadId).front());
-	}
-	MAINCSLEAVE;
-	return S_OK;
-}
-
-STDMETHODIMP Cprofilermain::ThreadNameChanged(ThreadID threadId, ULONG cchName, _In_reads_opt_(cchName) WCHAR name[])
-{
-	MAINCSENTER;
-#pragma message(__TODO__"Add and or change the critical section to use something more specific.")
-	std::map<ThreadID, std::queue<StackItemBase*>>::iterator itStack = g_ThreadStackMap->find(threadId);
-	if (itStack != g_ThreadStackMap->end())
-	{
-		// The front item should ALWAYS be the thread stack start item
-		// If it's not some how something inserted a TSI before the top item and that is not likely.
-
-		ThreadStackItem* testItemConverted = NULL;
-		try
+		//std::map<ThreadID, std::queue<StackItemBase*>>::iterator it;
+		std::locale loc("");
+		UINT_PTR highPart;
+		UINT_PTR lowPart;
+		UINT highPartParam;
+		UINT lowPartParam;
+		UINT highPartReturn;
+		UINT lowPartReturn;
+		outFile.imbue(std::locale(loc, new no_separator()));
+		std::map<FunctionID, FunctionInfo>::iterator itFunc;
+		std::wstring spaces;
+		std::wstring separator(80, '=');
+		outFile << separator << std::endl;
+		outFile << this->m_ProcessName << L" " << boost::wformat(L"%u") % this->m_ProcessId << std::endl;
+		outFile << separator << std::endl;
+		outFile << std::endl;
+		for (auto it = this->m_Container->g_ThreadStackMap->begin();
+			it != this->m_Container->g_ThreadStackMap->end();
+			it++)
 		{
-			testItemConverted = dynamic_cast<ThreadStackItem*>(g_ThreadStackMap->at(threadId).front());
-		}
-		catch (std::bad_cast* e)
-		{
-			e->what();
-		}
+			int depth = 0;
+			int previousDepth = 0;
+			highPart = (0xFFFFFFFF00000000 & it->first) >> 32;
+			lowPart = 0x00000000FFFFFFFF & it->first;
 
-		if (testItemConverted != NULL)
-		{
-			testItemConverted->ThreadName(name);
+
+			EnterCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
+			std::deque<StackItemBase*>::const_iterator constIt = it->second.cbegin();
+			LeaveCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
+
+			ThreadStackItem* threadStackItem = NULL;
+			try
+			{
+				threadStackItem = dynamic_cast<ThreadStackItem*>(*constIt);
+			}
+			catch (std::bad_cast* e)
+			{
+
+				outFile << e->what();
+			}
+			outFile << separator << std::endl;
+			if (threadStackItem != NULL)
+			{
+				outFile << "Thread: " << threadStackItem->ThreadName() << boost::wformat(TEXT(" (0x%08x`%08x)")) % highPart % lowPart << std::endl;
+			}
+			else {
+				outFile << "Thread: " << boost::wformat(TEXT("0x%08x`%08x")) % highPart % lowPart << std::endl;
+			}
+			outFile << separator << std::endl;
+			outFile << std::endl;
+			ULONGLONG totalTime = 0;
+			ULONGLONG profilerTime = 0;
+
+			while (constIt != it->second.cend())
+			{
+
+				FunctionStackItem* testItemConverted = NULL;
+				try
+				{
+					testItemConverted = dynamic_cast<FunctionStackItem*>(*constIt);
+				}
+				catch (std::bad_cast* e)
+				{
+					outFile << e->what();
+				}
+
+				if (testItemConverted != NULL)
+				{
+					itFunc = this->m_Container->g_FunctionSet->find(testItemConverted->FunctionId());
+
+					if (&itFunc != NULL && itFunc != this->m_Container->g_FunctionSet->end())
+					{
+						if ((*constIt)->Depth() >= 0)
+						{
+							depth = (*constIt)->Depth();
+						}
+						spaces.swap(std::wstring(depth * 2, ' '));
+						outFile << spaces << itFunc->second.SignatureString();
+						if ((*constIt)->LastReason() == TAIL)
+						{
+							outFile << _T(" !!TAIL CALL!! ");
+						}
+						outFile << std::endl;
+						if (testItemConverted->ParameterCount() != 0)
+						{
+							outFile << spaces;
+							for (ULONG i = 0, paramNumber = 1; i < testItemConverted->ParameterCount(); i++, paramNumber++)
+							{
+								highPartParam = (0xFFFFFFFF00000000 & testItemConverted->ItemStackParameters()[i]) >> 32;
+								lowPartParam = 0x00000000FFFFFFFF & testItemConverted->ItemStackParameters()[i];
+								if (itFunc->second.IsStatic() == FALSE && i == 0)
+								{
+									outFile << "Class Pointer: ";
+									paramNumber--;
+								}
+								else {
+									outFile << "Parameter " << paramNumber << ": ";
+								}
+								outFile << boost::wformat(TEXT("0x%08x`%08x")) % highPartParam % lowPartParam << " ";
+							}
+							outFile << std::endl;
+						}
+						highPartReturn = (0xFFFFFFFF00000000 & testItemConverted->ReturnValue()) >> 32;
+						lowPartReturn = 0x00000000FFFFFFFF & testItemConverted->ReturnValue();
+						outFile << spaces << "Return: " << boost::wformat(TEXT("0x%08x`%08x")) % highPartReturn % lowPartReturn << std::endl;
+						outFile << spaces << boost::wformat(TEXT("Total time: %uus\tProfiling Time: %uus")) % (*constIt)->ItemRunTime() % (*constIt)->ProfilingOverhead() << std::endl;
+						totalTime += (*constIt)->ItemRunTime();
+						profilerTime += (*constIt)->ProfilingOverhead();
+					}
+				}
+
+				constIt++;
+			};
+			outFile << separator << std::endl;
+			outFile << boost::wformat(TEXT("Total time: %uus\tProfiling Time: %uus")) % totalTime % profilerTime << std::endl;
+			outFile << separator << std::endl;
+
 		}
 	}
-#pragma message(__TODO__"Add and or change the critical section to use something more specific.")
-	MAINCSLEAVE;
-	return S_OK;
+}
+
+void Cprofilermain::SetProcessName()
+{
+	WCHAR imageName[MAX_PATH];
+	GetModuleFileName(NULL, imageName, MAX_PATH);
+	std::wstringstream stringStream(imageName);
+	std::wstring lastItem;
+	for (std::wstring item; std::getline(stringStream, item, L'\\');)
+	{
+		lastItem.assign(item);
+	}
+	this->m_ProcessName.assign(lastItem);
 }
 
 STDMETHODIMP Cprofilermain::SetMask()
@@ -292,7 +377,20 @@ STDMETHODIMP Cprofilermain::SetMask()
 		| COR_PRF_MONITOR_THREADS
 		| COR_PRF_MONITOR_GC
 		| COR_PRF_MONITOR_SUSPENDS);
-	return m_pICorProfilerInfo->SetEventMask(eventMask);
+	switch (this->m_HighestProfileInfo)
+	{
+	case 1:
+		return m_pICorProfilerInfo->SetEventMask(eventMask);
+	case 2:
+		return m_pICorProfilerInfo2->SetEventMask(eventMask);
+	case 3:
+		return m_pICorProfilerInfo3->SetEventMask(eventMask);
+	case 4:
+		return m_pICorProfilerInfo4->SetEventMask(eventMask);
+	default:
+		return 0;
+	}
+
 }
 
 STDMETHODIMP Cprofilermain::GetFullMethodName(FunctionID functionID, std::string *methodName, int cMethod)
@@ -305,7 +403,24 @@ STDMETHODIMP Cprofilermain::GetFullMethodName(FunctionID functionID, std::string
 	WCHAR wszMethod[NAME_BUFFER_SIZE];
 
 	// get the token for the function which we will use to get its name
-	hr = this->m_pICorProfilerInfo2->GetTokenAndMetaDataFromFunction(functionID, IID_IMetaDataImport, (LPUNKNOWN *)&pIMetaDataImport, &funcToken);
+	switch (this->m_HighestProfileInfo)
+	{
+	case 1:
+		hr = this->m_pICorProfilerInfo->GetTokenAndMetaDataFromFunction(functionID, IID_IMetaDataImport, (LPUNKNOWN *)&pIMetaDataImport, &funcToken);
+		break;
+	case 2:
+		hr = this->m_pICorProfilerInfo2->GetTokenAndMetaDataFromFunction(functionID, IID_IMetaDataImport, (LPUNKNOWN *)&pIMetaDataImport, &funcToken);
+		break;
+	case 3:
+		hr = this->m_pICorProfilerInfo3->GetTokenAndMetaDataFromFunction(functionID, IID_IMetaDataImport, (LPUNKNOWN *)&pIMetaDataImport, &funcToken);
+		break;
+	case 4:
+		hr = this->m_pICorProfilerInfo4->GetTokenAndMetaDataFromFunction(functionID, IID_IMetaDataImport, (LPUNKNOWN *)&pIMetaDataImport, &funcToken);
+		break;
+	default:
+		return E_FAIL;
+	}
+	//hr = this->m_pICorProfilerInfo2->GetTokenAndMetaDataFromFunction(functionID, IID_IMetaDataImport, (LPUNKNOWN *)&pIMetaDataImport, &funcToken);
 	if (SUCCEEDED(hr))
 	{
 		mdTypeDef classTypeDef;
@@ -346,33 +461,254 @@ STDMETHODIMP Cprofilermain::GetFuncArgs(FunctionID functionID, COR_PRF_FRAME_INF
 	ULONG32 typeArgsOut = 0;
 	ClassID typeArgs[1024];
 
+
+	switch (this->m_HighestProfileInfo)
+	{
+	case 1:
+		return E_FAIL;
+	case 2:
+		hr = this->m_pICorProfilerInfo2->GetFunctionInfo2(
+			functionID,
+			frameinfo,
+			&classID,
+			&modId,
+			&token,
+			typeArgsMax,
+			&typeArgsOut,
+			typeArgs);
+		break;
+	case 3:
+		hr = this->m_pICorProfilerInfo3->GetFunctionInfo2(
+			functionID,
+			frameinfo,
+			&classID,
+			&modId,
+			&token,
+			typeArgsMax,
+			&typeArgsOut,
+			typeArgs);
+		break;
+	case 4:
+		hr = this->m_pICorProfilerInfo4->GetFunctionInfo2(
+			functionID,
+			frameinfo,
+			&classID,
+			&modId,
+			&token,
+			typeArgsMax,
+			&typeArgsOut,
+			typeArgs);
+		break;
+	default:
+		return E_FAIL;
+	}
 	// get the token for the function which we will use to get its name
-	hr = this->m_pICorProfilerInfo2->GetFunctionInfo2(
-		functionID,
-		frameinfo,
-		&classID,
-		&modId,
-		&token,
-		typeArgsMax,
-		&typeArgsOut,
-		typeArgs);
+
 
 	return hr;
 }
 
-// Edit this list to add in functions by name (anywhere in the function name)
-// or by the entire class.
-void Cprofilermain::AddCommonFunctions()
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Possibly we will eventually move all of these .NET profiling methods to base classes for clarity
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 {
-	/*g_ClassNameSet->insert(TEXT("System.Threading.Thread"));
-	g_ClassNameSet->insert(TEXT("System.Threading.ThreadStart"));
-	g_ClassNameSet->insert(TEXT("System.Threading.ThreadHelper"));*/
-	g_FunctionNameSet->insert(TEXT("AddNumbers"));/*
-	g_FunctionNameSet->insert(TEXT("Main"));
-	g_FunctionNameSet->insert(TEXT("ThreadStart"));
-	g_FunctionNameSet->insert(TEXT("Start"));*/
-	//g_FunctionNameSet->insert(TEXT(".ctor"));
-	//g_FunctionNameSet->insert(TEXT(".cctor"));
+	// We're using this as a quick exit so the profiler doesn't actually load.
+	if ((this->m_ProcessName.compare(L"w3wp.exe") == 0)
+		|| (this->m_ProcessName.compare(L"HelloWorldTestHarness.exe") == 0)
+		|| (this->m_ProcessName.compare(L"iisexpress.exe") == 0))
+	{
+
+
+		// get the ICorProfilerInfo interface
+
+		HRESULT hr;
+		this->m_HighestProfileInfo = 1; // If we don't fail, start off by assuming we're at the highest version we support
+
+		hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo, (LPVOID*)&this->m_pICorProfilerInfo);
+		if (FAILED(hr))
+			return E_FAIL;
+
+		// determine if this object implements ICorProfilerInfo2
+		hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo2, (LPVOID*)&this->m_pICorProfilerInfo2);
+		if (FAILED(hr))
+		{
+			// we still want to work if this call fails, might be an older .NET version
+			this->m_pICorProfilerInfo2.p = NULL;
+
+		}
+		else {
+			this->m_HighestProfileInfo = 2;
+		}
+
+		// determine if this object implements ICorProfilerInfo3
+		hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo3, (LPVOID*)&this->m_pICorProfilerInfo3);
+		if (FAILED(hr))
+		{
+			// we still want to work if this call fails, might be an older .NET version
+			this->m_pICorProfilerInfo3.p = NULL;
+
+		}
+		else {
+			this->m_HighestProfileInfo = 3;
+		}
+
+		// determine if this object implements ICorProfilerInfo4
+		hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo4, (LPVOID*)&this->m_pICorProfilerInfo4);
+		if (FAILED(hr))
+		{
+			// we still want to work if this call fails, might be an older .NET version
+			this->m_pICorProfilerInfo4.p = NULL;
+
+		}
+		else {
+			this->m_HighestProfileInfo = 4;
+		}
+
+		switch (this->m_HighestProfileInfo)
+		{
+		case 1:
+			this->m_Container->g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo);
+			break;
+		case 2:
+			this->m_Container->g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo2);
+			break;
+		case 3:
+			this->m_Container->g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo3);
+			break;
+		case 4:
+			this->m_Container->g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo4);
+			break;
+		default:
+			return 0;
+		}
+
+		UINT_PTR * clientData = new UINT_PTR(0xDEADBEEF); // We should never see this in our map. This is basically a bounds checker.
+
+		if (m_pICorProfilerInfo2 != NULL)
+		{
+			clientData = new UINT_PTR(0x0);; // Obviously we're not using any 
+			m_pICorProfilerInfo2->SetFunctionIDMapper((FunctionIDMapper*)&Cprofilermain::Mapper1);
+#ifdef _WIN64 
+			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_Wrapper_x64, (FunctionLeave2*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall2*)&FunctionTail2_Wrapper_x64);
+#else
+			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2();
+#endif
+		}
+		if (m_pICorProfilerInfo3 != NULL)
+		{
+			// .NET40
+			clientData = new UINT_PTR(40);
+			m_pICorProfilerInfo3->SetFunctionIDMapper2((FunctionIDMapper2*)&Cprofilermain::Mapper2, this);
+#ifdef _WIN64 
+
+			m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_Wrapper_x64, (FunctionLeave2*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall2*)&FunctionTail2_Wrapper_x64);
+			//m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks2((FunctionEnter3*)&FunctionEnter2_Wrapper_x64, (FunctionLeave3*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall3*)&FunctionTail2_Wrapper_x64);
+#else
+			m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks3();
+#endif
+		}
+		if (m_pICorProfilerInfo4 != NULL)
+		{
+			// .NET45
+			clientData = new UINT_PTR(45);
+			m_pICorProfilerInfo4->SetFunctionIDMapper2((FunctionIDMapper2*)&Cprofilermain::Mapper2, this);
+
+#ifdef _WIN64 
+			m_pICorProfilerInfo4->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_Wrapper_x64, (FunctionLeave2*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall2*)&FunctionTail2_Wrapper_x64);
+			//m_pICorProfilerInfo4->SetEnterLeaveFunctionHooks2((FunctionEnter3*)&FunctionEnter2_Wrapper_x64, (FunctionLeave3*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall3*)&FunctionTail2_Wrapper_x64);
+#else
+			m_pICorProfilerInfo4->SetEnterLeaveFunctionHooks3();
+#endif
+		}
+		Cprofilermain::g_StaticContainerClass->insert(std::pair<UINT_PTR, Cprofilermain*>(0x0, this));
+
+
+		SetMask();
+
+
+
+		return S_OK;
+	}
+	else {
+		return E_FAIL;
+	}
+}
+
+STDMETHODIMP Cprofilermain::AppDomainCreationStarted(AppDomainID appDomainId)
+{
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
+{
+
+	TimerItem firstTimer(THREAD_START);
+	ThreadStackItem *firstItem = new ThreadStackItem(threadId, THREAD_START);
+
+	{ // Critsec block for thread insert start
+		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
+		this->m_Container->g_ThreadStackMap->insert(
+			std::pair<ThreadID,
+			std::deque<StackItemBase*, ALLOC_500<StackItemBase*>>>
+			(threadId, std::deque<StackItemBase*, ALLOC_500<StackItemBase*>>()));
+	} // Critsec block for thread insert start
+
+	firstTimer.AddThreadStackItem(firstItem);
+
+	{ // Critsec block for thread depth start
+		critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
+		this->m_Container->g_ThreadStackDepth->insert(std::pair<ThreadID, volatile unsigned int>(threadId, 0));
+	}
+
+	{ // Critsec block for thread sequence start
+		critsec_helper csh(&this->m_Container->g_ThreadStackSequenceCriticalSection);
+		this->m_Container->g_ThreadStackSequence->insert(std::pair<ThreadID, volatile unsigned int>(threadId, 0));
+	}
+
+	{ // Critsec block for thread insert start
+		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
+		this->m_Container->g_ThreadStackMap->at(threadId).emplace_back(firstItem);
+	}  // Crit
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::ThreadDestroyed(ThreadID threadId)
+{
+	TimerItem lastTimer(THREAD_END);
+	std::map<ThreadID, std::queue<StackItemBase*>>::iterator itStack;
+	{ // Critsec block for thread depth start
+		critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
+		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
+		if (itStack != this->m_Container->g_ThreadStackMap->end())
+		{
+			// The front item should ALWAYS be the thread stack start item
+			// If it's not some how something inserted a TSI before the top item and that is not likely.
+			lastTimer.AddThreadStackItem(this->m_Container->g_ThreadStackMap->at(threadId).back());
+		}
+	}
+	//WriteLogFile();
+	return S_OK;
+}
+
+STDMETHODIMP Cprofilermain::ThreadNameChanged(ThreadID threadId, ULONG cchName, _In_reads_opt_(cchName) WCHAR name[])
+{
+	//MAINCSENTER;
+	{ // Critsec block for thread depth start
+		critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
+		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
+		if (itStack != this->m_Container->g_ThreadStackMap->end())
+		{
+			// The front item should ALWAYS be the thread stack start item
+			// If it's not some how something inserted a TSI before the top item and that is not likely.
+			dynamic_cast<ThreadStackItem*>(this->m_Container->g_ThreadStackMap->at(threadId)[0])->ThreadName(name);
+		} // Critsec block for thread depth start
+	}
+	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleId, HRESULT hrStatus)
@@ -402,28 +738,30 @@ STDMETHODIMP Cprofilermain::RuntimeThreadSuspended(ThreadID threadId)
 	// For all other runtime suspensions we'd like to know
 	ti = TimerItem(m_CurrentSuspendReason, SUSPEND_START);
 
-	MAINCSENTER;
-	std::map<ThreadID, std::queue<StackItemBase*>>::iterator itStack = g_ThreadStackMap->find(threadId);
+	{ // Critsec block for thread depth start
+		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
+		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
 
-	if (itStack != g_ThreadStackMap->end())
-	{
-		ti.AddThreadStackItem(itStack->second.back());
+		if (itStack != this->m_Container->g_ThreadStackMap->end())
+		{
+			ti.AddThreadStackItem(itStack->second.back());
+		}
 	}
-	MAINCSLEAVE;
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::RuntimeThreadResumed(ThreadID threadId)
 {
 	TimerItem ti(m_CurrentSuspendReason, SUSPEND_END);
-	MAINCSENTER;
-	std::map<ThreadID, std::queue<StackItemBase*>>::iterator itStack = g_ThreadStackMap->find(threadId);
+	{ // Critsec block for thread depth start
+		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
+		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
 
-	if (itStack != g_ThreadStackMap->end())
-	{
-		ti.AddThreadStackItem(itStack->second.back());
+		if (itStack != this->m_Container->g_ThreadStackMap->end())
+		{
+			ti.AddThreadStackItem(itStack->second.back());
+		}
 	}
-	MAINCSLEAVE;
 	return S_OK;
 }
 
@@ -469,131 +807,244 @@ STDMETHODIMP Cprofilermain::RuntimeResumeFinished(void)
 
 
 
-void Cprofilermain::WriteLogFile()
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Class level static function hooks, cleaning up globals implementation
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
+	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
 {
-	//std::string fileName = ;
-	std::wstring fileName(str(boost::wformat(L"%d_%s.log") % m_ProcessId % m_ProcessName));
-	std::wofstream outFile(fileName);
-	if (outFile)
-	{
-		std::map<ThreadID, std::queue<StackItemBase*>>::iterator it;
-		std::locale loc("");
-		UINT_PTR highPart;
-		UINT_PTR lowPart;
-		UINT highPartParam;
-		UINT lowPartParam;
-		UINT highPartReturn;
-		UINT lowPartReturn;
-		outFile.imbue(std::locale(loc, new no_separator()));
-		std::map<FunctionID, FunctionInfo>::iterator itFunc;
-		std::wstring spaces;
-		std::wstring separator(80, '=');
-		outFile << separator << std::endl;
-		outFile << this->m_ProcessName << L" " << boost::wformat(L"%u") % this->m_ProcessId << std::endl;
-		outFile << separator << std::endl;
-		outFile << std::endl;
-		for (it = g_ThreadStackMap->begin();
-			it != g_ThreadStackMap->end();
-			it++)
+	// A little bit of hacking goes a long way
+	// Opened up the pipeline request manager and found that they call native webengine modules via an IntPtr
+	// The structure of the IntPtr is that of [MDTOKEN][PtrValue]
+	// Knowing this I am doing a hack instead of a graceful MD lookup on this object and adding the size of a Ptr
+	// to the IntPtr address.
+
+	webengine4helper &helper = webengine4helper::createhelper();
+
+	UINT_PTR reqInfo = *(UINT_PTR*)(argumentInfo->ranges[1].startAddress);
+	//UINT_PTR reqInfo = (UINT_PTR)(argumentInfo->ranges->startAddress + argumentInfo->ranges->length);
+	UINT_PTR contType;
+	UINT_PTR totalLen;
+	UINT_PTR pathTranslated;
+	UINT_PTR cchPathTranslated;
+	UINT_PTR cacheURL;
+	UINT_PTR cchCacheURL;
+	UINT_PTR urlMax;
+	UINT_PTR cookedUrl;
+
+	helper.GetRequestBasics(
+		reqInfo,
+		&contType,
+		&totalLen,
+		&pathTranslated,
+		&cchPathTranslated,
+		&cacheURL,
+		&cchCacheURL,
+		&urlMax,
+		&cookedUrl);
+
+	_HTTP_COOKED_URL * cooked = (_HTTP_COOKED_URL*)cookedUrl;
+
+	helper.SetUnkHeader(reqInfo, false, true, "X-chainsAPM", "JamesDavis", 11);
+	/*
+	MSDN Article that describes the ELT methods and what COR flags need to be set.
+	http://msdn.microsoft.com/en-us/magazine/cc300553.aspx
+	*/
+
+	TimerItem ti(ThreadStackReason::ENTER);
+	// As we could be mapping a function while trying to find this guy it's possible
+	// we would have a race condition.
+	// However we will more than likely stop using this behavior as testing shows we don't need it
+	//#pragma message(__TODO__"Do more testing around this 'feature' to see if we need it.")
+	/*EnterCriticalSection(&g_ThreadingCriticalSection);
+	std::map<FunctionID, FunctionInfo>::const_iterator it = g_FunctionSet->find(funcId);
+	LeaveCriticalSection(&g_ThreadingCriticalSection);*/
+
+	/*	if (it != g_FunctionSet->end())
+	{*/
+	//const FunctionInfo *fi = &it->second;
+	ThreadID threadId;
+
+	this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+	{ // Critsec block for thread find start
+		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
+		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
+		if (itStack != this->m_Container->g_ThreadStackMap->end())
 		{
-			int depth = 0;
-			int previousDepth = 0;
-			highPart = (0xFFFFFFFF00000000 & it->first) >> 32;
-			lowPart = 0x00000000FFFFFFFF & it->first;
-
-
-			EnterCriticalSection(&g_ThreadingCriticalSection);
-
-			std::deque<StackItemBase*>::const_iterator constIt;
-			std::deque<StackItemBase*>::iterator deqIT = it->second._Get_container()._Make_iter(constIt);
-
-			ThreadStackItem* threadStackItem = NULL;
-			try
-			{
-				threadStackItem = dynamic_cast<ThreadStackItem*>(*deqIT);
+			csh.leave_early(); // Leaving CS early because we don't need to worry about it
+			FunctionStackItem * tsi = new FunctionStackItem(funcId, ThreadStackReason::ENTER, *argumentInfo);
+			{ // Critsec block for thread depth start
+				critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
+				tsi->Depth(this->m_Container->g_ThreadStackDepth->at(threadId));
 			}
-			catch (std::bad_cast* e)
-			{
-
-				outFile << e->what();
+			{ // Critsec block for thread depth start
+				critsec_helper csh(&this->m_Container->g_ThreadStackSequenceCriticalSection);
+				tsi->SequenceNumber(this->m_Container->g_ThreadStackSequence->at(threadId));
 			}
-			outFile << separator << std::endl;
-			if (threadStackItem != NULL)
+			ti.AddThreadStackItem(tsi);
+			// We will  need to lock this as only one thread can act on this list.
+			itStack->second.emplace_back(tsi);
+			if (itStack->second.size() > 0)
 			{
-				outFile << "Thread: " << threadStackItem->ThreadName() << boost::wformat(TEXT(" (0x%08x`%08x)")) % highPart % lowPart << std::endl;
-			}
-			else {
-				outFile << "Thread: " << boost::wformat(TEXT("0x%08x`%08x")) % highPart % lowPart << std::endl;
-			}
-			outFile << separator << std::endl;
-			outFile << std::endl;
-			ULONGLONG totalTime = 0;
-			ULONGLONG profilerTime = 0;
-
-			while (deqIT != it->second._Get_container().end())
-			{
-
-				FunctionStackItem* testItemConverted = NULL;
-				try
-				{
-					testItemConverted = dynamic_cast<FunctionStackItem*>(*deqIT);
+				// use a thread safe way of incrementing a mapped value
+				{ // Critsec block for thread depth start
+					critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
+					InterlockedIncrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
 				}
-				catch (std::bad_cast* e)
-				{
-					outFile << e->what();
+				{ // Critsec block for thread depth start
+					critsec_helper csh(&this->m_Container->g_ThreadStackSequenceCriticalSection);
+					InterlockedIncrement(&this->m_Container->g_ThreadStackSequence->at(threadId));
 				}
+			}
+		}
+	} // Critsec block for thread find end
 
-				if (testItemConverted != NULL)
+}
+
+void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
+	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentRange)
+{
+
+	TimerItem ti(ThreadStackReason::EXIT);
+	{ // Critsec block for thread find start
+		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
+		auto it = this->m_Container->g_FunctionSet->find(funcId);
+		csh.leave_early(); // Leaving CS early because we don't need to worry about it
+		if (it != this->m_Container->g_FunctionSet->end())
+		{
+
+			ThreadID threadId;
+
+			this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+			auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
+			if (itStack != this->m_Container->g_ThreadStackMap->end())
+			{
+				if (itStack->second.size() > 0)
 				{
-					itFunc = g_FunctionSet->find(testItemConverted->FunctionId());
-
-					if (&itFunc != NULL && itFunc != g_FunctionSet->end())
+					if (this->m_Container->g_ThreadStackDepth->at(threadId) > 0)
 					{
-						if ((*deqIT)->Depth() >= 0)
-						{
-							depth = (*deqIT)->Depth();
+						{ // Critsec block for thread depth start
+							critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
+							InterlockedDecrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
 						}
-						spaces.swap(std::wstring(depth * 2, ' '));
-						outFile << spaces << itFunc->second.SignatureString();
-						if ((*deqIT)->LastReason() == TAIL)
-						{
-							outFile << _T(" !!TAIL CALL!! ");
-						}
-						outFile << std::endl;
-						if (testItemConverted->ParameterCount() != 0)
-						{
-							outFile << spaces;
-							for (ULONG i = 0, paramNumber = 1; i < testItemConverted->ParameterCount(); i++, paramNumber++)
-							{
-								highPartParam = (0xFFFFFFFF00000000 & testItemConverted->ItemStackParameters()[i]) >> 32;
-								lowPartParam = 0x00000000FFFFFFFF & testItemConverted->ItemStackParameters()[i];
-								if (itFunc->second.IsStatic() == FALSE && i == 0)
-								{
-									outFile << "Class Pointer: ";
-									paramNumber--;
-								}
-								else {
-									outFile << "Parameter " << paramNumber << ": ";
-								}
-								outFile << boost::wformat(TEXT("0x%08x`%08x")) % highPartParam % lowPartParam << " ";
-							}
-							outFile << std::endl;
-						}
-						highPartReturn = (0xFFFFFFFF00000000 & testItemConverted->ReturnValue()) >> 32;
-						lowPartReturn = 0x00000000FFFFFFFF & testItemConverted->ReturnValue();
-						outFile << spaces << "Return: " << boost::wformat(TEXT("0x%08x`%08x")) % highPartReturn % lowPartReturn << std::endl;
-						outFile << spaces << boost::wformat(TEXT("Total time: %uus\tProfiling Time: %uus")) % (*deqIT)->ItemRunTime() % (*deqIT)->ProfilingOverhead() << std::endl;
-						totalTime += (*deqIT)->ItemRunTime();
-						profilerTime += (*deqIT)->ProfilingOverhead();
 					}
-				}
 
-				deqIT++;
-			};
-			outFile << separator << std::endl;
-			outFile << boost::wformat(TEXT("Total time: %uus\tProfiling Time: %uus")) % totalTime % profilerTime << std::endl;
-			outFile << separator << std::endl;
-			LeaveCriticalSection(&g_ThreadingCriticalSection);
+				}
+				FunctionStackItem* tsi = static_cast<FunctionStackItem*>(itStack->second.back());
+				tsi->ReturnValue(*argumentRange);
+				ti.AddThreadStackItem(tsi);
+			}
+
+			// TODO extract argument 
 		}
 	}
+	//TODO Implement function callbacks
+}
+
+void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
+	COR_PRF_FRAME_INFO func)
+{
+	TimerItem ti(ThreadStackReason::TAIL);
+	{ // Critsec block for thread find start
+		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
+		ThreadID threadId;
+		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
+		csh.leave_early(); // Leaving CS early because we don't need to worry about it
+		int depth = 0;
+		if (itStack != this->m_Container->g_ThreadStackMap->end())
+		{
+			if (itStack->second.size() > 0)
+			{
+
+				InterlockedDecrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
+			}
+			StackItemBase* tsi = itStack->second.back();
+			//tsi->ItemStackReturnValue(*argumentRange);
+			ti.AddThreadStackItem(tsi);
+		}
+
+	}
+	// TODO extract argument 
+}
+
+// Mapper function to create the collection of FunctionInfo items and set functions to be mapped.
+UINT_PTR __stdcall Cprofilermain::Mapper1(FunctionID funcId, BOOL *pbHookFunction)
+{
+	// Find the Cprofiler class from the static container
+	Cprofilermain * pContainerClass = g_StaticContainerClass->at(0x0);
+	return pContainerClass->MapFunction(funcId, 0x0, pbHookFunction);
+}
+
+// Implementation of Mapper2. Create the collection of FunctionInfo items and set functions to be mapped.
+UINT_PTR __stdcall Cprofilermain::Mapper2(FunctionID funcId, UINT_PTR clientData, BOOL *pbHookFunction)
+{
+	Cprofilermain * pContainerClass = (Cprofilermain*)clientData;
+	if (funcId == clientData)
+	{
+		pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
+	}
+	return pContainerClass->MapFunction(funcId, clientData, pbHookFunction);
+}
+
+//#define ALLMETHODS
+UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL *pbHookFunction)
+{
+#ifdef ALLMETHODS
+
+	FunctionInfo funcInfo;
+	this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, &funcInfo);
+	{ // Critsec block for thread depth start
+
+		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
+		this->m_Container->g_FunctionSet->insert(std::pair<FunctionID, FunctionInfo>(funcId, funcInfo));
+
+	}
+	*pbHookFunction = TRUE;
+
+#else
+	// While this method does not cause any updates the one below it does.
+	EnterCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
+	std::map<FunctionID, FunctionInfo>::const_iterator it = this->m_Container->g_FunctionSet->find(funcId);
+	LeaveCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
+	if (it == this->m_Container->g_FunctionSet->end())
+	{
+
+		// funcInfo declared in this block so they are not created if the function is found
+
+		FunctionInfo funcInfo;
+
+		this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, &funcInfo);
+		// These iterator operations should not cause a lock since it's only a read
+		// and the find method does not alter the structure.
+
+		// The function mapping happens at the during the class instantiation
+		std::unordered_set<std::wstring>::const_iterator findClass =
+			this->m_Container->g_ClassNameSet->find(funcInfo.ClassName());
+		std::unordered_set<std::wstring>::const_iterator findName =
+			this->m_Container->g_FunctionNameSet->find(funcInfo.FunctionName());
+
+
+		if ((findName != this->m_Container->g_FunctionNameSet->end()) | (findClass != this->m_Container->g_ClassNameSet->end()))
+		{
+			// Causes and update to this map and can be called from multiple threads.
+			this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, &funcInfo);
+			{ // Critsec block for thread depth start
+				critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
+				this->m_Container->g_FunctionSet->insert(std::pair<FunctionID, FunctionInfo>(funcId, funcInfo));
+			}
+			*pbHookFunction = TRUE;
+		}
+		else {
+			*pbHookFunction = FALSE;
+		}
+
+	}
+#endif // ALLMETHODS
+	if (clientData == 0x0)
+	{
+		return (UINT_PTR)funcId;
+	}
+	return (UINT_PTR)this;
 }

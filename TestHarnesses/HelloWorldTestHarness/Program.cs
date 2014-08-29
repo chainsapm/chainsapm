@@ -46,7 +46,7 @@ namespace HelloWorldTestHarness
             System.Console.WriteLine(AddNumbers(ref i, ref b));
             System.Console.WriteLine(AddNumbers(ref i, ref b));
             System.Console.WriteLine(AddNumbers(ref i, ref b));
-            for (int f = 0; f < 50; f++)
+            for (int f = 0; f < 8; f++)
             {
 
                 var t = new System.Threading.Thread(new System.Threading.ThreadStart(

@@ -7,7 +7,7 @@ SIZEOF_STACK_ALLOC                      equ 10h*NUMBER_XMM_SAVES + SIZEOF_OUTGOI
 OFFSETOF_XMM_SAVE                       equ SIZEOF_OUTGOING_ARGUMENT_HOMES
 
 ; @@TODO: Change to match the function you're implementing
-extern FunctionLeave2_CPP_Helper:proc
+extern FunctionLeave2_CPP_STUB:proc
 
 ; @@TODO: Change to match the function you're implementing
 ;typedef void FunctionLeave2_Wrapper(
@@ -93,7 +93,7 @@ DoneSaveVolFPRegs:
 
         ; call FuntionLeave2 c++ helper
         ; @@TODO: Change to match the function you're implementing
-        call                    FunctionLeave2_CPP_Helper
+        call                    FunctionLeave2_CPP_STUB
 
         ; restore floating-point return register
         movdqa                  xmm0, [rsp + OFFSETOF_XMM_SAVE + 0h]

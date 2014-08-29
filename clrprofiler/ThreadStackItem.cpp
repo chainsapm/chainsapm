@@ -7,7 +7,7 @@
 StackItemBase::StackItemBase()
 {
 	QueryPerformanceCounter(&this->m_EnterTime);
-	this->m_GCReasons = std::vector<GC_REASON>();
+	this->m_GCReasons = std::vector<GC_REASON>(); // Setting this to 10 suspend reasons
 	this->m_SuspensionReasons = std::vector<COR_PRF_SUSPEND_REASON>();
 	m_StartWallTime = boost::posix_time::second_clock::universal_time();
 }
@@ -100,6 +100,8 @@ FunctionStackItem::FunctionStackItem(FunctionID funcId, ThreadStackReason reason
 	if (byteData.numRanges != 0)
 	{
 		this->m_ParameterInfo = COR_PRF_FUNCTION_ARGUMENT_INFO(byteData);
+		this->m_ParameterRanges = new COR_PRF_FUNCTION_ARGUMENT_RANGE[this->m_ParameterInfo.numRanges];
+		this->m_ParameterValues = new UINT_PTR[this->m_ParameterInfo.numRanges];
 		for (ULONG parameterCount = 0; parameterCount < this->m_ParameterInfo.numRanges; parameterCount++)
 		{
 			this->m_ParameterRanges[parameterCount]
@@ -113,6 +115,11 @@ FunctionStackItem::FunctionStackItem(FunctionID funcId, ThreadStackReason reason
 	}
 }
 
+FunctionStackItem::~FunctionStackItem()
+{
+	delete[] this->m_ParameterRanges;
+	delete[] this->m_ParameterValues;
+}
 
 ULONG FunctionStackItem::ParameterCount() const
 {
@@ -162,7 +169,7 @@ ThreadStackItem::ThreadStackItem(ThreadID threadId, ThreadStackReason reason) : 
 {
 	this->m_ThreadID = threadId;
 	this->m_LastReason = reason;
-	//this->m_ThreadName.assign(ThreadName);
+	this->m_ThreadName.assign(L"Worker Thread");
 }
 
 const std::wstring& ThreadStackItem::ThreadName() const
