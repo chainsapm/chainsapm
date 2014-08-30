@@ -2,7 +2,7 @@
 
 #include "MetadataHelpers.h"
 
-
+TODO("Research thread safety around metadata functions.");
 MetadataHelpers::MetadataHelpers()
 {
 	InitializeCriticalSection(&m_ThreadCS);
@@ -583,20 +583,25 @@ STDMETHODIMP MetadataHelpers::GetCurrentThread(ThreadID* threadId)
 {
 	if (this->m_pICorProfilerInfo4.p != NULL)
 	{
-		return this->m_pICorProfilerInfo4->GetCurrentThreadID(threadId);
+		this->m_pICorProfilerInfo4->GetCurrentThreadID(threadId);
+		return S_OK;
 	}
 	else if (this->m_pICorProfilerInfo4.p == NULL && this->m_pICorProfilerInfo3.p != NULL)
 	{
-		return this->m_pICorProfilerInfo3->GetCurrentThreadID(threadId);
+		 this->m_pICorProfilerInfo3->GetCurrentThreadID(threadId);
+		 return S_OK;
 	}
 	else if (this->m_pICorProfilerInfo3.p == NULL && this->m_pICorProfilerInfo2.p != NULL)
 	{
-		return this->m_pICorProfilerInfo2->GetCurrentThreadID(threadId);
+		 this->m_pICorProfilerInfo2->GetCurrentThreadID(threadId);
+		 return S_OK;
 	}
 	else if (this->m_pICorProfilerInfo2.p == NULL && this->m_pICorProfilerInfo.p != NULL)
 	{
-		return this->m_pICorProfilerInfo->GetCurrentThreadID(threadId);
+		 this->m_pICorProfilerInfo->GetCurrentThreadID(threadId);
+		 return S_OK;
 	}
+	return E_FAIL;
 	
 }
 

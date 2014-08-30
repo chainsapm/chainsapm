@@ -113,10 +113,14 @@ DWORD WINAPI MyThreadFunction(LPVOID lpParam)
 
 Cprofilermain::Cprofilermain()
 {
-	
 
+	TODO("Generate unique and repeatable identifier for this CLR agent.");
+	TODO("We should be able to reliably create a hash or some idetifier that will distinguish the application.");
+	TODO("For example, the w3wp process should include the application pool name.");
 
-	this->SetProcessName();
+	this->SetProcessName()
+		TODO("Make the act of selectively attaching to a process more dynamic.");
+		TODO("Consider using an ini file.");
 	if ((this->m_ProcessName.compare(L"w3wp.exe") == 0)
 		|| (this->m_ProcessName.compare(L"HelloWorldTestHarness.exe") == 0)
 		|| (this->m_ProcessName.compare(L"iisexpress.exe") == 0))
@@ -126,9 +130,11 @@ Cprofilermain::Cprofilermain()
 		this->m_ProcessId = GetCurrentProcessId();
 		this->AddCommonFunctions();
 		//m_NetworkClient = new NetworkClient(this, TEXT("localhost"), TEXT("5600"));
+		TODO("Research this critical section in the profiler main constructor.");
 		InitializeCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
 	}
 	DWORD tID = 0;
+	TODO("Remove this log writer thread.");
 	HANDLE tHandle = CreateThread(
 		NULL,                   // default security attributes
 		0,                      // use default stack size  
@@ -162,6 +168,7 @@ Cprofilermain::~Cprofilermain()
 		m_pICorProfilerInfo4.Release();
 	}
 	this->Shutdown();
+	TODO("Research this critical section in the profiler main destructor.");
 	DeleteCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
 }
 
@@ -172,9 +179,10 @@ Cprofilermain::~Cprofilermain()
 
 void Cprofilermain::AddCommonFunctions()
 {
-	 /*g_ClassNameSet->insert(TEXT("System.Threading.Thread"));
-	g_ClassNameSet->insert(TEXT("System.Threading.ThreadStart"));
-	g_ClassNameSet->insert(TEXT("System.Threading.ThreadHelper"));*/
+	TODO("Create a more dynamic way to add classes and functions to the list of things to be mapped.");
+	/*g_ClassNameSet->insert(TEXT("System.Threading.Thread"));
+   g_ClassNameSet->insert(TEXT("System.Threading.ThreadStart"));
+   g_ClassNameSet->insert(TEXT("System.Threading.ThreadHelper"));*/
 
 	//this->m_Container->g_FunctionNameSet->insert(TEXT("ProcessRequest"));
 	this->m_Container->g_FunctionNameSet->insert(TEXT("ProcessRequestNotificationHelper"));
@@ -186,6 +194,7 @@ void Cprofilermain::AddCommonFunctions()
 
 void Cprofilermain::WriteLogFile(int fileNum)
 {
+	TODO("Adapt some of this code into the server module to recreate a thread stack.");
 	//std::string fileName = ;
 	std::wstring fileName(str(boost::wformat(L"C:\\logifles\\%d_%d_%s.log") % fileNum % m_ProcessId % m_ProcessName));
 	std::wofstream outFile(fileName);
@@ -368,6 +377,10 @@ STDMETHODIMP Cprofilermain::SetMask()
 	COR_PRF_MONITOR_IMMUTABLE = (((((((((((((((COR_PRF_MONITOR_CODE_TRANSITIONS | COR_PRF_MONITOR_REMOTING) | COR_PRF_MONITOR_REMOTING_COOKIE) | COR_PRF_MONITOR_REMOTING_ASYNC) | COR_PRF_ENABLE_REJIT) | COR_PRF_ENABLE_INPROC_DEBUGGING) | COR_PRF_ENABLE_JIT_MAPS) | COR_PRF_DISABLE_OPTIMIZATIONS) | COR_PRF_DISABLE_INLINING) | COR_PRF_ENABLE_OBJECT_ALLOCATED) | COR_PRF_ENABLE_FUNCTION_ARGS) | COR_PRF_ENABLE_FUNCTION_RETVAL) | COR_PRF_ENABLE_FRAME_INFO) | COR_PRF_USE_PROFILE_IMAGES) | COR_PRF_DISABLE_TRANSPARENCY_CHECKS_UNDER_FULL_TRUST) | COR_PRF_DISABLE_ALL_NGEN_IMAGES)
 	*/
 	// set the event mask 
+
+	TODO("Add a more dynamic way to set the event mask.");
+	TODO("Make note of the events that can be turned off an on, on the fly.");
+
 	DWORD eventMask = (DWORD)(
 		COR_PRF_MONITOR_APPDOMAIN_LOADS
 		| COR_PRF_MONITOR_ENTERLEAVE
@@ -395,6 +408,7 @@ STDMETHODIMP Cprofilermain::SetMask()
 
 STDMETHODIMP Cprofilermain::GetFullMethodName(FunctionID functionID, std::string *methodName, int cMethod)
 {
+	TODO("Move this to the metadata helpers class.");
 	IMetaDataImport* pIMetaDataImport = 0;
 	HRESULT hr = S_OK;
 	mdToken funcToken = 0;
@@ -452,6 +466,7 @@ STDMETHODIMP Cprofilermain::GetFullMethodName(FunctionID functionID, std::string
 
 STDMETHODIMP Cprofilermain::GetFuncArgs(FunctionID functionID, COR_PRF_FRAME_INFO frameinfo)
 {
+	TODO("Move this to the metadata helpers class.");
 	HRESULT hr = S_OK;
 	mdToken funcToken = 0;
 	ClassID classID;
@@ -595,6 +610,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 			m_pICorProfilerInfo2->SetFunctionIDMapper((FunctionIDMapper*)&Cprofilermain::Mapper1);
 #ifdef _WIN64 
 			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_Wrapper_x64, (FunctionLeave2*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall2*)&FunctionTail2_Wrapper_x64);
+			TODO("Implement the x86 versions of the Enter/Tail/Leave function hooks.");
 #else
 			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2();
 #endif
@@ -608,7 +624,9 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 
 			m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_Wrapper_x64, (FunctionLeave2*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall2*)&FunctionTail2_Wrapper_x64);
 			//m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks2((FunctionEnter3*)&FunctionEnter2_Wrapper_x64, (FunctionLeave3*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall3*)&FunctionTail2_Wrapper_x64);
+			TODO("Implement the x86 versions of the Enter/Tail/Leave function hooks.");
 #else
+
 			m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks3();
 #endif
 		}
@@ -621,6 +639,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 #ifdef _WIN64 
 			m_pICorProfilerInfo4->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_Wrapper_x64, (FunctionLeave2*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall2*)&FunctionTail2_Wrapper_x64);
 			//m_pICorProfilerInfo4->SetEnterLeaveFunctionHooks2((FunctionEnter3*)&FunctionEnter2_Wrapper_x64, (FunctionLeave3*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall3*)&FunctionTail2_Wrapper_x64);
+			TODO("Implement the x86 versions of the Enter/Tail/Leave function hooks.");
 #else
 			m_pICorProfilerInfo4->SetEnterLeaveFunctionHooks3();
 #endif
@@ -820,6 +839,11 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	// Knowing this I am doing a hack instead of a graceful MD lookup on this object and adding the size of a Ptr
 	// to the IntPtr address.
 
+	TODO("Create a threadpool and call it from these functions.");
+	TODO("Make copies of the function parameters and pass them in as objects to the TP.");
+	TODO("Only use 2 threads, we should allow queueing to take place.");
+
+
 	webengine4helper &helper = webengine4helper::createhelper();
 
 	UINT_PTR reqInfo = *(UINT_PTR*)(argumentInfo->ranges[1].startAddress);
@@ -905,7 +929,9 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentRange)
 {
-
+	TODO("Create a threadpool and call it from these functions.");
+	TODO("Make copies of the function parameters and pass them in as objects to the TP.");
+	TODO("Only use 2 threads, we should allow queueing to take place.");
 	TimerItem ti(ThreadStackReason::EXIT);
 	{ // Critsec block for thread find start
 		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
@@ -945,6 +971,9 @@ void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func)
 {
+	TODO("Create a threadpool and call it from these functions.");
+	TODO("Make copies of the function parameters and pass them in as objects to the TP.");
+	TODO("Only use 2 threads, we should allow queueing to take place.");
 	TimerItem ti(ThreadStackReason::TAIL);
 	{ // Critsec block for thread find start
 		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);

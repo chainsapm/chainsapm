@@ -407,6 +407,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClCompile Include="ILFactory.cpp" />
     <ClCompile Include="leave_x86.cpp" />
     <ClCompile Include="MetadataHelpers.cpp" />
+    <ClCompile Include="networkclient.cpp" />
     <ClCompile Include="ParameterInfo.cpp" />
     <ClCompile Include="profilermain.cpp" />
     <ClCompile Include="srw_helper.cpp" />
@@ -453,6 +454,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="FunctionInfo.h" />
     <ClInclude Include="ILFactory.h" />
     <ClInclude Include="MetadataHelpers.h" />
+    <ClInclude Include="networkclient.h" />
     <ClInclude Include="ParameterInfo.h" />
     <ClInclude Include="profilermain.h" />
     <ClInclude Include="Resource.h" />

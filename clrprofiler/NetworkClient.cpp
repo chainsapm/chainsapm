@@ -2,6 +2,7 @@
 #include <WinSock2.h>
 #include <ws2tcpip.h>
 #include "profilermain.h"
+#include "NetworkClient.h"
 
 // Initialize the socket to NULL.
 SOCKET NetworkClient::m_SocketConnection = NULL;
@@ -34,7 +35,8 @@ void CALLBACK DataSent(
 */
 NetworkClient::NetworkClient(Cprofilermain *profMain, std::wstring hostName, std::wstring port)
 {
-	
+	TODO("Complete the network client.");
+	TODO("Create packet structure to allow ease of transmission of data.");
 	this->m_HostName.assign(hostName);
 	this->m_HostPort.assign(port);
 
@@ -50,7 +52,7 @@ NetworkClient::NetworkClient(Cprofilermain *profMain, std::wstring hostName, std
 	WSABUF bufs[1];
 	std::string s = std::string("Test from netclient");
 	bufs[0].buf = s._Myptr();
-	bufs[0].len = s.length();
+	bufs[0].len = (ULONG)s.length();
 	DWORD bytesSent = 0;
 	DWORD flags = 0;
 	WSAOVERLAPPED overlapped;
@@ -79,3 +81,5 @@ void NetworkClient::ControllerLoop()
 void NetworkClient::Start()
 {
 }
+
+

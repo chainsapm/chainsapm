@@ -44,14 +44,14 @@
     <Filter Include="IL Rewriting\Factory Class">
       <UniqueIdentifier>{93825141-6d0f-4774-b6b2-cd34e988a1f7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Network Client">
-      <UniqueIdentifier>{a4e23f61-673d-4da0-8588-c259badd8510}</UniqueIdentifier>
-    </Filter>
     <Filter Include="CorProfilerCallback">
       <UniqueIdentifier>{b780124e-f465-4063-af4e-87fa6d554549}</UniqueIdentifier>
     </Filter>
     <Filter Include="WebengineHelpers">
       <UniqueIdentifier>{4d5af967-5f37-4c07-b387-1b2d73f60b2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{a4e23f61-673d-4da0-8588-c259badd8510}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -110,7 +110,10 @@
       <Filter>Common Classes</Filter>
     </ClCompile>
     <ClCompile Include="webengine4helper.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>WebengineHelpers</Filter>
+    </ClCompile>
+    <ClCompile Include="networkclient.cpp">
+      <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -172,7 +175,10 @@
       <Filter>Common Classes</Filter>
     </ClInclude>
     <ClInclude Include="webengine4helper.h">
-      <Filter>Header Files</Filter>
+      <Filter>WebengineHelpers</Filter>
+    </ClInclude>
+    <ClInclude Include="networkclient.h">
+      <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

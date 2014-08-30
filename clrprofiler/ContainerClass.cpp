@@ -7,6 +7,7 @@
 
 ContainerClass::ContainerClass()
 {
+	TODO("Add more containers to properly handle a proper entry point.");
 	
 	this->g_FunctionSet = new std::map<FunctionID, FunctionInfo, std::less<FunctionID>, ALLOC_500<std::pair<FunctionID, FunctionInfo>>>(); // Start with allowing 
 	this->g_ThreadStackMap = new std::map<ThreadID, std::deque<StackItemBase*, ALLOC_500<StackItemBase*>>>();
