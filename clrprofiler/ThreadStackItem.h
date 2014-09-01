@@ -93,7 +93,7 @@ private:
 	COR_PRF_FUNCTION_ARGUMENT_INFO m_ParameterInfo;
 	COR_PRF_FUNCTION_ARGUMENT_RANGE * m_ParameterRanges;
 	UINT_PTR m_ReturnData;
-	UINT_PTR * m_ParameterValues; // Created a max item here, but we should be a bit more dynamic maybe?
+	UINT_PTR * m_ParameterValues; // TODO validate this works, Created a max item here, but we should be a bit more dynamic maybe?
 	FunctionID m_FunctionID;
 
 };

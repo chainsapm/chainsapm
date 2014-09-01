@@ -2,8 +2,8 @@
 #include "webengine4helper.h"
 
 
-TODO("Research thread safety of webengine classes.");
-TODO("Add in more functions to extract more details from the web request.");
+// CRITICAL 1 Research thread safety of webengine classes.
+// TODO: Add in more functions to extract more details from the web request.
 webengine4helper& webengine4helper::createhelper()
 {
 	static webengine4helper m_Instance;

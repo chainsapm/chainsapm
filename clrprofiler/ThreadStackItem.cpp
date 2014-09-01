@@ -6,8 +6,8 @@
 // Default constructor for Thread Stack Item
 StackItemBase::StackItemBase()
 {
-	TODO("Add local thread safety for this class and it's subclasses.");
-	TODO("Suggest to use the Slim Read Writer lock for shared access.");
+	// CRITICAL 2 Add local thread safety for this class and it's subclasses.
+	// CRITICAL 4 Suggest to use the Slim Read Writer lock for shared access.
 	QueryPerformanceCounter(&this->m_EnterTime);
 	this->m_GCReasons = std::vector<GC_REASON>(); // Setting this to 10 suspend reasons
 	this->m_SuspensionReasons = std::vector<COR_PRF_SUSPEND_REASON>();

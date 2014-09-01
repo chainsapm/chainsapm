@@ -2,11 +2,10 @@
 
 #include "MetadataHelpers.h"
 
-TODO("Research thread safety around metadata functions.");
+// CRITICAL 1 Research thread safety around metadata functions.
 MetadataHelpers::MetadataHelpers()
 {
 	InitializeCriticalSection(&m_ThreadCS);
-	// TODO Check to see if containers are valid.
 }
 
 MetadataHelpers::MetadataHelpers(ICorProfilerInfo *profilerInfo) : MetadataHelpers()
@@ -581,6 +580,7 @@ STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromFunction(FunctionID 
 
 STDMETHODIMP MetadataHelpers::GetCurrentThread(ThreadID* threadId)
 {
+	//CRITICAL 1 Make this more thread safe
 	if (this->m_pICorProfilerInfo4.p != NULL)
 	{
 		this->m_pICorProfilerInfo4->GetCurrentThreadID(threadId);

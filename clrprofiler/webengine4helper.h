@@ -1,4 +1,9 @@
 #pragma once
+
+// A little bit of hacking goes a long way
+// Opened up the pipeline request manager and found that they call native webengine modules passing an IntPtr
+
+
 class webengine4helper
 {
 public:

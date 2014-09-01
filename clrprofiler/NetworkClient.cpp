@@ -35,8 +35,8 @@ void CALLBACK DataSent(
 */
 NetworkClient::NetworkClient(Cprofilermain *profMain, std::wstring hostName, std::wstring port)
 {
-	TODO("Complete the network client.");
-	TODO("Create packet structure to allow ease of transmission of data.");
+	// TODO: Complete the network client.
+	// TODO: Create packet structure to allow ease of transmission of data.
 	this->m_HostName.assign(hostName);
 	this->m_HostPort.assign(port);
 

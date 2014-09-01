@@ -55,7 +55,7 @@ struct  ContainerClass
 	// **************************************** TESTING CLASSES ****************************************
 
 	///////////////////////////////////////////////////////////////////////////////////////
-	// Critical Sections 
+	// _Critical Sections 
 	///////////////////////////////////////////////////////////////////////////////////////
 
 	// For locking inserts to the main thread map. This is used quite a bit when threads become active 
