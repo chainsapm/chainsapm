@@ -2,7 +2,7 @@ HKCR
 {
 	NoRemove CLSID
 	{
-		ForceRemove {41DB4CB9-F3A1-44B2-87DC-52BF4E8E8EB2} = s 'Opensource CLR Profiler'
+		ForceRemove {41DB4CB9-F3A1-44B2-87DC-52BF4E8E8EB2} = s 'Chains APM CLR Profiler'
 		{
 			InprocServer32 = s '%MODULE%'
 			{
