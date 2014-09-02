@@ -29,11 +29,20 @@ Once you have built the project you will need to add two environment variables. 
 The instructions below will run the default Debuging behavior with the HelloWorldTestHarness.exe. This is a simple .NET 2.0 console application used to generate data. It has no real meaning or usefulness outside of that.
 
 1. Build application
+2. Register the DLL version you need, x64 Debug example:
+  1. Open a command prompt
+  2. Navigate to the build directory <projecthome>\.output\Debug\x64
+  3. Run regsvr32 clrprofiler.dll
 2. Set the following environment variables
   - COR_ENABLE_PROFILING=**0x0**
   - COR_PROFILER=**{41DB4CB9-F3A1-44B2-87DC-52BF4E8E8EB2}**
 3. Create the *C:\logfiles\* directory
+  - The application **WILL FAIL** if you do not.
 4. Press F5 or Select Build -> Debug
+  - The solution is set to run the HelloWorldTestHarness.exe when using Debug
+  - The solution is set to run the Websites and Webservices when using DebugMVC
+
+**NOTE** You can have both the 32bit and 64bit versions of the DLL registered at the same time. If you're not seeing expected results make sure you are rebuilding the proper bitness version.
 
 
 ##Visual Studio 2013
@@ -48,3 +57,34 @@ includes are required for this build. So far, I have not had to use any of the c
 ##.NET 4.5
 All off the .NET projects (save for some of the testing projects) will be written in .NET 4.5. This version comes on most Windows 8 implementations. If you do not have it please download it from here: http://www.microsoft.com/en-us/download/details.aspx?id=30653
 
+##Troubleshooting
+
+###Random Crashes
+This software is under heavy development at this time. It has been tested stable against a number of applications but there are always exceptions.
+
+If you attempt to run this with an application and it fails send an issue request.
+
+###All Applications Being Instrumented
+Make sure you do not have COR_ENABLE_PROFILING set to **0x1** in the registry. If you do the profiler will attempt to profile ANY .NET application.
+
+###I want to monitor another application
+Make sure you do not unset any of the filters in the  [Cprofilermain()](https://github.com/jldgit/opensource-clrprofiler/blob/master/clrprofiler/profilermain.cpp#L124) method.
+
+###I want to change what is instrumented
+Make changes to [AddCommonFunctions()](https://github.com/jldgit/opensource-clrprofiler/blob/master/clrprofiler/profilermain.cpp#L180) to include more functions.
+
+The code uses a substring match so if the string matches any part of a method it will be instrumented.
+
+```cpp
+this->m_Container->g_FunctionNameSet->insert(TEXT("Main"));
+```
+
+Or you can instrument an entire class
+```cpp
+this->m_Container->g_ClassNameSet->insert(TEXT("System.Threading.ThreadStart"));
+```
+
+###My 32bit application isn't monitored
+Build the 32bit version of the DLL and make sure you run regsvr32 clrprofiler.dll on the newly built verison.
+- <projecthome>\.output\Debug\x64
+- <projecthome>\.output\Debug\Win32
