@@ -1,4 +1,4 @@
-
+IFDEF RAX 
 ; Constants which are used in the following assembly code.
 ; @@TODO: Adjust as per comments below.
 SIZEOF_OUTGOING_ARGUMENT_HOMES          equ 8h*4h
@@ -142,5 +142,5 @@ DoneRestoreVolIntRegs:
 FunctionTail2_Wrapper_x64    endp
 
 _TEXT ends
-
+ENDIF
 end

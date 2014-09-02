@@ -61,9 +61,6 @@
     <ClCompile Include="MetadataHelpers.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
-    <ClCompile Include="leave_x86.cpp">
-      <Filter>x86 Function Hooks</Filter>
-    </ClCompile>
     <ClCompile Include="static_il_bodies.cpp">
       <Filter>IL Rewriting\IL Body Helpers</Filter>
     </ClCompile>

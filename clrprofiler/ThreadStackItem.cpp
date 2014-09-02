@@ -11,7 +11,7 @@ StackItemBase::StackItemBase()
 	QueryPerformanceCounter(&this->m_EnterTime);
 	this->m_GCReasons = std::vector<GC_REASON>(); // Setting this to 10 suspend reasons
 	this->m_SuspensionReasons = std::vector<COR_PRF_SUSPEND_REASON>();
-	m_StartWallTime = boost::posix_time::second_clock::universal_time();
+	GetSystemTime(&m_StartWallTime);
 }
 
 

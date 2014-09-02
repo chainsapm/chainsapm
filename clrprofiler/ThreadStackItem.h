@@ -41,7 +41,7 @@ public:
 protected:
 	void UpdateLeaveTime();
 	void virtual PolyDummy();
-	boost::posix_time::ptime m_StartWallTime;
+	SYSTEMTIME m_StartWallTime;
 	int m_SequenceNumber;
 	LARGE_INTEGER m_EnterTime;
 	LARGE_INTEGER m_LeaveTime;

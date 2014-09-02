@@ -7,7 +7,7 @@
 #else
 
 // @@TODO: Change the declaration to match the function you're implementing
-void __declspec(naked) __stdcall FunctionLeave2(FunctionID id, UINT_PTR clientData, COR_PRF_FRAME_INFO frame, COR_PRF_FUNCTION_ARGUMENT_RANGE* retvalRange)
+void __declspec(naked) __stdcall FunctionLeave2_x86(FunctionID id, UINT_PTR clientData, COR_PRF_FRAME_INFO frame, COR_PRF_FUNCTION_ARGUMENT_RANGE* retvalRange)
 {
     __asm
     {

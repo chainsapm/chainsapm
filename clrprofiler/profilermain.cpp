@@ -9,9 +9,6 @@
 
 
 
-
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Definition of static members of the Cprofilermain class
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -55,6 +52,7 @@ protected:
 // Global methods for specific profiler callbacks. Namely the Mapper and Enter/Leave/Tail
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
 // Enter hook function for creating shadow stacks
 void FunctionEnter2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
@@ -95,6 +93,287 @@ void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 
 	pContainerClass->FunctionTailHook2(funcId, clientData, func);
 }
+
+
+
+
+#if X64
+#else
+
+// @@TODO: Change the declaration to match the function you're implementing
+void __declspec(naked) __stdcall FunctionLeave2_x86(FunctionID id, UINT_PTR clientData, COR_PRF_FRAME_INFO frame, COR_PRF_FUNCTION_ARGUMENT_RANGE* retvalRange)
+{
+	__asm
+	{
+#ifdef DEBUG
+		// Set up EBP Frame (easy debugging)
+		// Turned off in release mode to save cycles
+		push ebp
+			mov ebp, esp
+#endif
+
+			// Make space for locals.
+			sub esp, __LOCAL_SIZE
+
+			// Save all registers.
+			//
+			// Technically you need only save what you use, but if you're working in C
+			// rather than assembly that's hard to predict. Saving them all is safer.
+			// If you really need to save the minimal set, code the whole darn thing in 
+			// assembly so you can control the register usage.
+			//
+			// Pushing ESP again is redundant (and in DEBUG pushing EBP is too), but using
+			// pushad is cleaner and saves some clock time over pushing individual registers.
+			// You can push the individual registers if you want; doing so will
+			// save a couple of DWORDs of stack space, perhaps at the expense of
+			// a clock cycle.
+			pushad
+
+			// Check if there's anything on the FP stack.
+			//
+			// Again technically you need only save what you use. You might think that
+			// FP regs are not commonly used in the kind of code you'd write in these,
+			// but there are common cases that might interfere. For example, in the 8.0 MS CRT, 
+			// memcpy clears the FP stack.
+			//
+			// @@TODO: In CLR versions 1.x and 2.0, everything from here to NoSaveFPReg
+			// is only strictly necessary for FunctionLeave and FunctionLeave2.
+			// Of course that may change in future releases, so use this code for all of your
+			// enter/leave function hooks if you want to avoid breaking.
+			fstsw   ax
+			and     ax, 3800h		// Check the top-of-fp-stack bits
+			cmp     ax, 0			// If non-zero, we have something to save
+			jnz     SaveFPReg
+			push    0				// otherwise, mark that there is no float value
+			jmp     NoSaveFPReg
+		SaveFPReg :
+		sub     esp, 8			// Make room for the FP value
+			fstp    qword ptr[esp] // Copy the FP value to the buffer as a double
+			push    1				// mark that a float value is present
+		NoSaveFPReg :
+	}
+
+	::FunctionLeave2_CPP_STUB(id, clientData, frame, retvalRange);
+
+	__asm
+	{
+		// Now see if we have to restore any floating point registers
+		// @@TODO: In CLR versions 1.x and 2.0, everything from here to 
+		// RestoreFPRegsDone is only strictly necessary for FunctionLeave and FunctionLeave2
+		// Of course that may change in future releases, so use this code for all of your
+		// enter/leave function hooks if you want to avoid breaking.
+		cmp[esp], 0			// Check the flag
+			jz      NoRestoreFPRegs		// If zero, no FP regs
+		RestoreFPRegs :
+		fld     qword ptr[esp + 4]	// Restore FP regs
+			add    esp, 12				// Move ESP past the storage space
+			jmp   RestoreFPRegsDone
+		NoRestoreFPRegs :
+		add     esp, 4				// Move ESP past the flag
+		RestoreFPRegsDone :
+
+						  // Restore other registers
+						  popad
+
+						  // Pop off locals
+						  add esp, __LOCAL_SIZE
+
+#ifdef DEBUG
+						  // Restore EBP
+						  // Turned off in release mode to save cycles
+						  pop ebp
+#endif
+
+						  // stdcall: Callee cleans up args from stack on return
+						  // @@TODO: Change this line to match the parameters to your function!
+						  ret SIZE id + SIZE clientData + SIZE frame + SIZE retvalRange
+	}
+}
+
+// @@TODO: Change the declaration to match the function you're implementing
+void __declspec(naked) __stdcall FunctionEnter2_x86(FunctionID funcId, UINT_PTR clientData,
+	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
+{
+	__asm
+	{
+#ifdef DEBUG
+		// Set up EBP Frame (easy debugging)
+		// Turned off in release mode to save cycles
+		push ebp
+			mov ebp, esp
+#endif
+
+			// Make space for locals.
+			sub esp, __LOCAL_SIZE
+
+			// Save all registers.
+			//
+			// Technically you need only save what you use, but if you're working in C
+			// rather than assembly that's hard to predict. Saving them all is safer.
+			// If you really need to save the minimal set, code the whole darn thing in 
+			// assembly so you can control the register usage.
+			//
+			// Pushing ESP again is redundant (and in DEBUG pushing EBP is too), but using
+			// pushad is cleaner and saves some clock time over pushing individual registers.
+			// You can push the individual registers if you want; doing so will
+			// save a couple of DWORDs of stack space, perhaps at the expense of
+			// a clock cycle.
+			pushad
+
+			// Check if there's anything on the FP stack.
+			//
+			// Again technically you need only save what you use. You might think that
+			// FP regs are not commonly used in the kind of code you'd write in these,
+			// but there are common cases that might interfere. For example, in the 8.0 MS CRT, 
+			// memcpy clears the FP stack.
+			//
+			// @@TODO: In CLR versions 1.x and 2.0, everything from here to NoSaveFPReg
+			// is only strictly necessary for FunctionLeave and FunctionLeave2.
+			// Of course that may change in future releases, so use this code for all of your
+			// enter/leave function hooks if you want to avoid breaking.
+			fstsw   ax
+			and     ax, 3800h		// Check the top-of-fp-stack bits
+			cmp     ax, 0			// If non-zero, we have something to save
+			jnz     SaveFPReg
+			push    0				// otherwise, mark that there is no float value
+			jmp     NoSaveFPReg
+		SaveFPReg :
+		sub     esp, 8			// Make room for the FP value
+			fstp    qword ptr[esp] // Copy the FP value to the buffer as a double
+			push    1				// mark that a float value is present
+		NoSaveFPReg :
+	}
+
+	FunctionEnter2_CPP_STUB(funcId, clientData, func, argumentInfo);
+
+	__asm
+	{
+		// Now see if we have to restore any floating point registers
+		// @@TODO: In CLR versions 1.x and 2.0, everything from here to 
+		// RestoreFPRegsDone is only strictly necessary for FunctionLeave and FunctionLeave2
+		// Of course that may change in future releases, so use this code for all of your
+		// enter/leave function hooks if you want to avoid breaking.
+		cmp[esp], 0			// Check the flag
+			jz      NoRestoreFPRegs		// If zero, no FP regs
+		RestoreFPRegs :
+		fld     qword ptr[esp + 4]	// Restore FP regs
+			add    esp, 12				// Move ESP past the storage space
+			jmp   RestoreFPRegsDone
+		NoRestoreFPRegs :
+		add     esp, 4				// Move ESP past the flag
+		RestoreFPRegsDone :
+
+						  // Restore other registers
+						  popad
+
+						  // Pop off locals
+						  add esp, __LOCAL_SIZE
+
+#ifdef DEBUG
+						  // Restore EBP
+						  // Turned off in release mode to save cycles
+						  pop ebp
+#endif
+
+						  // stdcall: Callee cleans up args from stack on return
+						  // @@TODO: Change this line to match the parameters to your function!
+						  ret SIZE funcId + SIZE clientData + SIZE func + SIZE argumentInfo
+	}
+}
+
+
+// @@TODO: Change the declaration to match the function you're implementing
+void __declspec(naked) __stdcall FunctionTail2_x86(FunctionID funcId, UINT_PTR clientData,
+	COR_PRF_FRAME_INFO func)
+{
+	__asm
+	{
+#ifdef DEBUG
+		// Set up EBP Frame (easy debugging)
+		// Turned off in release mode to save cycles
+		push ebp
+			mov ebp, esp
+#endif
+
+			// Make space for locals.
+			sub esp, __LOCAL_SIZE
+
+			// Save all registers.
+			//
+			// Technically you need only save what you use, but if you're working in C
+			// rather than assembly that's hard to predict. Saving them all is safer.
+			// If you really need to save the minimal set, code the whole darn thing in 
+			// assembly so you can control the register usage.
+			//
+			// Pushing ESP again is redundant (and in DEBUG pushing EBP is too), but using
+			// pushad is cleaner and saves some clock time over pushing individual registers.
+			// You can push the individual registers if you want; doing so will
+			// save a couple of DWORDs of stack space, perhaps at the expense of
+			// a clock cycle.
+			pushad
+
+			// Check if there's anything on the FP stack.
+			//
+			// Again technically you need only save what you use. You might think that
+			// FP regs are not commonly used in the kind of code you'd write in these,
+			// but there are common cases that might interfere. For example, in the 8.0 MS CRT, 
+			// memcpy clears the FP stack.
+			//
+			// @@TODO: In CLR versions 1.x and 2.0, everything from here to NoSaveFPReg
+			// is only strictly necessary for FunctionLeave and FunctionLeave2.
+			// Of course that may change in future releases, so use this code for all of your
+			// enter/leave function hooks if you want to avoid breaking.
+			fstsw   ax
+			and     ax, 3800h		// Check the top-of-fp-stack bits
+			cmp     ax, 0			// If non-zero, we have something to save
+			jnz     SaveFPReg
+			push    0				// otherwise, mark that there is no float value
+			jmp     NoSaveFPReg
+		SaveFPReg :
+		sub     esp, 8			// Make room for the FP value
+			fstp    qword ptr[esp] // Copy the FP value to the buffer as a double
+			push    1				// mark that a float value is present
+		NoSaveFPReg :
+	}
+
+	FunctionTail2_CPP_STUB(funcId, clientData, func);
+
+	__asm
+	{
+		// Now see if we have to restore any floating point registers
+		// @@TODO: In CLR versions 1.x and 2.0, everything from here to 
+		// RestoreFPRegsDone is only strictly necessary for FunctionLeave and FunctionLeave2
+		// Of course that may change in future releases, so use this code for all of your
+		// enter/leave function hooks if you want to avoid breaking.
+		cmp[esp], 0			// Check the flag
+			jz      NoRestoreFPRegs		// If zero, no FP regs
+		RestoreFPRegs :
+		fld     qword ptr[esp + 4]	// Restore FP regs
+			add    esp, 12				// Move ESP past the storage space
+			jmp   RestoreFPRegsDone
+		NoRestoreFPRegs :
+		add     esp, 4				// Move ESP past the flag
+		RestoreFPRegsDone :
+
+						  // Restore other registers
+						  popad
+
+						  // Pop off locals
+						  add esp, __LOCAL_SIZE
+
+#ifdef DEBUG
+						  // Restore EBP
+						  // Turned off in release mode to save cycles
+						  pop ebp
+#endif
+
+						  // stdcall: Callee cleans up args from stack on return
+						  // @@TODO: Change this line to match the parameters to your function!
+						  ret SIZE funcId + SIZE clientData + SIZE func
+	}
+}
+#endif
+
 
 DWORD WINAPI MyThreadFunction(LPVOID lpParam)
 {
@@ -186,7 +465,6 @@ void Cprofilermain::AddCommonFunctions()
 
 	//this->m_Container->g_FunctionNameSet->insert(TEXT("ProcessRequest"));
 	this->m_Container->g_FunctionNameSet->insert(TEXT("ProcessRequestNotificationHelper"));
-
 	/*	this->m_Container->g_FunctionNameSet->insert(TEXT("ThreadStart"));
 		this->m_Container->g_FunctionNameSet->insert(TEXT("Start"))*/;
 
@@ -612,7 +890,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_Wrapper_x64, (FunctionLeave2*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall2*)&FunctionTail2_Wrapper_x64);
 			// TODO: Implement the x86 versions of the Enter/Tail/Leave function hooks.
 #else
-			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2();
+			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_x86, (FunctionLeave2*)&FunctionLeave2_x86, (FunctionTailcall2*)&FunctionTail2_x86);
 #endif
 		}
 		if (m_pICorProfilerInfo3 != NULL)
@@ -627,7 +905,8 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 			// TODO: Implement the x86 versions of the Enter/Tail/Leave function hooks.
 #else
 
-			m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks3();
+			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_x86, (FunctionLeave2*)&FunctionLeave2_x86, (FunctionTailcall2*)&FunctionTail2_x86);
+			//m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks3();
 #endif
 		}
 		if (m_pICorProfilerInfo4 != NULL)
@@ -641,7 +920,8 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 			//m_pICorProfilerInfo4->SetEnterLeaveFunctionHooks2((FunctionEnter3*)&FunctionEnter2_Wrapper_x64, (FunctionLeave3*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall3*)&FunctionTail2_Wrapper_x64);
 			// TODO: Implement the x86 versions of the Enter/Tail/Leave function hooks.
 #else
-			m_pICorProfilerInfo4->SetEnterLeaveFunctionHooks3();
+			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_x86, (FunctionLeave2*)&FunctionLeave2_x86, (FunctionTailcall2*)&FunctionTail2_x86);
+			//m_pICorProfilerInfo4->SetEnterLeaveFunctionHooks3();
 #endif
 		}
 		Cprofilermain::g_StaticContainerClass->insert(std::pair<UINT_PTR, Cprofilermain*>(0x0, this));
@@ -839,34 +1119,34 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	// Make copies of the function parameters and pass them in as objects to the TP.
 	// Only use 2 threads, we should allow queueing to take place.
 
-	// CRITICAL 2 Remove this code from this function block to speed up call time
-	webengine4helper &helper = webengine4helper::createhelper();
+	//// CRITICAL 2 Remove this code from this function block to speed up call time
+	//webengine4helper &helper = webengine4helper::createhelper();
 
-	UINT_PTR reqInfo = *(UINT_PTR*)(argumentInfo->ranges[1].startAddress);
-	//UINT_PTR reqInfo = (UINT_PTR)(argumentInfo->ranges->startAddress + argumentInfo->ranges->length);
-	UINT_PTR contType;
-	UINT_PTR totalLen;
-	UINT_PTR pathTranslated;
-	UINT_PTR cchPathTranslated;
-	UINT_PTR cacheURL;
-	UINT_PTR cchCacheURL;
-	UINT_PTR urlMax;
-	UINT_PTR cookedUrl;
+	//UINT_PTR reqInfo = *(UINT_PTR*)(argumentInfo->ranges[1].startAddress);
+	////UINT_PTR reqInfo = (UINT_PTR)(argumentInfo->ranges->startAddress + argumentInfo->ranges->length);
+	//UINT_PTR contType;
+	//UINT_PTR totalLen;
+	//UINT_PTR pathTranslated;
+	//UINT_PTR cchPathTranslated;
+	//UINT_PTR cacheURL;
+	//UINT_PTR cchCacheURL;
+	//UINT_PTR urlMax;
+	//UINT_PTR cookedUrl;
 
-	helper.GetRequestBasics(
-		reqInfo,
-		&contType,
-		&totalLen,
-		&pathTranslated,
-		&cchPathTranslated,
-		&cacheURL,
-		&cchCacheURL,
-		&urlMax,
-		&cookedUrl);
+	//helper.GetRequestBasics(
+	//	reqInfo,
+	//	&contType,
+	//	&totalLen,
+	//	&pathTranslated,
+	//	&cchPathTranslated,
+	//	&cacheURL,
+	//	&cchCacheURL,
+	//	&urlMax,
+	//	&cookedUrl);
 
-	_HTTP_COOKED_URL * cooked = (_HTTP_COOKED_URL*)cookedUrl;
+	//_HTTP_COOKED_URL * cooked = (_HTTP_COOKED_URL*)cookedUrl;
 
-	helper.SetUnkHeader(reqInfo, false, true, "X-chainsAPM", "JamesDavis", 11);
+	//helper.SetUnkHeader(reqInfo, false, true, "X-chainsAPM", "JamesDavis", 11);
 	/*
 	MSDN Article that describes the ELT methods and what COR flags need to be set.
 	http://msdn.microsoft.com/en-us/magazine/cc300553.aspx
@@ -1012,7 +1292,7 @@ UINT_PTR __stdcall Cprofilermain::Mapper2(FunctionID funcId, UINT_PTR clientData
 	return pContainerClass->MapFunction(funcId, clientData, pbHookFunction);
 }
 
-//#define ALLMETHODS
+#define ALLMETHODS
 UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL *pbHookFunction)
 {
 #ifdef ALLMETHODS
@@ -1028,7 +1308,7 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 	*pbHookFunction = TRUE;
 
 #else
-	// While this method does not cause any updates the one below it does.
+	// While this method does not cause any upthe one below it does.
 	EnterCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
 	std::map<FunctionID, FunctionInfo>::const_iterator it = this->m_Container->g_FunctionSet->find(funcId);
 	LeaveCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
