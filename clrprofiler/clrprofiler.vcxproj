@@ -433,6 +433,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="threadpoolhelper.cpp" />
     <ClCompile Include="ThreadStackItem.cpp" />
     <ClCompile Include="TimerItem.cpp" />
     <ClCompile Include="webengine4helper.cpp" />
@@ -475,6 +476,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="static_il_bodies.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="threadpoolhelper.h" />
     <ClInclude Include="ThreadStackItem.h" />
     <ClInclude Include="TimerItem.h" />
     <ClInclude Include="webengine4helper.h" />

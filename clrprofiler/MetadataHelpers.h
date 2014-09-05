@@ -6,14 +6,17 @@
 
 #define MAX_LENGTH 2048
 
+struct ContainerClass;
+
 class MetadataHelpers
 {
 public:
 	MetadataHelpers();
-	MetadataHelpers(ICorProfilerInfo *profilerInfo);
-	MetadataHelpers(ICorProfilerInfo2 *profilerInfo);
-	MetadataHelpers(ICorProfilerInfo3 *profilerInfo);
-	MetadataHelpers(ICorProfilerInfo4 *profilerInfo);
+	MetadataHelpers(ContainerClass *cClass);
+	MetadataHelpers(ICorProfilerInfo *profilerInfo, ContainerClass *cClass);
+	MetadataHelpers(ICorProfilerInfo2 *profilerInfo, ContainerClass *cClass);
+	MetadataHelpers(ICorProfilerInfo3 *profilerInfo, ContainerClass *cClass);
+	MetadataHelpers(ICorProfilerInfo4 *profilerInfo, ContainerClass *cClass);
 	~MetadataHelpers();
 
 	STDMETHOD(GetCurrentThread)(ThreadID* threadId);
@@ -45,6 +48,8 @@ private:
 	ATL::CComQIPtr<ICorProfilerInfo4> m_pICorProfilerInfo4;
 	//boost::mutex m_ThreadIdMutex;
 	CRITICAL_SECTION m_ThreadCS;
+	// Saving reference to the containers in order to provide specific function lookups, eg. Is this method an entry point
+	ContainerClass * m_ContainerClass;
 
 };
 

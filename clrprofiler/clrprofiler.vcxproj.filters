@@ -112,6 +112,9 @@
     <ClCompile Include="networkclient.cpp">
       <Filter>Network</Filter>
     </ClCompile>
+    <ClCompile Include="threadpoolhelper.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="clrprofiler_i.h">
@@ -176,6 +179,9 @@
     </ClInclude>
     <ClInclude Include="networkclient.h">
       <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="threadpoolhelper.h">
+      <Filter>Helpers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

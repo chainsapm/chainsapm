@@ -16,6 +16,7 @@ namespace HelloWorldTestHarness
         }
         static void Main(string[] args)
         {
+
             Console.ReadLine();
             System.Threading.Thread.CurrentThread.Name = "Main";
             System.Console.WriteLine("Hello World!");

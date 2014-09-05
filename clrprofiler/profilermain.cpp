@@ -398,8 +398,8 @@ Cprofilermain::Cprofilermain()
 	// For example, the w3wp process should include the application pool name.
 
 	this->SetProcessName();
-		// TODO: Make the act of selectively attaching to a process more dynamic.
-		// TODO: Consider using an ini file.
+	// TODO: Make the act of selectively attaching to a process more dynamic.
+	// TODO: Consider using an ini file.
 	if ((this->m_ProcessName.compare(L"w3wp.exe") == 0)
 		|| (this->m_ProcessName.compare(L"HelloWorldTestHarness.exe") == 0)
 		|| (this->m_ProcessName.compare(L"iisexpress.exe") == 0))
@@ -464,7 +464,41 @@ void Cprofilermain::AddCommonFunctions()
    g_ClassNameSet->insert(TEXT("System.Threading.ThreadHelper"));*/
 
 	//this->m_Container->g_FunctionNameSet->insert(TEXT("ProcessRequest"));
-	this->m_Container->g_FunctionNameSet->insert(TEXT("ProcessRequestNotificationHelper"));
+
+	ItemMapping *newMapping2 = new ItemMapping();
+	ItemMapping *newMapping3 = new ItemMapping();
+	ItemMapping *newMapping4 = new ItemMapping();
+	ItemMapping *newMapping5 = new ItemMapping();
+	ItemMapping *newMapping6 = new ItemMapping();
+	ItemMapping *newMapping7 = new ItemMapping();
+
+
+
+	newMapping2->ItemName = TEXT("ProcessRequest");
+	newMapping2->compare = STRINGCOMPARE::CONTAINS;
+	this->m_Container->g_FunctionNameSet->insert(newMapping2);
+
+	newMapping3->ItemName = TEXT("Thread");
+	newMapping3->compare = STRINGCOMPARE::CONTAINS;
+	this->m_Container->g_FunctionNameSet->insert(newMapping3);
+
+	newMapping4->ItemName = TEXT("Connect");
+	newMapping4->compare = STRINGCOMPARE::CONTAINS;
+	this->m_Container->g_FunctionNameSet->insert(newMapping4);
+
+	newMapping5->ItemName = TEXT("WriteStream");
+	newMapping5->compare = STRINGCOMPARE::CONTAINS;
+	this->m_Container->g_FunctionNameSet->insert(newMapping5);
+
+	newMapping6->ItemName = TEXT("Headers");
+	newMapping6->compare = STRINGCOMPARE::CONTAINS;
+	this->m_Container->g_FunctionNameSet->insert(newMapping6);
+
+	newMapping7->ItemName = TEXT("AddNumbers");
+	newMapping7->compare = STRINGCOMPARE::CONTAINS;
+	this->m_Container->g_FunctionNameSet->insert(newMapping7);
+
+
 	/*	this->m_Container->g_FunctionNameSet->insert(TEXT("ThreadStart"));
 		this->m_Container->g_FunctionNameSet->insert(TEXT("Start"))*/;
 
@@ -487,7 +521,7 @@ void Cprofilermain::WriteLogFile(int fileNum)
 		UINT highPartReturn;
 		UINT lowPartReturn;
 		outFile.imbue(std::locale(loc, new no_separator()));
-		std::map<FunctionID, FunctionInfo>::iterator itFunc;
+		std::map<FunctionID, FunctionInfo*>::iterator itFunc;
 		std::wstring spaces;
 		std::wstring separator(80, '=');
 		outFile << separator << std::endl;
@@ -555,7 +589,7 @@ void Cprofilermain::WriteLogFile(int fileNum)
 							depth = (*constIt)->Depth();
 						}
 						spaces.swap(std::wstring(depth * 2, ' '));
-						outFile << spaces << itFunc->second.SignatureString();
+						outFile << spaces << itFunc->second->SignatureString();
 						if ((*constIt)->LastReason() == TAIL)
 						{
 							outFile << _T(" !!TAIL CALL!! ");
@@ -568,7 +602,7 @@ void Cprofilermain::WriteLogFile(int fileNum)
 							{
 								highPartParam = (0xFFFFFFFF00000000 & testItemConverted->ItemStackParameters()[i]) >> 32;
 								lowPartParam = 0x00000000FFFFFFFF & testItemConverted->ItemStackParameters()[i];
-								if (itFunc->second.IsStatic() == FALSE && i == 0)
+								if (itFunc->second->IsStatic() == FALSE && i == 0)
 								{
 									outFile << "Class Pointer: ";
 									paramNumber--;
@@ -865,16 +899,16 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 		switch (this->m_HighestProfileInfo)
 		{
 		case 1:
-			this->m_Container->g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo);
+			this->m_Container->g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo, this->m_Container);
 			break;
 		case 2:
-			this->m_Container->g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo2);
+			this->m_Container->g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo2, this->m_Container);
 			break;
 		case 3:
-			this->m_Container->g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo3);
+			this->m_Container->g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo3, this->m_Container);
 			break;
 		case 4:
-			this->m_Container->g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo4);
+			this->m_Container->g_MetadataHelpers = new MetadataHelpers(this->m_pICorProfilerInfo4, this->m_Container);
 			break;
 		default:
 			return 0;
@@ -1113,7 +1147,7 @@ STDMETHODIMP Cprofilermain::RuntimeResumeFinished(void)
 void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
 {
-	
+
 
 	// CRITICAL 3 Create a threadpool and call it from these functions.
 	// Make copies of the function parameters and pass them in as objects to the TP.
@@ -1292,17 +1326,17 @@ UINT_PTR __stdcall Cprofilermain::Mapper2(FunctionID funcId, UINT_PTR clientData
 	return pContainerClass->MapFunction(funcId, clientData, pbHookFunction);
 }
 
-#define ALLMETHODS
+//#define ALLMETHODS
 UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL *pbHookFunction)
 {
 #ifdef ALLMETHODS
 
-	FunctionInfo funcInfo;
-	this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, &funcInfo);
+	FunctionInfo *funcInfo = new FunctionInfo();
+	this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, funcInfo);
 	{ // Critsec block for thread depth start
 
 		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
-		this->m_Container->g_FunctionSet->insert(std::pair<FunctionID, FunctionInfo>(funcId, funcInfo));
+		this->m_Container->g_FunctionSet->insert(std::pair<FunctionID, FunctionInfo*>(funcId, funcInfo));
 
 	}
 	*pbHookFunction = TRUE;
@@ -1310,33 +1344,35 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 #else
 	// While this method does not cause any upthe one below it does.
 	EnterCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
-	std::map<FunctionID, FunctionInfo>::const_iterator it = this->m_Container->g_FunctionSet->find(funcId);
+	auto it = this->m_Container->g_FunctionSet->find(funcId);
 	LeaveCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
 	if (it == this->m_Container->g_FunctionSet->end())
 	{
 
 		// funcInfo declared in this block so they are not created if the function is found
 
-		FunctionInfo funcInfo;
+		FunctionInfo *funcInfo = new FunctionInfo();
 
-		this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, &funcInfo);
+		this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, funcInfo);
 		// These iterator operations should not cause a lock since it's only a read
 		// and the find method does not alter the structure.
 
 		// The function mapping happens at the during the class instantiation
-		std::unordered_set<std::wstring>::const_iterator findClass =
-			this->m_Container->g_ClassNameSet->find(funcInfo.ClassName());
-		std::unordered_set<std::wstring>::const_iterator findName =
-			this->m_Container->g_FunctionNameSet->find(funcInfo.FunctionName());
+		auto findClass =
+			this->m_Container->g_ClassNameSet->find(funcInfo->ClassName());
+		ItemMapping itemMap;
+		itemMap.ItemName = funcInfo->FunctionName();
+		auto findName =
+			this->m_Container->g_FunctionNameSet->find(&itemMap);
 
 
 		if ((findName != this->m_Container->g_FunctionNameSet->end()) | (findClass != this->m_Container->g_ClassNameSet->end()))
 		{
 			// Causes and update to this map and can be called from multiple threads.
-			this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, &funcInfo);
+			this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, funcInfo);
 			{ // Critsec block for thread depth start
 				critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
-				this->m_Container->g_FunctionSet->insert(std::pair<FunctionID, FunctionInfo>(funcId, funcInfo));
+				this->m_Container->g_FunctionSet->insert(std::pair<FunctionID, FunctionInfo*>(funcId, funcInfo));
 			}
 			*pbHookFunction = TRUE;
 		}

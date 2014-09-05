@@ -108,7 +108,7 @@ void FunctionInfo::AddParameters(const ParameterInfo& addParameter)
 	this->m_Parameters.push_back(*new ParameterInfo(addParameter));
 }
 
-const BOOL FunctionInfo::IsStatic()
+const BOOL& FunctionInfo::IsStatic()
 {
 	return this->m_IsStatic;
 }
@@ -116,4 +116,14 @@ const BOOL FunctionInfo::IsStatic()
 void FunctionInfo::IsStatic(BOOL isStatic)
 {
 	this->m_IsStatic = isStatic;
+}
+
+const BOOL& FunctionInfo::IsEntryPoint()
+{
+	return this->m_IsEntryPoint;
+}
+
+void FunctionInfo::IsEntryPoint(BOOL isStatic)
+{
+	this->m_IsEntryPoint = isStatic;
 }

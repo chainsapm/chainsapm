@@ -1,3 +1,4 @@
+
 #pragma once
 #include "commonstructures.h"
 #include "ParameterInfo.h"
@@ -36,8 +37,11 @@ public:
 	const std::vector<ParameterInfo>& Parameters();
 	void AddParameters(const ParameterInfo& addParameter);
 
-	const BOOL IsStatic();
+	const BOOL& IsStatic();
 	void IsStatic(BOOL);
+
+	const BOOL& IsEntryPoint();
+	void IsEntryPoint(BOOL);
 
 private:
 	std::wstring m_ClassName;
@@ -49,6 +53,7 @@ private:
 	std::wstring m_CallingConvention;
 	std::vector<ParameterInfo> m_Parameters;
 	BOOL m_IsStatic;
+	BOOL m_IsEntryPoint;
 };
 
 

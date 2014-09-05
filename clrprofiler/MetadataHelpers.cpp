@@ -1,6 +1,8 @@
 #include "stdafx.h"
 
 #include "MetadataHelpers.h"
+#include "ContainerClass.h"
+
 
 // CRITICAL 1 Research thread safety around metadata functions.
 MetadataHelpers::MetadataHelpers()
@@ -8,22 +10,27 @@ MetadataHelpers::MetadataHelpers()
 	InitializeCriticalSection(&m_ThreadCS);
 }
 
-MetadataHelpers::MetadataHelpers(ICorProfilerInfo *profilerInfo) : MetadataHelpers()
+MetadataHelpers::MetadataHelpers(ContainerClass *cClass) : MetadataHelpers()
+{
+	this->m_ContainerClass = cClass;
+}
+
+MetadataHelpers::MetadataHelpers(ICorProfilerInfo *profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
 {
 	m_pICorProfilerInfo = profilerInfo;
 }
 
-MetadataHelpers::MetadataHelpers(ICorProfilerInfo2 *profilerInfo) : MetadataHelpers()
+MetadataHelpers::MetadataHelpers(ICorProfilerInfo2 *profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
 {
 	m_pICorProfilerInfo2 = profilerInfo;
 }
 
-MetadataHelpers::MetadataHelpers(ICorProfilerInfo3 *profilerInfo) : MetadataHelpers()
+MetadataHelpers::MetadataHelpers(ICorProfilerInfo3 *profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
 {
 	m_pICorProfilerInfo3 = profilerInfo;
 }
 
-MetadataHelpers::MetadataHelpers(ICorProfilerInfo4 *profilerInfo) : MetadataHelpers()
+MetadataHelpers::MetadataHelpers(ICorProfilerInfo4 *profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
 {
 	m_pICorProfilerInfo4 = profilerInfo;
 }
@@ -304,7 +311,12 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Function
 					
 					paramInfo.ParameterName(szParamName);
 					funcInfo->AddParameters(paramInfo);
-
+					auto foundEntrypoint = this->m_ContainerClass->g_FunctionSet->find(funcId);
+					auto endOfSet = this->m_ContainerClass->g_FunctionSet->end();
+					if (foundEntrypoint != endOfSet)
+					{
+						funcInfo->IsEntryPoint(TRUE);
+					}
 
 				}
 			}
