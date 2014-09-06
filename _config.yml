@@ -6,17 +6,17 @@ pygments:         true
 permalink:        pretty
 
 # Setup
-title:            Poole
-tagline:          The Jekyll Butler
-url:              http://getpoole.com
+title:            ChainsAPM
+tagline:          Find the weak link.
+url:              http://chainsapm.github.io/chainsapm
 paginate:         1
 baseurl:          /
 author:
-  name:           Mark Otto
-  url:            https://twitter.com/mdo
-  email:          markdotto@gmail.com
+  name:           James Davis
+  url:            https://twitter.com/chainsapm
+  email:          james.l.davis@outlook.com
 
 # Custom vars
 version:          1.0.0
 github:
-  repo:           https://github.com/poole/poole
+  repo:           https://github.com/chainsapm/chainsapm/
