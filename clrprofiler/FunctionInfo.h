@@ -43,6 +43,9 @@ public:
 	const BOOL& IsEntryPoint();
 	void IsEntryPoint(BOOL);
 
+	const BOOL& AlwaysCreateNewEntryPoint();
+	void AlwaysCreateNewEntryPoint(BOOL);
+
 private:
 	std::wstring m_ClassName;
 	std::wstring m_FunctionName;
@@ -54,6 +57,7 @@ private:
 	std::vector<ParameterInfo> m_Parameters;
 	BOOL m_IsStatic;
 	BOOL m_IsEntryPoint;
+	BOOL m_AlwaysCreateEntryPoint;
 };
 
 

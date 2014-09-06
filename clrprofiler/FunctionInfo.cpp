@@ -123,7 +123,17 @@ const BOOL& FunctionInfo::IsEntryPoint()
 	return this->m_IsEntryPoint;
 }
 
-void FunctionInfo::IsEntryPoint(BOOL isStatic)
+void FunctionInfo::IsEntryPoint(BOOL isEntry)
 {
-	this->m_IsEntryPoint = isStatic;
+	this->m_IsEntryPoint = isEntry;
+}
+
+const BOOL& FunctionInfo::AlwaysCreateNewEntryPoint()
+{
+	return this->m_AlwaysCreateEntryPoint;
+}
+
+void FunctionInfo::AlwaysCreateNewEntryPoint(BOOL alwaysCreate)
+{
+	this->m_AlwaysCreateEntryPoint = alwaysCreate;
 }

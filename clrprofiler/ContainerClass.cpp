@@ -19,7 +19,7 @@ ContainerClass::ContainerClass()
 
 	this->g_FunctionSet = new std::map<FunctionID, FunctionInfo*, std::less<FunctionID>, ALLOC_500<std::pair<FunctionID, FunctionInfo*>>>(); // Start with allowing 
 	this->g_ThreadStackMap = new std::map<ThreadID, std::deque<StackItemBase*, ALLOC_500<StackItemBase*>>>();
-	this->g_EntryPointStackMap = new std::map<ULONGLONG, std::deque<StackItemBase*, ALLOC_500<StackItemBase*>>>();
+	this->g_EntryPointStackMap = new std::map<LONGLONG, std::deque<StackItemBase*, ALLOC_500<StackItemBase*>>>();
 	this->g_ThreadEntrypointID = new std::map<ThreadID, ULONGLONG>();
 	this->g_FunctionNameSet = new std::unordered_set < ItemMapping*, Hasher, EqualFn>();
 	this->g_ClassNameSet = new std::unordered_set<std::wstring>();

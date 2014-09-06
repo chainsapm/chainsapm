@@ -1185,8 +1185,10 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	MSDN Article that describes the ELT methods and what COR flags need to be set.
 	http://msdn.microsoft.com/en-us/magazine/cc300553.aspx
 	*/
-
+	// Create a timer item that will calculate how long we spent trying to gather data
 	TimerItem ti(ThreadStackReason::ENTER);
+
+
 	// As we could be mapping a function while trying to find this guy it's possible
 	// we would have a race condition.
 	// However we will more than likely stop using this behavior as testing shows we don't need it
@@ -1198,15 +1200,43 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	/*	if (it != g_FunctionSet->end())
 	{*/
 	//const FunctionInfo *fi = &it->second;
-	ThreadID threadId;
 
+	ThreadID threadId;
 	this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+
 	{ // Critsec block for thread find start
 		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
-		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
-		if (itStack != this->m_Container->g_ThreadStackMap->end())
+		
+		auto functionInfo = this->m_Container->g_FunctionSet->find(funcId);
+
+		if (functionInfo->second->IsEntryPoint())
 		{
 			csh.leave_early(); // Leaving CS early because we don't need to worry about it
+			LONGLONG incremented = 0;
+			if (functionInfo->second->AlwaysCreateNewEntryPoint() ) // Check to see if we need to create a new entrypoint of if we fall through
+			{
+				incremented = InterlockedIncrement64(&this->m_Container->currentEntryPointCounter);
+			}
+			auto threadIdentifier = this->m_Container->g_ThreadEntrypointID->find(threadId);
+			if (threadIdentifier != this->m_Container->g_ThreadEntrypointID->end())
+			{
+				if (functionInfo->second->AlwaysCreateNewEntryPoint()) // Set the thread entrypoint ID to 
+				{
+					threadIdentifier->second = incremented;
+				}
+			}
+			else {
+				this->m_Container->g_ThreadEntrypointID->insert(std::pair<ThreadID, ULONGLONG>(threadId, incremented));
+				threadIdentifier = this->m_Container->g_ThreadEntrypointID->find(threadId);
+			}
+			auto entryPointStack = this->m_Container->g_EntryPointStackMap->find(threadIdentifier->second);
+
+			this->m_Container->g_EntryPointStackMap->insert(
+				std::pair<LONGLONG,
+				std::deque<StackItemBase*, ALLOC_500<StackItemBase*>>>
+				(this->m_Container->currentEntryPointCounter, std::deque<StackItemBase*, ALLOC_500<StackItemBase*>>()));
+
+			
 			FunctionStackItem * tsi = new FunctionStackItem(funcId, ThreadStackReason::ENTER, *argumentInfo);
 			{ // Critsec block for thread depth start
 				critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
@@ -1218,8 +1248,8 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 			}
 			ti.AddThreadStackItem(tsi);
 			// We will  need to lock this as only one thread can act on this list.
-			itStack->second.emplace_back(tsi);
-			if (itStack->second.size() > 0)
+			entryPointStack->second.emplace_back(tsi);
+			if (entryPointStack->second.size() > 0)
 			{
 				// use a thread safe way of incrementing a mapped value
 				{ // Critsec block for thread depth start
@@ -1232,6 +1262,44 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 				}
 			}
 		}
+
+		// Find the current entrypoint for this thread (if there is one)
+		auto itStack = this->m_Container->g_ThreadEntrypointID->find(threadId);
+		if (itStack != this->m_Container->g_ThreadEntrypointID->end())
+		{
+			auto entryPointStack = this->m_Container->g_EntryPointStackMap->find(itStack->second);
+			
+			if (entryPointStack != this->m_Container->g_EntryPointStackMap->end())
+			{
+				csh.leave_early(); // Leaving CS early because we don't need to worry about it
+
+				FunctionStackItem * tsi = new FunctionStackItem(funcId, ThreadStackReason::ENTER, *argumentInfo);
+				{ // Critsec block for thread depth start
+					critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
+					tsi->Depth(this->m_Container->g_ThreadStackDepth->at(threadId));
+				}
+			{ // Critsec block for thread depth start
+				critsec_helper csh(&this->m_Container->g_ThreadStackSequenceCriticalSection);
+				tsi->SequenceNumber(this->m_Container->g_ThreadStackSequence->at(threadId));
+			}
+				ti.AddThreadStackItem(tsi);
+				// We will  need to lock this as only one thread can act on this list.
+				entryPointStack->second.emplace_back(tsi);
+				if (entryPointStack->second.size() > 0)
+				{
+					// use a thread safe way of incrementing a mapped value
+					{ // Critsec block for thread depth start
+						critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
+						InterlockedIncrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
+					}
+				{ // Critsec block for thread depth start
+					critsec_helper csh(&this->m_Container->g_ThreadStackSequenceCriticalSection);
+					InterlockedIncrement(&this->m_Container->g_ThreadStackSequence->at(threadId));
+				}
+				}
+			}
+		}
+		
 	} // Critsec block for thread find end
 
 }

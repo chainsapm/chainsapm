@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 8.00.0603 */
-/* at Fri Sep 05 02:43:38 2014
+/* at Fri Sep 05 11:15:16 2014
  */
 /* Compiler settings for clrprofiler.idl:
     Oicf, W1, Zp8, env=Win32 (32b run), target_arch=X86 8.00.0603 
