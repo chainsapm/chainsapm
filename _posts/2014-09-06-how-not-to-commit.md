@@ -1,40 +1,49 @@
 ---
 layout: post
-title: Introducing Poole
+title: How not to commit to GitHub
 ---
 
-*The Strange Case of Dr. Jekyll and Mr. Hyde* tells the story of a lawyer investigating the connection of two persons, Dr. Henry Jekyll and Mr. Edward Hyde. Chief among the novel's supporting cast is a man by the name of Mr. Poole, Dr. Jekyll's loyal butler.
+*Sometimes you forget that just because it feels like you know what you're doing, you might not. This is why I now have a commit that looks like this "WIP on master: 70a43e6 Committing changes that lead up to Issue #3"
 
 -----
 
-Poole is the butler for [Jekyll](http://jekyllrb.com), the static site generator. It's designed and developed by [@mdo](https://twitter.com/mdo) to provide a clear and concise foundational setup for any Jekyll site. It does so by furnishing a full vanilla Jekyll install with example templates, pages, posts, and styles.
+While making a few changes to the core profiling product I decided it was time to stash my changes instead of committing them. I read some documentation and felt like I understood the process pretty well. Satisfied that I hadn't left my code in a bad state I ran the command:
 
-There are currently two themes built on Poole:
+```
+git stash
+```
 
-* [Hyde](http://hyde.getpoole.com)
-* [Lanyon](http://lanyon.getpoole.com)
+A not so useful message came up and said that it was unable to log to the repo logs and then mashed in the command line was **WIP on master: 70a43e6 Committing changes that lead up to Issue #3**. I felt like this was a success so I closed my IDE and went home. Later in the evening I wanted to pull my stash down to my home PC.
 
-Learn more and contribute on [GitHub](https://github.com/poole).
+Well this is where I *completely* lost touch with what I thought stashing changes was. I won't repeat all that I learned, but if you're a person who is used to TFS and shelvesets, this is nothing like them. I was able to log into my remote machine only to find that I was unable to list the stash. So I tried the next logical thing and tried to apply the stash. This also did not work. ... panic.
 
-### What's included
+Now, faced with losing a day of solid work and not knowing what to do I went back to Google. Every now and then when you start googling you get this sinking feeling that you don't know what you're asking for, or you're the only person IN THE ENTIRE WORLD to have this problem. Luckily only one of these paradigms are true.
 
-Poole is a streamlined Jekyll site designed and built as a foundation for building more meaningful themes. Poole, and every theme built on it, includes the following:
+Once I calmed down and started reading some stackoverflow and some other blog posts about the issue I was sure that I was alone. But, a ray of light shown through once I found Thomas Ferris Nicolaisen's blog and his [blooper](http://blog.tfnico.com/2012/09/git-stash-blooper-could-not-restore.html). Once I found the proper command to run my life was a whole lot better.
 
-* Complete Jekyll setup included (layouts, config, [404](/404.html), [RSS feed](/atom.xml), posts, and [example page](/about))
-* Mobile friendly design and development
-* Easily scalable text and component sizing with `rem` units in the CSS
-* Support for a wide gamut of HTML elements
-* Related posts (time-based, because Jekyll) below each post
-* Syntax highlighting, courtesy Pygments (the Python-based code snippet highlighter)
+```
+$ git log --graph --all --decorate --oneline
+* af75065 (HEAD, origin/gh-pages, gh-pages) Maybe this time...
+* bdfbf5c Updated config to get the links correct.
+* 0c03dbe Adding poole jekyll blog.
+| *   e27feb3 (refs/stash) WIP on gh-pages: 53f9f8b Create gh-pages branch via G
+| |\
+|/ /
+| * 97f0846 index on gh-pages: 53f9f8b Create gh-pages branch via GitHub
+|/
+* 53f9f8b Create gh-pages branch via GitHub
+```
 
-Additional features are available in individual themes.
+Once I found the stash point I wanted to revert back to I ran the following:
 
-### Browser support
+```
+git checkout e27feb3
+```
 
-Poole and it's themes are by preference a forward-thinking project. In addition to the latest versions of Chrome, Safari (mobile and desktop), and Firefox, it is only compatible with Internet Explorer 9 and above.
+BAM! All of my changes were back.  I instantly saved a copy of that directory because now, more than ever, I felt like I was going to run some errant command and delete my entire repository and all of my copies in one fell swoop. Unfortunately I was in a detached state so in a haste I pushed all of my changes back to the MASTER and was done with it. I found the answer on [this](http://stackoverflow.com/a/10738921) stackoverflow answer.
 
-### Download
+```
+git push origin HEAD:master
+```
 
-Poole is developed on and hosted with GitHub. Head to the <a href="https://github.com/poole/poole">GitHub repository</a> for downloads, bug reports, and features requests.
-
-Thanks!
+It was certainly ugly and I didn't want to lose my changes after hitting one of the best strides I had in a while. If you somehow stumble on this blog please pay more respect to the folks whos page's I ripped the answers from to cobble together this awful solution. :)
