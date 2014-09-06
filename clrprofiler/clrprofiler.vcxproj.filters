@@ -190,9 +190,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="clrprofiler.rgs">
       <Filter>Resource Files</Filter>
     </None>
@@ -205,6 +202,7 @@
     <None Include="clrprofiler.def">
       <Filter>DLLMain</Filter>
     </None>
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="etl_enter_x64.asm">
