@@ -8,9 +8,9 @@ permalink:        pretty
 # Setup
 title:            ChainsAPM
 tagline:          Find the weak link.
-url:              http://chainsapm.github.io/chainsapm/
+url:              http://chainsapm.github.io/chainsapm
 paginate:         1
-baseurl:          http://chainsapm.github.io/chainsapm
+baseurl:          http://chainsapm.github.io/chainsapm/
 author:
   name:           James Davis
   url:            https://twitter.com/chainsapm
