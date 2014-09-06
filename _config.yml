@@ -10,7 +10,7 @@ title:            ChainsAPM
 tagline:          Find the weak link.
 url:              http://chainsapm.github.io/chainsapm
 paginate:         1
-baseurl:          /
+baseurl:          /chainsapm/
 author:
   name:           James Davis
   url:            https://twitter.com/chainsapm
