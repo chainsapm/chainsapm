@@ -1,6 +1,5 @@
 clrprofiler
 ===========
----
 This is the core class for the .NET profiling API.  This folder contains all of the implementation details for the ICorProfilerCallback interfaces.
 
 This class is responsible for the following
