@@ -3,7 +3,7 @@ layout: post
 title: How not to commit to GitHub
 ---
 
-*Sometimes you forget that just because it feels like you know what you're doing, you might not. This is why I now have a commit that looks like this "WIP on master: 70a43e6 Committing changes that lead up to Issue #3"
+*Sometimes you forget that just because it feels like you know what you're doing, you might not.* This is why I now have a commit that looks like this "WIP on master: 70a43e6 Committing changes that lead up to Issue #3"
 
 -----
 
