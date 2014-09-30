@@ -13,10 +13,10 @@ class MetadataHelpers
 public:
 	MetadataHelpers();
 	MetadataHelpers(ContainerClass *cClass);
-	MetadataHelpers(ICorProfilerInfo *profilerInfo, ContainerClass *cClass);
-	MetadataHelpers(ICorProfilerInfo2 *profilerInfo, ContainerClass *cClass);
-	MetadataHelpers(ICorProfilerInfo3 *profilerInfo, ContainerClass *cClass);
-	MetadataHelpers(ICorProfilerInfo4 *profilerInfo, ContainerClass *cClass);
+	MetadataHelpers(std::shared_ptr<ICorProfilerInfo> profilerInfo, ContainerClass *cClass);
+	MetadataHelpers(std::shared_ptr<ICorProfilerInfo2> profilerInfo, ContainerClass *cClass);
+	MetadataHelpers(std::shared_ptr<ICorProfilerInfo3> profilerInfo, ContainerClass *cClass);
+	MetadataHelpers(std::shared_ptr<ICorProfilerInfo4> profilerInfo, ContainerClass *cClass);
 	~MetadataHelpers();
 
 	STDMETHOD(GetCurrentThread)(ThreadID* threadId);
@@ -39,13 +39,13 @@ public:
 	PCCOR_SIGNATURE ParseElementType(const std::unique_ptr<IMetaDataImport>& pMDImport, PCCOR_SIGNATURE signature, std::wstring* buffer);
 private:
 	// container for ICorProfilerInfo reference
-	ATL::CComQIPtr<ICorProfilerInfo> m_pICorProfilerInfo;
+	std::shared_ptr<ICorProfilerInfo> m_pICorProfilerInfo;
 	// container for ICorProfilerInfo2 reference
-	ATL::CComQIPtr<ICorProfilerInfo2> m_pICorProfilerInfo2;
+	std::shared_ptr<ICorProfilerInfo2> m_pICorProfilerInfo2;
 	// container for ICorProfilerInfo3 reference
-	ATL::CComQIPtr<ICorProfilerInfo3> m_pICorProfilerInfo3;
+	std::shared_ptr<ICorProfilerInfo3> m_pICorProfilerInfo3;
 	// container for ICorProfilerInfo4 reference
-	ATL::CComQIPtr<ICorProfilerInfo4> m_pICorProfilerInfo4;
+	std::shared_ptr<ICorProfilerInfo4> m_pICorProfilerInfo4;
 	//boost::mutex m_ThreadIdMutex;
 	CRITICAL_SECTION m_ThreadCS;
 	// Saving reference to the containers in order to provide specific function lookups, eg. Is this method an entry point

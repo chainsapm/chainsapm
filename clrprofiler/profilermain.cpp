@@ -432,19 +432,19 @@ Cprofilermain::~Cprofilermain()
 	delete g_MetadataHelpers;*/
 	if (m_pICorProfilerInfo != NULL)
 	{
-		m_pICorProfilerInfo.Release();
+		m_pICorProfilerInfo.reset();
 	}
 	if (m_pICorProfilerInfo2 != NULL)
 	{
-		m_pICorProfilerInfo2.Release();
+		m_pICorProfilerInfo2.reset();
 	}
 	if (m_pICorProfilerInfo3 != NULL)
 	{
-		m_pICorProfilerInfo3.Release();
+		m_pICorProfilerInfo3.reset();
 	}
 	if (m_pICorProfilerInfo4 != NULL)
 	{
-		m_pICorProfilerInfo4.Release();
+		m_pICorProfilerInfo4.reset();
 	}
 	this->Shutdown();
 	// CRITICAL 1 Research this critical section in the profiler main destructor.
@@ -865,7 +865,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 		if (FAILED(hr))
 		{
 			// we still want to work if this call fails, might be an older .NET version
-			this->m_pICorProfilerInfo2.p = NULL;
+			this->m_pICorProfilerInfo2 = nullptr;
 
 		}
 		else {
@@ -877,7 +877,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 		if (FAILED(hr))
 		{
 			// we still want to work if this call fails, might be an older .NET version
-			this->m_pICorProfilerInfo3.p = NULL;
+			this->m_pICorProfilerInfo3 = nullptr;
 
 		}
 		else {
@@ -889,7 +889,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 		if (FAILED(hr))
 		{
 			// we still want to work if this call fails, might be an older .NET version
-			this->m_pICorProfilerInfo4.p = NULL;
+			this->m_pICorProfilerInfo4 = nullptr;
 
 		}
 		else {

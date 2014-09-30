@@ -15,22 +15,22 @@ MetadataHelpers::MetadataHelpers(ContainerClass *cClass) : MetadataHelpers()
 	this->m_ContainerClass = cClass;
 }
 
-MetadataHelpers::MetadataHelpers(ICorProfilerInfo *profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
+MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo> profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
 {
 	m_pICorProfilerInfo = profilerInfo;
 }
 
-MetadataHelpers::MetadataHelpers(ICorProfilerInfo2 *profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
+MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo2> profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
 {
 	m_pICorProfilerInfo2 = profilerInfo;
 }
 
-MetadataHelpers::MetadataHelpers(ICorProfilerInfo3 *profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
+MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo3> profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
 {
 	m_pICorProfilerInfo3 = profilerInfo;
 }
 
-MetadataHelpers::MetadataHelpers(ICorProfilerInfo4 *profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
+MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo4> profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
 {
 	m_pICorProfilerInfo4 = profilerInfo;
 }
@@ -41,19 +41,19 @@ MetadataHelpers::~MetadataHelpers()
 	DeleteCriticalSection(&m_ThreadCS);
 	if (m_pICorProfilerInfo != NULL)
 	{
-		m_pICorProfilerInfo.Release();
+		m_pICorProfilerInfo.reset();
 	}
 	if (m_pICorProfilerInfo2 != NULL)
 	{
-		m_pICorProfilerInfo2.Release();
+		m_pICorProfilerInfo2.reset();
 	}
 	if (m_pICorProfilerInfo3 != NULL)
 	{
-		m_pICorProfilerInfo3.Release();
+		m_pICorProfilerInfo3.reset();
 	}
 	if (m_pICorProfilerInfo4 != NULL)
 	{
-		m_pICorProfilerInfo4.Release();
+		m_pICorProfilerInfo4.reset();
 	}
 }
 
@@ -561,26 +561,26 @@ STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromFunction(FunctionID 
 	const std::unique_ptr<IMetaDataImport>& _MetaDataImport, const std::unique_ptr<IMetaDataImport2>& _MetaDataImport2)
 {
 
-	if (_MetaDataImport == NULL)
+	if (_MetaDataImport == nullptr)
 	{
 		HRESULT hr;
-		if (m_pICorProfilerInfo4.p != NULL)
+		if (m_pICorProfilerInfo4 != nullptr)
 		{
 			hr = this->m_pICorProfilerInfo4->GetTokenAndMetaDataFromFunction(funcId, IID_IMetaDataImport2,
 				(IUnknown **)&_MetaDataImport2, funcToken);
 		}
-		else if (this->m_pICorProfilerInfo4.p == NULL && this->m_pICorProfilerInfo3.p != NULL)
+		else if (this->m_pICorProfilerInfo4 == nullptr && this->m_pICorProfilerInfo3 != nullptr)
 		{
 			hr = this->m_pICorProfilerInfo3->GetTokenAndMetaDataFromFunction(funcId, IID_IMetaDataImport2,
 				(IUnknown **)&_MetaDataImport2, funcToken);
 		}
-		else if (this->m_pICorProfilerInfo3.p == NULL && this->m_pICorProfilerInfo2.p != NULL)
+		else if (this->m_pICorProfilerInfo3 == nullptr && this->m_pICorProfilerInfo2 != nullptr)
 		{
 
 			hr = this->m_pICorProfilerInfo2->GetTokenAndMetaDataFromFunction(funcId, IID_IMetaDataImport2,
 				(IUnknown **)&_MetaDataImport2, funcToken);
 		}
-		else if (this->m_pICorProfilerInfo2.p == NULL && this->m_pICorProfilerInfo.p != NULL)
+		else if (this->m_pICorProfilerInfo2 == nullptr && this->m_pICorProfilerInfo != nullptr)
 		{
 			this->m_pICorProfilerInfo->GetTokenAndMetaDataFromFunction(funcId, IID_IMetaDataImport,
 				(IUnknown **)&_MetaDataImport, funcToken);
@@ -593,22 +593,22 @@ STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromFunction(FunctionID 
 STDMETHODIMP MetadataHelpers::GetCurrentThread(ThreadID* threadId)
 {
 	//CRITICAL 1 Make this more thread safe
-	if (this->m_pICorProfilerInfo4.p != NULL)
+	if (this->m_pICorProfilerInfo4 != nullptr)
 	{
 		this->m_pICorProfilerInfo4->GetCurrentThreadID(threadId);
 		return S_OK;
 	}
-	else if (this->m_pICorProfilerInfo4.p == NULL && this->m_pICorProfilerInfo3.p != NULL)
+	else if (this->m_pICorProfilerInfo4 == nullptr && this->m_pICorProfilerInfo3 != nullptr)
 	{
 		 this->m_pICorProfilerInfo3->GetCurrentThreadID(threadId);
 		 return S_OK;
 	}
-	else if (this->m_pICorProfilerInfo3.p == NULL && this->m_pICorProfilerInfo2.p != NULL)
+	else if (this->m_pICorProfilerInfo3 == nullptr && this->m_pICorProfilerInfo2 != nullptr)
 	{
 		 this->m_pICorProfilerInfo2->GetCurrentThreadID(threadId);
 		 return S_OK;
 	}
-	else if (this->m_pICorProfilerInfo2.p == NULL && this->m_pICorProfilerInfo.p != NULL)
+	else if (this->m_pICorProfilerInfo2 == nullptr && this->m_pICorProfilerInfo != nullptr)
 	{
 		 this->m_pICorProfilerInfo->GetCurrentThreadID(threadId);
 		 return S_OK;
@@ -626,26 +626,26 @@ STDMETHODIMP MetadataHelpers::GetArguments(FunctionID funcId, mdToken MethodData
 STDMETHODIMP MetadataHelpers::GetMetaDataEmitInterFaceFromModule(ModuleID ModuleId, 
 	const std::unique_ptr<IMetaDataEmit>& _MetaDataEmit, const std::unique_ptr<IMetaDataEmit2>& _MetaDataEmit2)
 {
-	if (_MetaDataEmit == NULL)
+	if (_MetaDataEmit == nullptr)
 	{
 		HRESULT hr;
-		if (m_pICorProfilerInfo4.p != NULL)
+		if (m_pICorProfilerInfo4 != nullptr)
 		{
 			hr = this->m_pICorProfilerInfo4->GetModuleMetaData(ModuleId, CorOpenFlags::ofReadWriteMask,  IID_IMetaDataEmit2,
 				(IUnknown **)&_MetaDataEmit2);
 		}
-		else if (this->m_pICorProfilerInfo4.p == NULL && this->m_pICorProfilerInfo3.p != NULL)
+		else if (this->m_pICorProfilerInfo4 == nullptr && this->m_pICorProfilerInfo3 != nullptr)
 		{
 			hr = this->m_pICorProfilerInfo4->GetModuleMetaData(ModuleId, CorOpenFlags::ofReadWriteMask, IID_IMetaDataEmit2,
 				(IUnknown **)&_MetaDataEmit2);
 		}
-		else if (this->m_pICorProfilerInfo3.p == NULL && this->m_pICorProfilerInfo2.p != NULL)
+		else if (this->m_pICorProfilerInfo3 == nullptr && this->m_pICorProfilerInfo2 != nullptr)
 		{
 
 			hr = this->m_pICorProfilerInfo2->GetModuleMetaData(ModuleId, CorOpenFlags::ofReadWriteMask, IID_IMetaDataEmit2,
 				(IUnknown **)&_MetaDataEmit2);
 		}
-		else if (this->m_pICorProfilerInfo2.p == NULL && this->m_pICorProfilerInfo.p != NULL)
+		else if (this->m_pICorProfilerInfo2 == nullptr && this->m_pICorProfilerInfo != nullptr)
 		{
 			hr = this->m_pICorProfilerInfo->GetModuleMetaData(ModuleId, CorOpenFlags::ofReadWriteMask, IID_IMetaDataEmit,
 				(IUnknown **)&_MetaDataEmit2);
@@ -660,26 +660,26 @@ STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromModule(ModuleID Modu
 	const std::unique_ptr<IMetaDataImport2>& _MetaDataImport2)
 {
 
-	if (_MetaDataImport == NULL)
+	if (_MetaDataImport == nullptr)
 	{
 		HRESULT hr;
-		if (m_pICorProfilerInfo4.p != NULL)
+		if (m_pICorProfilerInfo4 != nullptr)
 		{
 			hr = this->m_pICorProfilerInfo4->GetModuleMetaData(ModuleId, 0, IID_IMetaDataImport2,
 				(IUnknown **)&_MetaDataImport2);
 		}
-		else if (this->m_pICorProfilerInfo4.p == NULL && this->m_pICorProfilerInfo3.p != NULL)
+		else if (this->m_pICorProfilerInfo4 == nullptr && this->m_pICorProfilerInfo3 != nullptr)
 		{
 			hr = this->m_pICorProfilerInfo4->GetModuleMetaData(ModuleId, 0, IID_IMetaDataImport2,
 				(IUnknown **)&_MetaDataImport2);
 		}
-		else if (this->m_pICorProfilerInfo3.p == NULL && this->m_pICorProfilerInfo2.p != NULL)
+		else if (this->m_pICorProfilerInfo3 == nullptr && this->m_pICorProfilerInfo2 != nullptr)
 		{
 
 			hr = this->m_pICorProfilerInfo2->GetModuleMetaData(ModuleId, 0, IID_IMetaDataImport2,
 				(IUnknown **)&_MetaDataImport2);
 		}
-		else if (this->m_pICorProfilerInfo2.p == NULL && this->m_pICorProfilerInfo.p != NULL)
+		else if (this->m_pICorProfilerInfo2 == nullptr && this->m_pICorProfilerInfo != nullptr)
 		{
 			hr = this->m_pICorProfilerInfo->GetModuleMetaData(ModuleId, 0, IID_IMetaDataImport,
 				(IUnknown **)&_MetaDataImport);

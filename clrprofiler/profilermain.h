@@ -223,17 +223,17 @@ private:
 	// Highest available API
 	byte m_HighestProfileInfo;
 	// container for ICorProfilerInfo reference
-	CComQIPtr<ICorProfilerInfo> m_pICorProfilerInfo;
+	std::shared_ptr<ICorProfilerInfo> m_pICorProfilerInfo;
 	// container for ICorProfilerInfo2 reference
-	CComQIPtr<ICorProfilerInfo2> m_pICorProfilerInfo2;
+	std::shared_ptr<ICorProfilerInfo2> m_pICorProfilerInfo2;
 	// container for ICorProfilerInfo3 reference
-	CComQIPtr<ICorProfilerInfo3> m_pICorProfilerInfo3;
+	std::shared_ptr<ICorProfilerInfo3> m_pICorProfilerInfo3;
 	// container for ICorProfilerInfo4 reference
-	CComQIPtr<ICorProfilerInfo4> m_pICorProfilerInfo4;
+	std::shared_ptr<ICorProfilerInfo4> m_pICorProfilerInfo4;
 
 
 	// container for IL allocation
-	CComQIPtr<IMethodMalloc> m_pIMethodMalloc;
+	std::shared_ptr<IMethodMalloc> m_pIMethodMalloc;
 	//std::map<FunctionID, FunctionInfo> m_FunctionInfoMap;
 	COR_PRF_SUSPEND_REASON m_CurrentSuspendReason;
 	COR_PRF_GC_REASON m_CurrentGCReason;
