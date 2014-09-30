@@ -79,12 +79,12 @@ class FunctionStackItem : public StackItemBase
 {
 public:
 
-	FunctionStackItem(FunctionID, ThreadStackReason, const COR_PRF_FUNCTION_ARGUMENT_INFO& byteData);
+	FunctionStackItem(FunctionID, ThreadStackReason, std::shared_ptr<std::vector<UINT_PTR>>& byteData);
 	~FunctionStackItem();
 	// Array of parameters
-	const UINT_PTR* ItemStackParameters() const;
+	const std::shared_ptr<std::vector<UINT_PTR>>& ItemStackParameters() const;
 
-	void ReturnValue(const COR_PRF_FUNCTION_ARGUMENT_RANGE& input);
+	void ReturnValue(const UINT_PTR& input);
 	UINT_PTR ReturnValue() const;
 	// Count of parameters
 	ULONG ParameterCount() const;
@@ -93,7 +93,8 @@ private:
 	COR_PRF_FUNCTION_ARGUMENT_INFO m_ParameterInfo;
 	COR_PRF_FUNCTION_ARGUMENT_RANGE * m_ParameterRanges;
 	UINT_PTR m_ReturnData;
-	UINT_PTR * m_ParameterValues; // TODO validate this works, Created a max item here, but we should be a bit more dynamic maybe?
+	//UINT_PTR * m_ParameterValues; // TODO validate this works, Created a max item here, but we should be a bit more dynamic maybe?
+	std::shared_ptr<std::vector<UINT_PTR>> m_ParameterValues;
 	FunctionID m_FunctionID;
 
 };
