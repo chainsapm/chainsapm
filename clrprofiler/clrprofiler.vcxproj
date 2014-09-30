@@ -486,9 +486,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ResourceCompile Include="clrprofiler.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="clrprofiler.def" />
     <None Include="clrprofiler.rgs" />
     <MASM Include="etl_enter_x64.asm">
@@ -501,6 +498,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <FileType>Document</FileType>
     </MASM>
     <None Include="profilermain.rgs" />
+    <None Include="README.md" />
     <None Include="registry.bin" />
   </ItemGroup>
   <ItemGroup>
