@@ -94,33 +94,18 @@ void StackItemBase::PolyDummy()
 
 }
 
-FunctionStackItem::FunctionStackItem(FunctionID funcId, ThreadStackReason reason, const COR_PRF_FUNCTION_ARGUMENT_INFO& byteData)
+FunctionStackItem::FunctionStackItem(FunctionID funcId, ThreadStackReason reason, std::shared_ptr<std::vector<UINT_PTR>>& byteData)
 {
 	this->m_FunctionID = funcId;
 	this->m_LastReason = reason;
-
-	if (byteData.numRanges != 0)
-	{
-		this->m_ParameterInfo = COR_PRF_FUNCTION_ARGUMENT_INFO(byteData);
-		this->m_ParameterRanges = new COR_PRF_FUNCTION_ARGUMENT_RANGE[this->m_ParameterInfo.numRanges];
-		this->m_ParameterValues = new UINT_PTR[this->m_ParameterInfo.numRanges];
-		for (ULONG parameterCount = 0; parameterCount < this->m_ParameterInfo.numRanges; parameterCount++)
-		{
-			this->m_ParameterRanges[parameterCount]
-				= COR_PRF_FUNCTION_ARGUMENT_RANGE(byteData.ranges[parameterCount]);
-			if (this->m_ParameterRanges[parameterCount].startAddress != NULL)
-			{
-				this->m_ParameterValues[parameterCount]
-					= *(UINT_PTR*)this->m_ParameterRanges[parameterCount].startAddress;
-			}
-		}
-	}
+	this->m_ParameterValues.swap(byteData);
+	
 }
 
 FunctionStackItem::~FunctionStackItem()
 {
 	delete[] this->m_ParameterRanges;
-	delete[] this->m_ParameterValues;
+	delete &this->m_ParameterValues;
 }
 
 ULONG FunctionStackItem::ParameterCount() const
@@ -128,17 +113,14 @@ ULONG FunctionStackItem::ParameterCount() const
 	return this->m_ParameterInfo.numRanges;
 
 }
-const UINT_PTR* FunctionStackItem::ItemStackParameters() const
+const std::shared_ptr<std::vector<UINT_PTR>>& FunctionStackItem::ItemStackParameters() const
 {
 	return this->m_ParameterValues;
 }
 
-void FunctionStackItem::ReturnValue(const COR_PRF_FUNCTION_ARGUMENT_RANGE& input)
+void FunctionStackItem::ReturnValue(const UINT_PTR& input)
 {
-	if (input.startAddress != NULL)
-	{
-		this->m_ReturnData = *(UINT_PTR*)input.startAddress;
-	}
+	this->m_ReturnData = input;
 
 }
 
