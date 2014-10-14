@@ -15,11 +15,9 @@ enum ThreadStackReason {
 	EXIT,
 	TAIL,
 	THREAD_START,
-	THREAD_END
-};
-
-enum SuspensionReason
-{
+	THREAD_END,
+	GC_START,
+	GC_END,
 	SUSPEND_START,
 	SUSPEND_END
 };

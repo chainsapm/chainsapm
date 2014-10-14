@@ -424,6 +424,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClCompile Include="ParameterInfo.cpp" />
     <ClCompile Include="profilermain.cpp" />
     <ClCompile Include="srw_helper.cpp" />
+    <ClCompile Include="StackItem.cpp" />
     <ClCompile Include="static_il_bodies.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -473,6 +474,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="profilermain.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="srw_helper.h" />
+    <ClInclude Include="StackItem.h" />
     <ClInclude Include="static_il_bodies.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />

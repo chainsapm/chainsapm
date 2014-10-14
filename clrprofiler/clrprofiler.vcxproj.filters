@@ -115,6 +115,9 @@
     <ClCompile Include="threadpoolhelper.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
+    <ClCompile Include="StackItem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="clrprofiler_i.h">
@@ -182,6 +185,9 @@
     </ClInclude>
     <ClInclude Include="threadpoolhelper.h">
       <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="StackItem.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

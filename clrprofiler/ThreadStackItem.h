@@ -4,74 +4,45 @@
 // Base item entry for all stack objects. This provides a consistent way to access the data.
 class StackItemBase
 {
-	
+
 public:
-	friend class TimerItem;
-	
+
 	StackItemBase();
+	StackItemBase(int depth, int sequence, ThreadID thread, ThreadStackReason reason);
 	~StackItemBase();
 
-	ThreadID ItemThreadID();
-
-	void UpdateItemStackReason(ThreadStackReason);
-	const ThreadStackReason& LastReason();
+	virtual  ThreadStackReason& LastReason() const;
 
 	// Gets the current stack depth. Used primarily for stack recreation.
-	int Depth() const;
-	// Sets the current stack depth.
-	void Depth(int depth);
+	virtual int Depth() const;
 
 	// Gets the sequence number of the stack item. Used for identification when rebuilding the stack.
-	int SequenceNumber() const;
-	// Sets the sequence number of the stack item.
-	void SequenceNumber(int seqNumber);
+	virtual int SequenceNumber() const;
 
-	// Total calculated run time of this stack item.
-	ULONGLONG ItemRunTime() const;
-	// Total calculated GC caused suspension time of this stack item.
-	ULONGLONG GCSuspensionTime() const;
-	// Total calculated suspension time of this stack item. Does not include GC.
-	ULONGLONG OtherSuspensionTime() const;
-	// Total calculated overhead added by the profiler.
-	ULONGLONG ProfilingOverhead() const;
-	// The GMT wall clock time of this item start
-	ULONGLONG ItemStartTime() const;
-	
+	// Gets the ThreadID
+	virtual ThreadID ItemThreadID() const;
+
+	// The wall clock time of this item start
+	virtual SYSTEMTIME ItemStartTime() const;
+
+	// The wall clock time of this item start
+	virtual LARGE_INTEGER ItemProfilingTime() const;
+
+	// Returns the text representation of the agent
+	std::wstring& AgentID() const;
+
 
 protected:
-	void UpdateLeaveTime();
-	void virtual PolyDummy();
-	SYSTEMTIME m_StartWallTime;
-	int m_SequenceNumber;
-	LARGE_INTEGER m_EnterTime;
-	LARGE_INTEGER m_LeaveTime;
-	
-	LARGE_INTEGER m_GarbageCollectionTimeStart;
-	LARGE_INTEGER m_GarbageCollectionTimeEnd;
-
-	LARGE_INTEGER m_RuntimeSuspensionStart;
-	LARGE_INTEGER m_RuntimeSuspensionEnd;
 
 
-	ULONGLONG m_ItemTotal;
-	ULONGLONG m_GarbageCollectionTotal;
-	ULONGLONG m_SuspensionTotal;
-	ULONGLONG m_ProfilingOverheadTotal;
 
-	
-	ThreadStackReason m_LastReason;
-
-	std::vector<GC_REASON> m_GCReasons;
-	std::vector<COR_PRF_SUSPEND_REASON> m_SuspensionReasons;
-
-	/* 
-	Flag to tell the Network Client to send data. 
-	The idea is that it's always false until something updates the times or other properties at that time it will be set to true
-	and the network client will update the field to false.
-	*/
-	BOOL m_NeedsToBeSent; 
-
-	int m_Depth;
+	SYSTEMTIME			m_StartWallTime;	// Wall clock time
+	LARGE_INTEGER		m_ProfilingTime;	// GetPerfCounter() time
+	ThreadStackReason	m_Reason;			// Reason for creating this stack item
+	int					m_Depth;			// Current Stack Depth
+	int					m_Sequence;			// Current Stack sequence
+	ThreadID			m_Thread;			// Current thread
+	std::wstring		m_AgentID;			// Reporting agent
 };
 
 // Defines a terse version of a function on the stack. The pointers are used to look up more verbose information.

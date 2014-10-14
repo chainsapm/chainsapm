@@ -34,7 +34,7 @@
 //CRITICAL_SECTION Cprofilermain::g_FunctionSetCriticalSection;
 
 std::map<UINT_PTR, Cprofilermain*> * Cprofilermain::g_StaticContainerClass = new std::map<UINT_PTR, Cprofilermain*>();
-
+CRITICAL_SECTION Cprofilermain::g_StaticContainerClassCritSec;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Remove the separator (,) and digit grouping on numbers like 1,000,000
@@ -378,13 +378,14 @@ void __declspec(naked) __stdcall FunctionTail2_x86(FunctionID funcId, UINT_PTR c
 
 DWORD WINAPI MyThreadFunction(LPVOID lpParam)
 {
-	INT counter = 1;
+	/*INT counter = 1;
 	while (true)
 	{
-		Cprofilermain * pCprof = (Cprofilermain*)lpParam;
-		pCprof->WriteLogFile(counter++);
-		Sleep(10000);
+	Cprofilermain * pCprof = (Cprofilermain*)lpParam;
+	pCprof->WriteLogFile(counter++);
+	Sleep(10000);
 	}
+	*/
 	return S_OK;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -393,6 +394,13 @@ DWORD WINAPI MyThreadFunction(LPVOID lpParam)
 
 Cprofilermain::Cprofilermain()
 {
+	if (!TryEnterCriticalSection(&Cprofilermain::g_StaticContainerClassCritSec))
+	{
+		InitializeCriticalSection(&Cprofilermain::g_StaticContainerClassCritSec);
+	}
+	else {
+		LeaveCriticalSection(&Cprofilermain::g_StaticContainerClassCritSec);
+	}
 
 	// TODO: Generate unique and repeatable identifier for this CLR agent.
 	// We should be able to reliably create a hash or some idetifier that will distinguish the application.
@@ -612,7 +620,7 @@ void Cprofilermain::WriteLogFile(int fileNum)
 								}
 								else {
 									outFile << "Parameter " << paramNumber << ": ";
-									
+
 								}
 								outFile << boost::wformat(TEXT("0x%08x`%08x")) % highPartParam % lowPartParam << " ";
 								++paramNumber;
@@ -706,7 +714,9 @@ STDMETHODIMP Cprofilermain::SetMask()
 		| COR_PRF_ENABLE_FUNCTION_RETVAL
 		| COR_PRF_MONITOR_THREADS
 		| COR_PRF_MONITOR_GC
-		| COR_PRF_MONITOR_SUSPENDS);
+		| COR_PRF_MONITOR_SUSPENDS
+		| COR_PRF_MONITOR_EXCEPTIONS
+		| COR_PRF_MONITOR_CLR_EXCEPTIONS);
 	switch (this->m_HighestProfileInfo)
 	{
 	case 1:
@@ -991,9 +1001,9 @@ STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 	{ // Critsec block for thread insert start
 		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
 		this->m_Container->g_ThreadStackMap->insert(
-			std::pair<ThreadID,
-			std::deque<StackItemBase*, ALLOC_500<StackItemBase*>>>
-			(threadId, std::deque<StackItemBase*, ALLOC_500<StackItemBase*>>()));
+			std::pair < ThreadID,
+			std::deque < StackItemBase* >>
+			(threadId, std::deque<StackItemBase*>()));
 	} // Critsec block for thread insert start
 
 	firstTimer.AddThreadStackItem(firstItem);
@@ -1192,7 +1202,7 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	*/
 	// Create a timer item that will calculate how long we spent trying to gather data
 
-	TimerItem ti(ThreadStackReason::ENTER);
+
 
 
 	// As we could be mapping a function while trying to find this guy it's possible
@@ -1208,131 +1218,95 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	//const FunctionInfo *fi = &it->second;
 
 	ThreadID threadId;
-	this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+	{
+		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
+		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+	}
 
 	// In order to stay async we need to copy this data before passing it off to a potentially blocking
 	// operation, such as adding items to our global vectors.
 
-	auto arguments = std::make_shared<std::vector<UINT_PTR>>();
+	auto argumentsPtrRaw = new std::vector<UINT_PTR>();
 	if (argumentInfo->numRanges != 0)
 	{
-		
+		COR_PRF_FUNCTION_ARGUMENT_RANGE data;
 		for (ULONG parameterCount = 0; parameterCount < argumentInfo->numRanges; parameterCount++)
 		{
-			auto data
+			data
 				= COR_PRF_FUNCTION_ARGUMENT_RANGE((COR_PRF_FUNCTION_ARGUMENT_RANGE)argumentInfo->ranges[parameterCount]);
 
 			if (data.startAddress != NULL)
 			{
-				arguments->push_back(*(UINT_PTR*)data.startAddress);
+				argumentsPtrRaw->push_back(*(UINT_PTR*)data.startAddress);
 			}
 		}
 	}
+	
+	critsec_helper cshFirst(&this->m_Container->g_FunctionSetCriticalSection);
+	auto functionInfoFirst = this->m_Container->g_FunctionSet->find(funcId);
+	cshFirst.leave_early(); // Leaving CS early because we don't need to worry about it
+	BOOL isEntry = functionInfoFirst->second->IsEntryPoint();
+	LONGLONG incremented = 0;
+	if (isEntry)
+	{
+		incremented = InterlockedIncrement64(&this->m_Container->currentEntryPointCounter);;
+	}
+	// Increment the values in a way that is predictable and repeatable. The original approach was to determine the exact level per thread.
+	int threadDepth = InterlockedIncrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
+	int threadSequence = InterlockedIncrement(&this->m_Container->g_ThreadStackSequence->at(threadId));
+	std::async(std::launch::async, [&, funcId, threadId, isEntry, incremented, threadDepth, threadSequence, argumentsPtrRaw]  {
+		TimerItem ti(ThreadStackReason::ENTER);
+		// We are not completely doing the right thing here as I should use a C++11 contract to pass the shared_ptr
+		auto arguments = std::make_shared<std::vector<UINT_PTR >>();
+		arguments.reset(argumentsPtrRaw); // This however assigns the pointer to this shared_ptr and should live on.
 
-	{ // Critsec block for thread find start
-		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
 
-		auto functionInfo = this->m_Container->g_FunctionSet->find(funcId);
-
-		
-
-		if (functionInfo->second->IsEntryPoint())
+		if (isEntry)
 		{
-			csh.leave_early(); // Leaving CS early because we don't need to worry about it
-			
-			std::async([&, threadId]{
-				LONGLONG incremented = 0;
-				if (functionInfo->second->AlwaysCreateNewEntryPoint()) // Check to see if we need to create a new entrypoint of if we fall through
-				{
-					incremented = InterlockedIncrement64(&this->m_Container->currentEntryPointCounter);
-				}
-				auto threadIdentifier = this->m_Container->g_ThreadEntrypointID->find(threadId);
-				if (threadIdentifier != this->m_Container->g_ThreadEntrypointID->end())
-				{
-					if (functionInfo->second->AlwaysCreateNewEntryPoint()) // Set the thread entrypoint ID to 
-					{
-						threadIdentifier->second = incremented;
-					}
-				}
-				else {
-					this->m_Container->g_ThreadEntrypointID->insert(std::pair<ThreadID, ULONGLONG>(threadId, incremented));
-					threadIdentifier = this->m_Container->g_ThreadEntrypointID->find(threadId);
-				}
-				auto entryPointStack = this->m_Container->g_EntryPointStackMap->find(threadIdentifier->second);
-
-				this->m_Container->g_EntryPointStackMap->insert(
-					std::pair<LONGLONG,
-					std::deque<StackItemBase*, ALLOC_500<StackItemBase*>>>
-					(this->m_Container->currentEntryPointCounter, std::deque<StackItemBase*, ALLOC_500<StackItemBase*>>()));
-
-
-				FunctionStackItem * tsi = new FunctionStackItem(funcId, ThreadStackReason::ENTER, arguments);
-				{ // Critsec block for thread depth start
-					critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
-					tsi->Depth(this->m_Container->g_ThreadStackDepth->at(threadId));
-				}
-			{ // Critsec block for thread depth start
-				critsec_helper csh(&this->m_Container->g_ThreadStackSequenceCriticalSection);
-				tsi->SequenceNumber(this->m_Container->g_ThreadStackSequence->at(threadId));
+			critsec_helper cshT(&this->m_Container->g_FunctionSetCriticalSection);
+			auto functionInfo = this->m_Container->g_FunctionSet->find(funcId);
+			cshT.leave_early();
+			// Find the current entrypoint for the thread.
+			// If there isn't one create it. If there is one, check to see if we need to create a new entry point based on the rules.
+			critsec_helper cshThreading(&this->m_Container->g_ThreadEntrypointCriticalSection);
+			auto threadIdentifier = this->m_Container->g_ThreadEntrypointID->find(threadId);
+			if (threadIdentifier != this->m_Container->g_ThreadEntrypointID->end())
+			{
+				if (functionInfo->second->AlwaysCreateNewEntryPoint()) // Set the thread entrypoint ID to the newest number
+					threadIdentifier->second = incremented;
 			}
-				ti.AddThreadStackItem(tsi);
-				// We will  need to lock this as only one thread can act on this list.
-				entryPointStack->second.emplace_back(tsi);
-				if (entryPointStack->second.size() > 0)
-				{
-					// use a thread safe way of incrementing a mapped value
-					{ // Critsec block for thread depth start
-						critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
-						InterlockedIncrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
-					}
-				{ // Critsec block for thread depth start
-					critsec_helper csh(&this->m_Container->g_ThreadStackSequenceCriticalSection);
-					InterlockedIncrement(&this->m_Container->g_ThreadStackSequence->at(threadId));
-				}
-				}
-			});
+			else {
+				this->m_Container->g_ThreadEntrypointID->insert(std::pair<ThreadID, ULONGLONG>(threadId, incremented));
+				threadIdentifier = this->m_Container->g_ThreadEntrypointID->find(threadId);
+			}
+			cshThreading.leave_early();
 		}
 
-		// Find the current entrypoint for this thread (if there is one)
+		critsec_helper cshThredEntryPoint(&this->m_Container->g_ThreadEntrypointCriticalSection);
 		auto itStack = this->m_Container->g_ThreadEntrypointID->find(threadId);
 		if (itStack != this->m_Container->g_ThreadEntrypointID->end())
 		{
-			auto entryPointStack = this->m_Container->g_EntryPointStackMap->find(itStack->second);
 
+			critsec_helper cshStackMap(&this->m_Container->g_EntryPointCriticalSection);
+			auto entryPointStack = this->m_Container->g_EntryPointStackMap->find(itStack->second);
+			if (entryPointStack == this->m_Container->g_EntryPointStackMap->end())
+			{
+				this->m_Container->g_EntryPointStackMap->insert(std::pair<UINT_PTR, std::deque<StackItemBase*>>(itStack->second, std::deque<StackItemBase*>()));
+			}
+			entryPointStack = this->m_Container->g_EntryPointStackMap->find(itStack->second);
 			if (entryPointStack != this->m_Container->g_EntryPointStackMap->end())
 			{
-				csh.leave_early(); // Leaving CS early because we don't need to worry about it
-				std::async([&, threadId]{
-					FunctionStackItem * tsi = new FunctionStackItem(funcId, ThreadStackReason::ENTER, arguments);
-					{ // Critsec block for thread depth start
-						critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
-						tsi->Depth(this->m_Container->g_ThreadStackDepth->at(threadId));
-					}
-			{ // Critsec block for thread depth start
-				critsec_helper csh(&this->m_Container->g_ThreadStackSequenceCriticalSection);
-				tsi->SequenceNumber(this->m_Container->g_ThreadStackSequence->at(threadId));
+				FunctionStackItem * tsi = new FunctionStackItem(funcId, ThreadStackReason::ENTER, arguments);
+				tsi->Depth(threadDepth);
+				tsi->SequenceNumber(threadSequence);
+				ti.AddThreadStackItem(tsi);
+				// We will  need to lock this as only one thread can act on this list.
+				entryPointStack->second.emplace_back(tsi);
 			}
-					ti.AddThreadStackItem(tsi);
-					// We will  need to lock this as only one thread can act on this list.
-					entryPointStack->second.emplace_back(tsi);
-					if (entryPointStack->second.size() > 0)
-					{
-						// use a thread safe way of incrementing a mapped value
-						{ // Critsec block for thread depth start
-							critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
-							InterlockedIncrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
-						}
-				{ // Critsec block for thread depth start
-					critsec_helper csh(&this->m_Container->g_ThreadStackSequenceCriticalSection);
-					InterlockedIncrement(&this->m_Container->g_ThreadStackSequence->at(threadId));
-				}
-					}
-				});
-			}
+			cshStackMap.leave_early();
 		}
-
-	} // Critsec block for thread find end
-
+		cshThredEntryPoint.leave_early();
+	});
 }
 
 void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
@@ -1342,44 +1316,48 @@ void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 	// Make copies of the function parameters and pass them in as objects to the TP.
 	// Only use 2 threads, we should allow queueing to take place.
 
-	TimerItem ti(ThreadStackReason::EXIT);
+
 	{ // Critsec block for thread find start
-		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
-		auto it = this->m_Container->g_FunctionSet->find(funcId);
-		csh.leave_early(); // Leaving CS early because we don't need to worry about it
+		critsec_helper cshFirst(&this->m_Container->g_MetaDataCriticalSection);
+		// Leaving CS early because we don't need to worry about it
 		ThreadID threadId;
 		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
-		if (it != this->m_Container->g_FunctionSet->end())
+		cshFirst.leave_early();
+		UINT_PTR returnVal = NULL;
+		if (argumentRange->startAddress != NULL)
 		{
-			UINT_PTR returnVal = NULL;
-			// Make a copy of the return value for the potential blocking operation.
-			if (argumentRange->startAddress != NULL)
+			returnVal = *(UINT_PTR*)argumentRange->startAddress;
+		}
+
+		if (this->m_Container->g_ThreadStackDepth->at(threadId) > 0)
+		{
+			InterlockedDecrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
+		}
+
+		std::async(std::launch::async, [&, funcId, threadId, returnVal]{
+			TimerItem ti(ThreadStackReason::EXIT);
+			critsec_helper csh(&this->m_Container->g_FunctionSetCriticalSection);
+			auto it = this->m_Container->g_FunctionSet->find(funcId);
+			csh.leave_early();
+
+			if (it != this->m_Container->g_FunctionSet->end())
 			{
-				returnVal = *(UINT_PTR*)argumentRange->startAddress;
-			}
-			std::async([=, &ti]{
-				
+
+				// Make a copy of the return value for the potential blocking operation.
+
+
+				critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
 				auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
+				cshT.leave_early();
+
 				if (itStack != this->m_Container->g_ThreadStackMap->end())
 				{
-					if (itStack->second.size() > 0)
-					{
-						if (this->m_Container->g_ThreadStackDepth->at(threadId) > 0)
-						{
-							{ // Critsec block for thread depth start
-								critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
-								InterlockedDecrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
-							}
-						}
-
-					}
 					FunctionStackItem* tsi = static_cast<FunctionStackItem*>(itStack->second.back());
 					tsi->ReturnValue(returnVal);
 					ti.AddThreadStackItem(tsi);
 				}
-			});
-		}
-
+			}
+		});
 	}
 }
 
@@ -1389,26 +1367,30 @@ void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 	// CRITICAL 3 Create a threadpool and call it from these functions.
 	// Make copies of the function parameters and pass them in as objects to the TP.
 	// Only use 2 threads, we should allow queueing to take place.
-	TimerItem ti(ThreadStackReason::TAIL);
+
 	{ // Critsec block for thread find start
-		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
+		critsec_helper cshFirst(&this->m_Container->g_ThreadingCriticalSection);
 		ThreadID threadId;
 		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
-		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
-		csh.leave_early(); // Leaving CS early because we don't need to worry about it
-		std::async([&]{
-			int depth = 0;
-			if (itStack != this->m_Container->g_ThreadStackMap->end())
-			{
-				if (itStack->second.size() > 0)
+		cshFirst.leave_early(); // Leaving CS early because we don't need to worry about it
+		if (this->m_Container->g_ThreadStackDepth->at(threadId) > 0)
+		{
+			InterlockedDecrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
+		}
+		std::async(std::launch::async, [&, funcId, threadId]{
 				{
-
-					InterlockedDecrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
+					critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
+					auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
+					csh.leave_early();
+					TimerItem ti(ThreadStackReason::TAIL);
+					int depth = 0;
+					if (itStack != this->m_Container->g_ThreadStackMap->end())
+					{
+						StackItemBase* tsi = itStack->second.back();
+						//tsi->ItemStackReturnValue(*argumentRange);
+						ti.AddThreadStackItem(tsi);
+					}
 				}
-				StackItemBase* tsi = itStack->second.back();
-				//tsi->ItemStackReturnValue(*argumentRange);
-				ti.AddThreadStackItem(tsi);
-			}
 		});
 
 	}
@@ -1441,9 +1423,10 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 
 	FunctionInfo *funcInfo = new FunctionInfo();
 	this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, funcInfo);
+	funcInfo->IsEntryPoint(TRUE);
 	{ // Critsec block for thread depth start
 
-		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
+		critsec_helper csh(&this->m_Container->g_FunctionSetCriticalSection);
 		this->m_Container->g_FunctionSet->insert(std::pair<FunctionID, FunctionInfo*>(funcId, funcInfo));
 
 	}
@@ -1451,9 +1434,9 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 
 #else
 	// While this method does not cause any upthe one below it does.
-	EnterCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
+	critsec_helper csh(&this->m_Container->g_FunctionSetCriticalSection);
 	auto it = this->m_Container->g_FunctionSet->find(funcId);
-	LeaveCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
+	csh.leave_early();
 	if (it == this->m_Container->g_FunctionSet->end())
 	{
 
@@ -1479,7 +1462,7 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 			// Causes and update to this map and can be called from multiple threads.
 			this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, funcInfo);
 			{ // Critsec block for thread depth start
-				critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
+				critsec_helper csh(&this->m_Container->g_FunctionSetCriticalSection);
 				this->m_Container->g_FunctionSet->insert(std::pair<FunctionID, FunctionInfo*>(funcId, funcInfo));
 			}
 			*pbHookFunction = TRUE;

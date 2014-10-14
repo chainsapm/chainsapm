@@ -165,6 +165,7 @@ public:
 
 
 	static std::map<UINT_PTR, Cprofilermain*> * g_StaticContainerClass;
+	static CRITICAL_SECTION g_StaticContainerClassCritSec;
 	
 	//// Metadata interface for getting function information
 	//static MetadataHelpers *  g_MetadataHelpers;
