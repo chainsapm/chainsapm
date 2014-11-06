@@ -30,8 +30,8 @@ EXTERN_C void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 //#include "NetworkClient.h"
 #include "MetadataHelpers.h"
 #include "FunctionInfo.h"
-#include "ThreadStackItem.h"
-#include "TimerItem.h"
+#include "stackitems.h"
+//#include "TimerItem.h"
 #include "CorProfilerCallbackImplementation.h"
 #include <http.h>
 

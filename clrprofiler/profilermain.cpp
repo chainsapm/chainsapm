@@ -515,135 +515,135 @@ void Cprofilermain::AddCommonFunctions()
 
 void Cprofilermain::WriteLogFile(int fileNum)
 {
-	// TODO: Adapt some of this code into the server module to recreate a thread stack.
-	//std::string fileName = ;
-	std::wstring fileName(str(boost::wformat(L"C:\\logfiles\\%d_%d_%s.log") % fileNum % m_ProcessId % m_ProcessName));
-	std::wofstream outFile(fileName);
-	if (outFile)
-	{
-		//std::map<ThreadID, std::queue<StackItemBase*>>::iterator it;
-		std::locale loc("");
-		UINT_PTR highPart;
-		UINT_PTR lowPart;
-		UINT highPartParam;
-		UINT lowPartParam;
-		UINT highPartReturn;
-		UINT lowPartReturn;
-		outFile.imbue(std::locale(loc, new no_separator()));
-		std::map<FunctionID, FunctionInfo*>::iterator itFunc;
-		std::wstring spaces;
-		std::wstring separator(80, '=');
-		outFile << separator << std::endl;
-		outFile << this->m_ProcessName << L" " << boost::wformat(L"%u") % this->m_ProcessId << std::endl;
-		outFile << separator << std::endl;
-		outFile << std::endl;
-		for (auto it = this->m_Container->g_ThreadStackMap->begin();
-			it != this->m_Container->g_ThreadStackMap->end();
-			it++)
-		{
-			int depth = 0;
-			int previousDepth = 0;
-			highPart = (0xFFFFFFFF00000000 & it->first) >> 32;
-			lowPart = 0x00000000FFFFFFFF & it->first;
+	//// TODO: Adapt some of this code into the server module to recreate a thread stack.
+	////std::string fileName = ;
+	//std::wstring fileName(str(boost::wformat(L"C:\\logfiles\\%d_%d_%s.log") % fileNum % m_ProcessId % m_ProcessName));
+	//std::wofstream outFile(fileName);
+	//if (outFile)
+	//{
+	//	//std::map<ThreadID, std::queue<StackItemBase*>>::iterator it;
+	//	std::locale loc("");
+	//	UINT_PTR highPart;
+	//	UINT_PTR lowPart;
+	//	UINT highPartParam;
+	//	UINT lowPartParam;
+	//	UINT highPartReturn;
+	//	UINT lowPartReturn;
+	//	outFile.imbue(std::locale(loc, new no_separator()));
+	//	std::map<FunctionID, FunctionInfo*>::iterator itFunc;
+	//	std::wstring spaces;
+	//	std::wstring separator(80, '=');
+	//	outFile << separator << std::endl;
+	//	outFile << this->m_ProcessName << L" " << boost::wformat(L"%u") % this->m_ProcessId << std::endl;
+	//	outFile << separator << std::endl;
+	//	outFile << std::endl;
+	//	for (auto it = this->m_Container->g_ThreadStackMap->begin();
+	//		it != this->m_Container->g_ThreadStackMap->end();
+	//		it++)
+	//	{
+	//		int depth = 0;
+	//		int previousDepth = 0;
+	//		highPart = (0xFFFFFFFF00000000 & it->first) >> 32;
+	//		lowPart = 0x00000000FFFFFFFF & it->first;
 
 
-			EnterCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
-			std::deque<StackItemBase*>::const_iterator constIt = it->second.cbegin();
-			LeaveCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
+	//		EnterCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
+	//		std::deque<StackItemBase*>::const_iterator constIt = it->second.cbegin();
+	//		LeaveCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
 
-			ThreadStackItem* threadStackItem = NULL;
-			try
-			{
-				threadStackItem = dynamic_cast<ThreadStackItem*>(*constIt);
-			}
-			catch (std::bad_cast* e)
-			{
+	//		ThreadStackItem* threadStackItem = NULL;
+	//		try
+	//		{
+	//			threadStackItem = dynamic_cast<ThreadStackItem*>(*constIt);
+	//		}
+	//		catch (std::bad_cast* e)
+	//		{
 
-				outFile << e->what();
-			}
-			outFile << separator << std::endl;
-			if (threadStackItem != NULL)
-			{
-				outFile << "Thread: " << threadStackItem->ThreadName() << boost::wformat(TEXT(" (0x%08x`%08x)")) % highPart % lowPart << std::endl;
-			}
-			else {
-				outFile << "Thread: " << boost::wformat(TEXT("0x%08x`%08x")) % highPart % lowPart << std::endl;
-			}
-			outFile << separator << std::endl;
-			outFile << std::endl;
-			ULONGLONG totalTime = 0;
-			ULONGLONG profilerTime = 0;
+	//			outFile << e->what();
+	//		}
+	//		outFile << separator << std::endl;
+	//		if (threadStackItem != NULL)
+	//		{
+	//			outFile << "Thread: " << threadStackItem->ThreadName() << boost::wformat(TEXT(" (0x%08x`%08x)")) % highPart % lowPart << std::endl;
+	//		}
+	//		else {
+	//			outFile << "Thread: " << boost::wformat(TEXT("0x%08x`%08x")) % highPart % lowPart << std::endl;
+	//		}
+	//		outFile << separator << std::endl;
+	//		outFile << std::endl;
+	//		ULONGLONG totalTime = 0;
+	//		ULONGLONG profilerTime = 0;
 
-			while (constIt != it->second.cend())
-			{
+	//		while (constIt != it->second.cend())
+	//		{
 
-				FunctionStackItem* testItemConverted = NULL;
-				try
-				{
-					testItemConverted = dynamic_cast<FunctionStackItem*>(*constIt);
-				}
-				catch (std::bad_cast* e)
-				{
-					outFile << e->what();
-				}
+	//			FunctionStackItem* testItemConverted = NULL;
+	//			try
+	//			{
+	//				testItemConverted = dynamic_cast<FunctionStackItem*>(*constIt);
+	//			}
+	//			catch (std::bad_cast* e)
+	//			{
+	//				outFile << e->what();
+	//			}
 
-				if (testItemConverted != NULL)
-				{
-					itFunc = this->m_Container->g_FunctionSet->find(testItemConverted->FunctionId());
+	//			if (testItemConverted != NULL)
+	//			{
+	//				itFunc = this->m_Container->g_FunctionSet->find(testItemConverted->FunctionId());
 
-					if (&itFunc != NULL && itFunc != this->m_Container->g_FunctionSet->end())
-					{
-						if ((*constIt)->Depth() >= 0)
-						{
-							depth = (*constIt)->Depth();
-						}
-						spaces.swap(std::wstring(depth * 2, ' '));
-						outFile << spaces << itFunc->second->SignatureString();
-						if ((*constIt)->LastReason() == TAIL)
-						{
-							outFile << _T(" !!TAIL CALL!! ");
-						}
-						outFile << std::endl;
-						if (testItemConverted->ParameterCount() != 0)
-						{
-							outFile << spaces;
-							int i = 0;
-							int paramNumber = 1;
-							for (auto &param : *testItemConverted->ItemStackParameters())
-							{
-								highPartParam = (0xFFFFFFFF00000000 & param) >> 32;
-								lowPartParam = 0x00000000FFFFFFFF & param;
-								if (itFunc->second->IsStatic() == FALSE && i == 0)
-								{
-									outFile << "Class Pointer: ";
-									paramNumber--;
-								}
-								else {
-									outFile << "Parameter " << paramNumber << ": ";
+	//				if (&itFunc != NULL && itFunc != this->m_Container->g_FunctionSet->end())
+	//				{
+	//					if ((*constIt)->Depth() >= 0)
+	//					{
+	//						depth = (*constIt)->Depth();
+	//					}
+	//					spaces.swap(std::wstring(depth * 2, ' '));
+	//					outFile << spaces << itFunc->second->SignatureString();
+	//					if ((*constIt)->LastReason() == TAIL)
+	//					{
+	//						outFile << _T(" !!TAIL CALL!! ");
+	//					}
+	//					outFile << std::endl;
+	//					if (testItemConverted->ParameterCount() != 0)
+	//					{
+	//						outFile << spaces;
+	//						int i = 0;
+	//						int paramNumber = 1;
+	//						for (auto &param : *testItemConverted->ItemStackParameters())
+	//						{
+	//							highPartParam = (0xFFFFFFFF00000000 & param) >> 32;
+	//							lowPartParam = 0x00000000FFFFFFFF & param;
+	//							if (itFunc->second->IsStatic() == FALSE && i == 0)
+	//							{
+	//								outFile << "Class Pointer: ";
+	//								paramNumber--;
+	//							}
+	//							else {
+	//								outFile << "Parameter " << paramNumber << ": ";
 
-								}
-								outFile << boost::wformat(TEXT("0x%08x`%08x")) % highPartParam % lowPartParam << " ";
-								++paramNumber;
-							}
-							outFile << std::endl;
-						}
-						highPartReturn = (0xFFFFFFFF00000000 & testItemConverted->ReturnValue()) >> 32;
-						lowPartReturn = 0x00000000FFFFFFFF & testItemConverted->ReturnValue();
-						outFile << spaces << "Return: " << boost::wformat(TEXT("0x%08x`%08x")) % highPartReturn % lowPartReturn << std::endl;
-						outFile << spaces << boost::wformat(TEXT("Total time: %uus\tProfiling Time: %uus")) % (*constIt)->ItemRunTime() % (*constIt)->ProfilingOverhead() << std::endl;
-						totalTime += (*constIt)->ItemRunTime();
-						profilerTime += (*constIt)->ProfilingOverhead();
-					}
-				}
+	//							}
+	//							outFile << boost::wformat(TEXT("0x%08x`%08x")) % highPartParam % lowPartParam << " ";
+	//							++paramNumber;
+	//						}
+	//						outFile << std::endl;
+	//					}
+	//					highPartReturn = (0xFFFFFFFF00000000 & testItemConverted->ReturnValue()) >> 32;
+	//					lowPartReturn = 0x00000000FFFFFFFF & testItemConverted->ReturnValue();
+	//					outFile << spaces << "Return: " << boost::wformat(TEXT("0x%08x`%08x")) % highPartReturn % lowPartReturn << std::endl;
+	//					outFile << spaces << boost::wformat(TEXT("Total time: %uus\tProfiling Time: %uus")) % (*constIt)->ItemRunTime() % (*constIt)->ProfilingOverhead() << std::endl;
+	//					totalTime += (*constIt)->ItemRunTime();
+	//					profilerTime += (*constIt)->ProfilingOverhead();
+	//				}
+	//			}
 
-				constIt++;
-			};
-			outFile << separator << std::endl;
-			outFile << boost::wformat(TEXT("Total time: %uus\tProfiling Time: %uus")) % totalTime % profilerTime << std::endl;
-			outFile << separator << std::endl;
+	//			constIt++;
+	//		};
+	//		outFile << separator << std::endl;
+	//		outFile << boost::wformat(TEXT("Total time: %uus\tProfiling Time: %uus")) % totalTime % profilerTime << std::endl;
+	//		outFile << separator << std::endl;
 
-		}
-	}
+	//	}
+	//}
 }
 
 void Cprofilermain::SetProcessName()
@@ -995,18 +995,17 @@ STDMETHODIMP Cprofilermain::AppDomainCreationStarted(AppDomainID appDomainId)
 STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 {
 
-	TimerItem firstTimer(THREAD_START);
-	ThreadStackItem *firstItem = new ThreadStackItem(threadId, THREAD_START);
+	
+	std::shared_ptr<ThreadStackItem> firstItem = std::make_shared<ThreadStackItem>(threadId, THREAD_START);
 
 	{ // Critsec block for thread insert start
 		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
 		this->m_Container->g_ThreadStackMap->insert(
 			std::pair < ThreadID,
-			std::deque < StackItemBase* >>
-			(threadId, std::deque<StackItemBase*>()));
+			std::deque < std::shared_ptr<StackItemBase> >>
+			(threadId, std::deque<std::shared_ptr<StackItemBase>>()));
 	} // Critsec block for thread insert start
 
-	firstTimer.AddThreadStackItem(firstItem);
 
 	{ // Critsec block for thread depth start
 		critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
@@ -1027,7 +1026,6 @@ STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 
 STDMETHODIMP Cprofilermain::ThreadDestroyed(ThreadID threadId)
 {
-	TimerItem lastTimer(THREAD_END);
 	std::map<ThreadID, std::queue<StackItemBase*>>::iterator itStack;
 	{ // Critsec block for thread depth start
 		critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
@@ -1036,7 +1034,8 @@ STDMETHODIMP Cprofilermain::ThreadDestroyed(ThreadID threadId)
 		{
 			// The front item should ALWAYS be the thread stack start item
 			// If it's not some how something inserted a TSI before the top item and that is not likely.
-			lastTimer.AddThreadStackItem(this->m_Container->g_ThreadStackMap->at(threadId).back());
+			// Create 
+			// lastTimer.AddThreadStackItem(this->m_Container->g_ThreadStackMap->at(threadId).back());
 		}
 	}
 	//WriteLogFile();
@@ -1053,7 +1052,7 @@ STDMETHODIMP Cprofilermain::ThreadNameChanged(ThreadID threadId, ULONG cchName, 
 		{
 			// The front item should ALWAYS be the thread stack start item
 			// If it's not some how something inserted a TSI before the top item and that is not likely.
-			dynamic_cast<ThreadStackItem*>(this->m_Container->g_ThreadStackMap->at(threadId)[0])->ThreadName(name);
+			std::dynamic_pointer_cast<ThreadStackItem>(this->m_Container->g_ThreadStackMap->at(threadId)[0])->ThreadName(name);
 		} // Critsec block for thread depth start
 	}
 	return S_OK;
@@ -1082,9 +1081,7 @@ STDMETHODIMP Cprofilermain::ClassLoadFinished(ClassID classId, HRESULT hrStatus)
 
 STDMETHODIMP Cprofilermain::RuntimeThreadSuspended(ThreadID threadId)
 {
-	TimerItem ti;
 	// For all other runtime suspensions we'd like to know
-	ti = TimerItem(m_CurrentSuspendReason, SUSPEND_START);
 
 	{ // Critsec block for thread depth start
 		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
@@ -1092,7 +1089,8 @@ STDMETHODIMP Cprofilermain::RuntimeThreadSuspended(ThreadID threadId)
 
 		if (itStack != this->m_Container->g_ThreadStackMap->end())
 		{
-			ti.AddThreadStackItem(itStack->second.back());
+			// TODO Implement a stack item insertion for the buffer
+			//ti.AddThreadStackItem(itStack->second.back());
 		}
 	}
 	return S_OK;
@@ -1100,14 +1098,14 @@ STDMETHODIMP Cprofilermain::RuntimeThreadSuspended(ThreadID threadId)
 
 STDMETHODIMP Cprofilermain::RuntimeThreadResumed(ThreadID threadId)
 {
-	TimerItem ti(m_CurrentSuspendReason, SUSPEND_END);
 	{ // Critsec block for thread depth start
 		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
 		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
 
 		if (itStack != this->m_Container->g_ThreadStackMap->end())
 		{
-			ti.AddThreadStackItem(itStack->second.back());
+			// TODO Implement a stack item insertion for the buffer
+			// ti.AddThreadStackItem(itStack->second.back());
 		}
 	}
 	return S_OK;
@@ -1255,7 +1253,6 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	int threadDepth = InterlockedIncrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
 	int threadSequence = InterlockedIncrement(&this->m_Container->g_ThreadStackSequence->at(threadId));
 	std::async(std::launch::async, [&, funcId, threadId, isEntry, incremented, threadDepth, threadSequence, argumentsPtrRaw]  {
-		TimerItem ti(ThreadStackReason::ENTER);
 		// We are not completely doing the right thing here as I should use a C++11 contract to pass the shared_ptr
 		auto arguments = std::make_shared<std::vector<UINT_PTR >>();
 		arguments.reset(argumentsPtrRaw); // This however assigns the pointer to this shared_ptr and should live on.
@@ -1299,7 +1296,7 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 				FunctionStackItem * tsi = new FunctionStackItem(funcId, ThreadStackReason::ENTER, arguments);
 				tsi->Depth(threadDepth);
 				tsi->SequenceNumber(threadSequence);
-				ti.AddThreadStackItem(tsi);
+				// TODO add in function to add to network buffer
 				// We will  need to lock this as only one thread can act on this list.
 				entryPointStack->second.emplace_back(tsi);
 			}
@@ -1335,7 +1332,6 @@ void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 		}
 
 		std::async(std::launch::async, [&, funcId, threadId, returnVal]{
-			TimerItem ti(ThreadStackReason::EXIT);
 			critsec_helper csh(&this->m_Container->g_FunctionSetCriticalSection);
 			auto it = this->m_Container->g_FunctionSet->find(funcId);
 			csh.leave_early();
@@ -1352,9 +1348,8 @@ void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 
 				if (itStack != this->m_Container->g_ThreadStackMap->end())
 				{
-					FunctionStackItem* tsi = static_cast<FunctionStackItem*>(itStack->second.back());
+					auto tsi = std::dynamic_pointer_cast<FunctionStackItem>(itStack->second.back());
 					tsi->ReturnValue(returnVal);
-					ti.AddThreadStackItem(tsi);
 				}
 			}
 		});
@@ -1382,13 +1377,11 @@ void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 					critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
 					auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
 					csh.leave_early();
-					TimerItem ti(ThreadStackReason::TAIL);
 					int depth = 0;
 					if (itStack != this->m_Container->g_ThreadStackMap->end())
 					{
-						StackItemBase* tsi = itStack->second.back();
+						auto tsi = itStack->second.back();
 						//tsi->ItemStackReturnValue(*argumentRange);
-						ti.AddThreadStackItem(tsi);
 					}
 				}
 		});

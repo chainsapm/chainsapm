@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "ContainerClass.h"
 #include "FunctionInfo.h"
-#include "ThreadStackItem.h"
+#include "stackitems.h"
 
 
 
@@ -18,7 +18,7 @@ ContainerClass::ContainerClass()
 	// TODO: Issue #2 Add more containers to properly handle a proper entry point.
 
 	this->g_FunctionSet = new std::map<FunctionID, FunctionInfo*>(); // Start with allowing 
-	this->g_ThreadStackMap = new std::map<ThreadID, std::deque<StackItemBase*>>();
+	this->g_ThreadStackMap = new std::map<ThreadID, std::deque<std::shared_ptr<StackItemBase>>>();
 	this->g_EntryPointStackMap = new std::map<LONGLONG, std::deque<StackItemBase*>>();
 	this->g_ThreadEntrypointID = new std::map<ThreadID, ULONGLONG>();
 	this->g_FunctionNameSet = new std::unordered_set < ItemMapping*, Hasher, EqualFn>();

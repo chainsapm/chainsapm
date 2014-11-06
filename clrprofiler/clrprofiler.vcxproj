@@ -418,13 +418,17 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="FunctionInfo.cpp" />
+    <ClCompile Include="FunctionStackItem.cpp" />
+    <ClCompile Include="GarbageCollectionStackItem.cpp" />
     <ClCompile Include="ILFactory.cpp" />
     <ClCompile Include="MetadataHelpers.cpp" />
     <ClCompile Include="networkclient.cpp" />
     <ClCompile Include="ParameterInfo.cpp" />
     <ClCompile Include="profilermain.cpp" />
+    <ClCompile Include="RuntimeSuspensionStackItem.cpp" />
     <ClCompile Include="srw_helper.cpp" />
     <ClCompile Include="StackItem.cpp" />
+    <ClCompile Include="StackItemBase.cpp" />
     <ClCompile Include="static_il_bodies.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -436,7 +440,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ClCompile>
     <ClCompile Include="threadpoolhelper.cpp" />
     <ClCompile Include="ThreadStackItem.cpp" />
-    <ClCompile Include="TimerItem.cpp" />
     <ClCompile Include="webengine4helper.cpp" />
     <ClCompile Include="xdlldata.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -479,8 +482,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="threadpoolhelper.h" />
-    <ClInclude Include="ThreadStackItem.h" />
-    <ClInclude Include="TimerItem.h" />
+    <ClInclude Include="stackitems.h" />
     <ClInclude Include="webengine4helper.h" />
     <ClInclude Include="xdlldata.h" />
   </ItemGroup>

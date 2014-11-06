@@ -82,7 +82,7 @@ struct  ContainerClass
 
 	// Holds pointers to StackItemBase polymorphic class. This class is an extensible map of objects
 	// that describe the state of this thread.
-	std::map<ThreadID, std::deque<StackItemBase*>> * g_ThreadStackMap;
+	std::map<ThreadID, std::deque<std::shared_ptr<StackItemBase>>> * g_ThreadStackMap;
 
 	// In order to properly capture units of work we need to have a container that allows for an "arbitrary" entry point
 	// the best example is a web request. It is assigned to a thread on a thread pool, so the thread may have to be created

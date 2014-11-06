@@ -53,6 +53,15 @@
     <Filter Include="Network">
       <UniqueIdentifier>{a4e23f61-673d-4da0-8588-c259badd8510}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common Classes\Info Classes">
+      <UniqueIdentifier>{427aaf54-e20c-4c23-a5d4-22800a9a4aa0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common Classes\Main Container">
+      <UniqueIdentifier>{f6c808bd-4320-45ea-81e0-a6e87b5ca833}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common Classes\Stack Items">
+      <UniqueIdentifier>{a3c08432-144b-4b9e-9e55-00f2e03ee385}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clrprofiler_i.c">
@@ -79,18 +88,6 @@
     <ClCompile Include="profilermain.cpp">
       <Filter>CProfilerClass</Filter>
     </ClCompile>
-    <ClCompile Include="ParameterInfo.cpp">
-      <Filter>Common Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="FunctionInfo.cpp">
-      <Filter>Common Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="ThreadStackItem.cpp">
-      <Filter>Common Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="TimerItem.cpp">
-      <Filter>Common Classes</Filter>
-    </ClCompile>
     <ClCompile Include="ILFactory.cpp">
       <Filter>IL Rewriting\Factory Class</Filter>
     </ClCompile>
@@ -103,9 +100,6 @@
     <ClCompile Include="CorProfilerCallbackImplementation.cpp">
       <Filter>CorProfilerCallback</Filter>
     </ClCompile>
-    <ClCompile Include="ContainerClass.cpp">
-      <Filter>Common Classes</Filter>
-    </ClCompile>
     <ClCompile Include="webengine4helper.cpp">
       <Filter>WebengineHelpers</Filter>
     </ClCompile>
@@ -117,6 +111,30 @@
     </ClCompile>
     <ClCompile Include="StackItem.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StackItemBase.cpp">
+      <Filter>Common Classes\Stack Items</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreadStackItem.cpp">
+      <Filter>Common Classes\Stack Items</Filter>
+    </ClCompile>
+    <ClCompile Include="FunctionStackItem.cpp">
+      <Filter>Common Classes\Stack Items</Filter>
+    </ClCompile>
+    <ClCompile Include="FunctionInfo.cpp">
+      <Filter>Common Classes\Info Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="ParameterInfo.cpp">
+      <Filter>Common Classes\Info Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="ContainerClass.cpp">
+      <Filter>Common Classes\Main Container</Filter>
+    </ClCompile>
+    <ClCompile Include="RuntimeSuspensionStackItem.cpp">
+      <Filter>Common Classes\Stack Items</Filter>
+    </ClCompile>
+    <ClCompile Include="GarbageCollectionStackItem.cpp">
+      <Filter>Common Classes\Stack Items</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -153,18 +171,6 @@
     <ClInclude Include="ILFactory.h">
       <Filter>IL Rewriting\Factory Class</Filter>
     </ClInclude>
-    <ClInclude Include="FunctionInfo.h">
-      <Filter>Common Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="ParameterInfo.h">
-      <Filter>Common Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="ThreadStackItem.h">
-      <Filter>Common Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="TimerItem.h">
-      <Filter>Common Classes</Filter>
-    </ClInclude>
     <ClInclude Include="critsec_helper.h">
       <Filter>Helpers</Filter>
     </ClInclude>
@@ -173,9 +179,6 @@
     </ClInclude>
     <ClInclude Include="CorProfilerCallbackImplementation.h">
       <Filter>CorProfilerCallback</Filter>
-    </ClInclude>
-    <ClInclude Include="ContainerClass.h">
-      <Filter>Common Classes</Filter>
     </ClInclude>
     <ClInclude Include="webengine4helper.h">
       <Filter>WebengineHelpers</Filter>
@@ -188,6 +191,18 @@
     </ClInclude>
     <ClInclude Include="StackItem.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stackitems.h">
+      <Filter>Common Classes\Stack Items</Filter>
+    </ClInclude>
+    <ClInclude Include="FunctionInfo.h">
+      <Filter>Common Classes\Info Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="ParameterInfo.h">
+      <Filter>Common Classes\Info Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="ContainerClass.h">
+      <Filter>Common Classes\Main Container</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
