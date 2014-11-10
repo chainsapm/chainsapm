@@ -382,18 +382,20 @@ DWORD WINAPI MyThreadFunction(LPVOID lpParam)
 	Cprofilermain * pCprof = (Cprofilermain*)lpParam;
 	while (true)
 	{
-	
-	//pCprof->
-	
-	
+		pCprof->DequeItems();
+		Sleep(10000);
 	}
-	
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::DequeItems()
 {
-	//this->m_Container->
+	critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
+	while (!this->m_Container->g_BigStack->empty())
+	{
+		this->m_Container->g_BigStack->front();
+		this->m_Container->g_BigStack->pop();
+	}
 	return S_OK;
 }
 
@@ -431,6 +433,7 @@ Cprofilermain::Cprofilermain()
 		// CRITICAL 1 Research this critical section in the profiler main constructor.
 		InitializeCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
 	}
+
 	DWORD tID = 0;
 	// CRITICAL 9 Remove this log writer thread.
 	HANDLE tHandle = CreateThread(
@@ -1008,14 +1011,6 @@ STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 
 	std::shared_ptr<ThreadStackItem> firstItem = std::make_shared<ThreadStackItem>(0, 0, threadId, THREAD_START);
 
-	{ // Critsec block for thread insert start
-		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
-		this->m_Container->g_ThreadStackMap->insert(
-			std::pair < ThreadID,
-			std::deque < std::shared_ptr<StackItemBase> >>
-			(threadId, std::deque<std::shared_ptr<StackItemBase>>()));
-	} // Critsec block for thread insert start
-
 
 	{ // Critsec block for thread depth start
 		critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
@@ -1029,7 +1024,7 @@ STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 
 	{ // Critsec block for thread insert start
 		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
-		this->m_Container->g_ThreadStackMap->at(threadId).emplace_back(firstItem);
+		this->m_Container->g_BigStack->push(firstItem);
 	}  // Crit
 	return S_OK;
 }
@@ -1278,17 +1273,15 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 		{
 
 			// Make a copy of the return value for the potential blocking operation.
-
-
-			critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
-			auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
-			if (itStack != this->m_Container->g_ThreadStackMap->end())
+			auto itStack = this->m_Container->g_BigStack;
+			auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::ENTER, funcId, arguments);
+			// TODO add in function to add to network buffer
+			// We will  need to lock this as only one thread can act on this list.
 			{
-				auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::ENTER, funcId, arguments);
-				// TODO add in function to add to network buffer
-				// We will  need to lock this as only one thread can act on this list.
-				itStack->second.emplace_back(tsi);
+				critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
+				itStack->push(tsi);
 			}
+
 		}
 	});
 }
@@ -1328,12 +1321,11 @@ void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 			if (it != this->m_Container->g_FunctionSet->end())
 			{
 				// Make a copy of the return value for the potential blocking operation.
-				critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
-				auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
-				if (itStack != this->m_Container->g_ThreadStackMap->end())
+				auto itStack = this->m_Container->g_BigStack;
+				auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::EXIT, funcId, returnVal);
 				{
-					auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::EXIT, funcId, returnVal);
-					itStack->second.emplace_back(tsi);
+					critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
+					itStack->push(tsi);
 				}
 			}
 		});
@@ -1348,7 +1340,7 @@ void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 	// Only use 2 threads, we should allow queueing to take place.
 
 	{ // Critsec block for thread find start
-		critsec_helper cshFirst(&this->m_Container->g_ThreadingCriticalSection);
+		critsec_helper cshFirst(&this->m_Container->g_MetaDataCriticalSection);
 		ThreadID threadId;
 		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
 		cshFirst.leave_early(); // Leaving CS early because we don't need to worry about it
@@ -1360,13 +1352,12 @@ void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 		}
 		std::async(std::launch::async, [&, funcId, threadId, threadDepth, threadSequence]{
 				{
-					critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
-					auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
-					int depth = 0;
-					if (itStack != this->m_Container->g_ThreadStackMap->end())
+
+					auto itStack = this->m_Container->g_BigStack;
+					auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::EXIT, funcId, NULL);
 					{
-						auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::EXIT, funcId, NULL);
-						itStack->second.emplace_back(tsi);
+						critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
+						itStack->push(tsi);
 					}
 				}
 		});

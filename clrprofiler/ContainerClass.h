@@ -84,7 +84,7 @@ struct  ContainerClass
 	// that describe the state of this thread.
 	std::map<ThreadID, std::deque<std::shared_ptr<StackItemBase>>> * g_ThreadStackMap;
 
-	std::stack<std::shared_ptr<StackItemBase>> * g_BigStack;
+	std::queue<std::shared_ptr<StackItemBase>> * g_BigStack;
 
 	// In order to properly capture units of work we need to have a container that allows for an "arbitrary" entry point
 	// the best example is a web request. It is assigned to a thread on a thread pool, so the thread may have to be created

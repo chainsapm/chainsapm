@@ -19,7 +19,7 @@ ContainerClass::ContainerClass()
 
 	this->g_FunctionSet = new std::map<FunctionID, FunctionInfo*>(); // Start with allowing 
 	this->g_ThreadStackMap = new std::map<ThreadID, std::deque<std::shared_ptr<StackItemBase>>>();
-	this->g_BigStack = new std::stack<std::shared_ptr<StackItemBase>>();
+	this->g_BigStack = new std::queue<std::shared_ptr<StackItemBase>>();
 	this->g_EntryPointStackMap = new std::map<LONGLONG, std::deque<std::shared_ptr<StackItemBase>>>();
 	this->g_ThreadEntrypointID = new std::map<ThreadID, ULONGLONG>();
 	this->g_FunctionNameSet = new std::unordered_set < ItemMapping*, Hasher, EqualFn>();

@@ -20,8 +20,6 @@ FunctionStackItem::FunctionStackItem(int depth, int sequence, ThreadID threadId,
 
 FunctionStackItem::~FunctionStackItem()
 {
-	delete[] this->m_ParameterRanges;
-	delete &this->m_ParameterValues;
 }
 
 ULONG FunctionStackItem::ParameterCount() const
