@@ -1,13 +1,22 @@
 #include "stdafx.h"
 #include "stackitems.h"
 
-FunctionStackItem::FunctionStackItem(FunctionID funcId, ThreadStackReason reason, std::shared_ptr<std::vector<UINT_PTR>>& byteData)
+//
+FunctionStackItem::FunctionStackItem(int depth, int sequence, ThreadID threadId, 
+	ThreadStackReason reason, FunctionID funcId, std::shared_ptr<std::vector<UINT_PTR>>& byteData) 
+	: FunctionStackItem(depth, sequence, threadId, reason, funcId, NULL)
+{
+	this->m_ParameterValues.swap(byteData);
+}
+
+FunctionStackItem::FunctionStackItem(int depth, int sequence, ThreadID threadId,
+	ThreadStackReason reason, FunctionID funcId, UINT_PTR returnValue)
+	: StackItemBase(depth, sequence, threadId, reason)
 {
 	this->m_FunctionID = funcId;
-	this->m_Reason = reason;
-	this->m_ParameterValues.swap(byteData);
-
+	this->m_ReturnData = returnValue;
 }
+
 
 FunctionStackItem::~FunctionStackItem()
 {

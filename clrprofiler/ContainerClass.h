@@ -84,10 +84,12 @@ struct  ContainerClass
 	// that describe the state of this thread.
 	std::map<ThreadID, std::deque<std::shared_ptr<StackItemBase>>> * g_ThreadStackMap;
 
+	std::stack<std::shared_ptr<StackItemBase>> * g_BigStack;
+
 	// In order to properly capture units of work we need to have a container that allows for an "arbitrary" entry point
 	// the best example is a web request. It is assigned to a thread on a thread pool, so the thread may have to be created
 	// or it can be reused. In this case we would not have an entry point and the thread would execute "forever".
-	std::map<LONGLONG, std::deque<StackItemBase*>> * g_EntryPointStackMap;
+	std::map<LONGLONG, std::deque<std::shared_ptr<StackItemBase>>> * g_EntryPointStackMap;
 
 	// Entrypoint counter. The max number is 18,446,744,073,709,551,614 ... we should NEVER reach that.
 	// If we were to assume that each entrypoint executed in 1ms and we could execute 96 at a time, that means we could execute 96,000 in a second.

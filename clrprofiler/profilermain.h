@@ -131,6 +131,7 @@ public:
 
 	UINT_PTR MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL *pbHookFunction);
 
+	STDMETHOD(DequeItems)(void);
 
 	void WriteLogFile(int fileNum);
 	void AddCommonFunctions();

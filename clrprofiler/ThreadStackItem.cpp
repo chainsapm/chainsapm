@@ -5,10 +5,8 @@
 // Generic garbage collection suspension creation
 
 
-ThreadStackItem::ThreadStackItem(ThreadID threadId, ThreadStackReason reason) : StackItemBase()
+ThreadStackItem::ThreadStackItem(int depth, int sequence, ThreadID threadId, ThreadStackReason reason) : StackItemBase(depth, sequence, threadId, reason)
 {
-	this->m_ThreadID = threadId;
-	this->m_Reason = reason;
 	this->m_ThreadName.assign(L"Worker Thread");
 }
 
@@ -22,10 +20,7 @@ void ThreadStackItem::ThreadName(const std::wstring& threadName)
 	this->m_ThreadName.assign(threadName);
 }
 
-ThreadID ThreadStackItem::ThreadId() const
-{
-	return this->m_ThreadID;
-}
+
 
 std::shared_ptr<std::vector<BYTE>> ThreadStackItem::SendPacket()
 {
