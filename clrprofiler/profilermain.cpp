@@ -383,16 +383,17 @@ DWORD WINAPI MyThreadFunction(LPVOID lpParam)
 	while (true)
 	{
 		pCprof->DequeItems();
-		Sleep(10000);
+		Sleep(500);
 	}
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::DequeItems()
 {
-	critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
+	
 	while (!this->m_Container->g_BigStack->empty())
 	{
+		critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
 		this->m_Container->g_BigStack->front();
 		this->m_Container->g_BigStack->pop();
 	}
