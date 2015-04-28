@@ -50,10 +50,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Base\BaseAggregator.cs" />
+    <Compile Include="Connection\Connection.cs" />
     <Compile Include="Listener\Listener.cs" />
     <Compile Include="NetworkPackets\Events\Events.cs" />
     <Compile Include="NetworkPackets\IBasePacket.cs" />
     <Compile Include="NetworkPackets\Information\FunctionMapping.cs" />
+    <Compile Include="NetworkPackets\IPacketDisector.cs" />
     <Compile Include="NetworkPackets\StackItems\StackItems.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Relay\Relay.cs" />

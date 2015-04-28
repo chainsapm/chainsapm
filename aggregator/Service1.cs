@@ -20,6 +20,18 @@ namespace aggregator
         protected override void OnStart(string[] args)
         {
             new aggregator.Listener.Listener();
+            var md = Mono.Cecil.ModuleDefinition.ReadModule(@"C:\temp\mscorlib.dll");
+            var ty = md.Assembly.MainModule.GetType("System.Console");
+            foreach (var item in ty.Methods)
+            {
+                
+            }
+            var proc = ty.Methods[0].GetElementMethod().Resolve().Body.GetILProcessor();
+            var il = proc.Create(Mono.Cecil.Cil.OpCodes.Ldstr,
+                "test insert");
+            proc.Body.Instructions[2] = il ;
+            
+
         }
 
         protected override void OnStop()

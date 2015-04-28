@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="DebugMVC|Win32">
       <Configuration>DebugMVC</Configuration>
@@ -236,9 +236,11 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>X64;_WINDOWS;_DEBUG;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\8.1\Include\um;C:\boost_1_55_0</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
       <AdditionalOptions>/Zm111 %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -263,6 +265,9 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <RegisterOutput>true</RegisterOutput>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugMVC|x64'">
     <ClCompile>
@@ -271,7 +276,8 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>X64;_WINDOWS;_DEBUG;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\8.1\Include\um;C:\boost_1_55_0</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
       <AdditionalOptions>/Zm111 %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -344,7 +350,8 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>X64;_WINDOWS;NDEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\8.1\Include\um;C:\boost_1_55_0</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -417,15 +424,18 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="FunctionEnterQuick.cpp" />
     <ClCompile Include="FunctionInfo.cpp" />
     <ClCompile Include="FunctionStackItem.cpp" />
     <ClCompile Include="GarbageCollectionStackItem.cpp" />
+    <ClCompile Include="ICommand.cpp" />
     <ClCompile Include="ILFactory.cpp" />
     <ClCompile Include="MetadataHelpers.cpp" />
     <ClCompile Include="networkclient.cpp" />
     <ClCompile Include="ParameterInfo.cpp" />
     <ClCompile Include="profilermain.cpp" />
     <ClCompile Include="RuntimeSuspensionStackItem.cpp" />
+    <ClCompile Include="SendString.cpp" />
     <ClCompile Include="srw_helper.cpp" />
     <ClCompile Include="StackItem.cpp" />
     <ClCompile Include="StackItemBase.cpp" />
@@ -463,19 +473,24 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bitconverters.hpp" />
     <ClInclude Include="clrprofiler_i.h" />
+    <ClInclude Include="Commands.h" />
     <ClInclude Include="commonstructures.h" />
     <ClInclude Include="ContainerClass.h" />
     <ClInclude Include="CorProfilerCallbackImplementation.h" />
     <ClInclude Include="critsec_helper.h" />
     <ClInclude Include="dllmain.h" />
+    <ClInclude Include="FunctionEnterQuick.h" />
     <ClInclude Include="FunctionInfo.h" />
+    <ClInclude Include="ICommand.h" />
     <ClInclude Include="ILFactory.h" />
     <ClInclude Include="MetadataHelpers.h" />
     <ClInclude Include="networkclient.h" />
     <ClInclude Include="ParameterInfo.h" />
     <ClInclude Include="profilermain.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SendString.h" />
     <ClInclude Include="srw_helper.h" />
     <ClInclude Include="StackItem.h" />
     <ClInclude Include="static_il_bodies.h" />

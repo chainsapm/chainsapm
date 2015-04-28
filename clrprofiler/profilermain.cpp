@@ -6,6 +6,8 @@
 #include "srw_helper.h"
 #include "critsec_helper.h"
 #include "webengine4helper.h"
+#include "networkclient.h"
+#include "Commands.h"
 #include <future>
 
 
@@ -390,7 +392,7 @@ DWORD WINAPI MyThreadFunction(LPVOID lpParam)
 
 STDMETHODIMP Cprofilermain::DequeItems()
 {
-	
+
 	while (!this->m_Container->g_BigStack->empty())
 	{
 		critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
@@ -430,7 +432,7 @@ Cprofilermain::Cprofilermain()
 		this->m_Container = new ContainerClass();
 		this->m_ProcessId = GetCurrentProcessId();
 		this->AddCommonFunctions();
-		//m_NetworkClient = new NetworkClient(this, TEXT("localhost"), TEXT("5600"));
+		auto m_NetworkClient = new NetworkClient(this, TEXT("localhost"), TEXT("8080"));
 		// CRITICAL 1 Research this critical section in the profiler main constructor.
 		InitializeCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
 	}
@@ -474,7 +476,6 @@ Cprofilermain::~Cprofilermain()
 	DeleteCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // These are helper methods and have nothing to do with the core profiling.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -494,6 +495,7 @@ void Cprofilermain::AddCommonFunctions()
 	ItemMapping *newMapping5 = new ItemMapping();
 	ItemMapping *newMapping6 = new ItemMapping();
 	ItemMapping *newMapping7 = new ItemMapping();
+	ItemMapping *newMapping8 = new ItemMapping();
 
 
 
@@ -520,6 +522,11 @@ void Cprofilermain::AddCommonFunctions()
 	newMapping7->ItemName = TEXT("AddNumbers");
 	newMapping7->compare = STRINGCOMPARE::CONTAINS;
 	this->m_Container->g_FunctionNameSet->insert(newMapping7);
+
+	newMapping8->ItemName = TEXT("WriteLine");
+	newMapping8->compare = STRINGCOMPARE::CONTAINS;
+	this->m_Container->g_FunctionNameSet->insert(newMapping8);
+
 
 
 	/*	this->m_Container->g_FunctionNameSet->insert(TEXT("ThreadStart"));
@@ -722,15 +729,21 @@ STDMETHODIMP Cprofilermain::SetMask()
 
 	DWORD eventMask = (DWORD)(
 		COR_PRF_MONITOR_APPDOMAIN_LOADS
-		| COR_PRF_MONITOR_ENTERLEAVE
-		| COR_PRF_ENABLE_FRAME_INFO
-		| COR_PRF_ENABLE_FUNCTION_ARGS
-		| COR_PRF_ENABLE_FUNCTION_RETVAL
+		//| COR_PRF_MONITOR_ENTERLEAVE
+		//| COR_PRF_ENABLE_FRAME_INFO
+		//| COR_PRF_ENABLE_FUNCTION_ARGS
+		//| COR_PRF_ENABLE_FUNCTION_RETVAL
 		| COR_PRF_MONITOR_THREADS
 		| COR_PRF_MONITOR_GC
 		| COR_PRF_MONITOR_SUSPENDS
 		| COR_PRF_MONITOR_EXCEPTIONS
-		| COR_PRF_MONITOR_CLR_EXCEPTIONS);
+		| COR_PRF_MONITOR_CLR_EXCEPTIONS
+		| COR_PRF_MONITOR_MODULE_LOADS
+		| COR_PRF_MONITOR_ASSEMBLY_LOADS
+		| COR_PRF_MONITOR_APPDOMAIN_LOADS
+		| COR_PRF_ENABLE_REJIT
+		| COR_PRF_DISABLE_ALL_NGEN_IMAGES
+		| COR_PRF_MONITOR_JIT_COMPILATION);
 	switch (this->m_HighestProfileInfo)
 	{
 	case 1:
@@ -747,7 +760,7 @@ STDMETHODIMP Cprofilermain::SetMask()
 
 }
 
-STDMETHODIMP Cprofilermain::GetFullMethodName(FunctionID functionID, std::string *methodName, int cMethod)
+STDMETHODIMP Cprofilermain::GetFullMethodName(FunctionID functionID, std::wstring &methodName)
 {
 	// CRITICAL 8 Move this to the metadata helpers class.
 	IMetaDataImport* pIMetaDataImport = 0;
@@ -791,11 +804,8 @@ STDMETHODIMP Cprofilermain::GetFullMethodName(FunctionID functionID, std::string
 			if (SUCCEEDED(hr))
 			{
 				// create the fully qualified name
-				_snwprintf_s(wszMethod, cMethod, cMethod, L"%s.%s", szClass, szFunction);
-				char newStr[NAME_BUFFER_SIZE];
-				char defChar = ' ';
-				WideCharToMultiByte(CP_ACP, 0, wszMethod, -1, newStr, NAME_BUFFER_SIZE, &defChar, NULL);
-				*methodName = std::string(newStr);
+				_snwprintf_s<NAME_BUFFER_SIZE>(wszMethod, NAME_BUFFER_SIZE, L"%s.%s", szClass, szFunction);
+				methodName.assign(std::wstring(wszMethod));
 			}
 		}
 		// release our reference to the metadata
@@ -1032,7 +1042,6 @@ STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 
 STDMETHODIMP Cprofilermain::ThreadDestroyed(ThreadID threadId)
 {
-	std::map<ThreadID, std::queue<StackItemBase*>>::iterator itStack;
 	{ // Critsec block for thread depth start
 		critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
 		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
@@ -1067,7 +1076,31 @@ STDMETHODIMP Cprofilermain::ThreadNameChanged(ThreadID threadId, ULONG cchName, 
 STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleId, HRESULT hrStatus)
 {
 
-	//g_MetadataHelpers->InjectFieldToModule(moduleId, std::wstring(L"test"));
+	LPCBYTE baseAddress = new byte;
+	wchar_t *stringName = NULL;
+	ULONG cNameSize = 0;
+	ULONG pcchNameSize = 0;
+	AssemblyID asemId = {};
+	this->m_pICorProfilerInfo2->GetModuleInfo(moduleId, &baseAddress, cNameSize, &pcchNameSize, stringName, &asemId);
+	if (pcchNameSize > 0)
+	{
+		stringName = new wchar_t[pcchNameSize];
+		cNameSize = pcchNameSize;
+		this->m_pICorProfilerInfo2->GetModuleInfo(moduleId, &baseAddress, cNameSize, &pcchNameSize, stringName, &asemId);
+		OFSTRUCT ofStruct = {};
+		auto hFile = CreateFile(stringName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		LARGE_INTEGER li = {};
+		GetFileSizeEx(hFile, &li);
+		char * buffer = new char[li.LowPart] {0};
+		DWORD bytesRead = 0;
+		BOOL fileError = ReadFile(hFile, buffer, li.LowPart, &bytesRead, NULL);
+		auto err = GetLastError();
+		if (fileError == FALSE)
+		{
+			WSABUF wsaB = {};
+			wsaB.buf = buffer;
+		}
+	}
 	return S_OK;
 }
 
@@ -1157,7 +1190,18 @@ STDMETHODIMP Cprofilermain::RuntimeResumeFinished(void)
 	return S_OK;
 }
 
+STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionId, BOOL fIsSafeToBlock)
+{
+	ClassID classId;
+	ModuleID moduleId;
+	mdToken mdToken;
+	this->m_pICorProfilerInfo->GetFunctionInfo(functionId, &classId, &moduleId, &mdToken);
+	std::wstring s;
+	Cprofilermain::GetFullMethodName(functionId, s);
+	
+	return S_OK;
 
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Class level static function hooks, cleaning up globals implementation
@@ -1439,9 +1483,9 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 		}
 		else {
 			*pbHookFunction = FALSE;
-		}
-
 	}
+
+}
 #endif // ALLMETHODS
 	if (clientData == 0x0)
 	{

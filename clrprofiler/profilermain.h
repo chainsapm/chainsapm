@@ -58,7 +58,7 @@ public:
 	Cprofilermain();
 	~Cprofilermain();
 
-	
+
 	/*
 	//MgdGetRequestBasics(
 	class W3_MGD_HANDLER *,
@@ -111,7 +111,7 @@ public:
 	STDMETHOD(ThreadDestroyed)(ThreadID threadId);
 	STDMETHOD(ThreadNameChanged)(ThreadID threadId, ULONG cchName, _In_reads_opt_(cchName) WCHAR name[]);
 	STDMETHOD(SetMask)();
-	STDMETHOD(GetFullMethodName)(FunctionID functionID, std::string *methodName, int cMethod);
+	STDMETHOD(GetFullMethodName)(FunctionID functionID, std::wstring &methodName);
 	STDMETHOD(GetFuncArgs)(FunctionID functionID, COR_PRF_FRAME_INFO frameinfo);
 	STDMETHOD(ModuleLoadStarted)(ModuleID moduleId);
 	STDMETHOD(ModuleLoadFinished)(ModuleID moduleId, HRESULT hrStatus);
@@ -128,6 +128,8 @@ public:
 	STDMETHOD(RuntimeSuspendAborted)(void);
 	STDMETHOD(RuntimeResumeStarted)(void);
 	STDMETHOD(RuntimeResumeFinished)(void);
+
+	STDMETHOD(JITCompilationStarted)(FunctionID functionId, BOOL fIsSafeToBlock);
 
 	UINT_PTR MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL *pbHookFunction);
 
@@ -168,44 +170,7 @@ public:
 	static std::map<UINT_PTR, Cprofilermain*> * g_StaticContainerClass;
 	static CRITICAL_SECTION g_StaticContainerClassCritSec;
 	
-	//// Metadata interface for getting function information
-	//static MetadataHelpers *  g_MetadataHelpers;
-
-	//// As a function is mapped we want to keep a reference to it's specific details so we can 
-	//// use it again when generating the call stack.
-	//static std::map<FunctionID, FunctionInfo> * g_FunctionSet;
-	//// Holds pointers to StackItemBase polymorphic class. This class is an extensible map of objects
-	//// that describe the state of this thread.
-	//static std::map<ThreadID, std::queue<StackItemBase*>> * g_ThreadStackMap;
-	//// Holds the current depth of the stack based on the Enter / Leave / Tail calls
-	//static std::map<ThreadID, volatile unsigned int> * g_ThreadStackDepth;
-	//// Holds the current sequence of the stack items
-	//static std::map<ThreadID, volatile unsigned int> * g_ThreadStackSequence;
-	//// Holds the current number of functions that we've entered and exited. This will be used to stop
-	//// further additions to the stack. This really won't change performance too drastically, however it
-	//// will allow us to save memory
-	//static std::map<ThreadID, volatile unsigned int> * g_ThreadFunctionCount;
-	//// This map is used to link together two threads as a parent and child. 
-	//static std::map<ThreadID, UINT_PTR> * g_ThreadSpawnMap;
-
-	//// This is a structure to hold two or more instances of the Cprofilermain class that will
-	//// spawn the ICorProfiler* classes. This is used in instances where a SxS scenario is active
-	//// As of 08/16/2014 we have not implemented this.
-	//static std::map<DWORD, Cprofilermain*> * g_InstanceMap;
-
-	//// **************************************** TESTING CLASSES ****************************************
-	//// This collection is used to validate that we should be mapping this function. As of right now,
-	//// for testing, we have this in both the mapper function and the ELT functions. Once we're out of
-	//// the testing phase this collection will only be used in the mapper and we can remove the extraneous
-	//// call to the find() method in the hooks.
-	//static std::unordered_set<std::wstring> * g_FunctionNameSet;
-	//// This collection is used to validate that we should be mapping this entire class. As of right now,
-	//// for testing, we have this in both the mapper function and the ELT functions. Once we're out of
-	//// the testing phase this collection will only be used in the mapper and we can remove the extraneous
-	//// call to the find() method in the hooks.
-	//static std::unordered_set<std::wstring> * g_ClassNameSet;
-	//// **************************************** TESTING CLASSES ****************************************
-
+	
 	/************************************************************************************
 	!!!NOTE!!!!
 
@@ -253,29 +218,6 @@ private:
 
 OBJECT_ENTRY_AUTO(__uuidof(profilermain), Cprofilermain)
 
-class NetworkClient
-{
-public:
-	NetworkClient(Cprofilermain *profMain, std::wstring hostName, std::wstring port);
-	~NetworkClient();
-	static SOCKET m_SocketConnection;
-
-private:
-	// Create a singleton socket so we can control what happens if this
-	// class is instantiated more than once.
-
-	std::wstring m_HostName;
-	std::wstring m_HostPort;
-	// This is the main loop that will be used for sending and receving data. When a call comes in we will have a callback to a correct processor
-	void ControllerLoop();
-public:
-	// Start the network client when we're ready.
-	void Start();
-	HRESULT SendData(const char& packet);
-	HRESULT RecvData(char& packet);
-	LPWSAOVERLAPPED_COMPLETION_ROUTINE m_DataSent;
-	LPWSAOVERLAPPED_COMPLETION_ROUTINE m_DataReceived;
-};
 
 
 

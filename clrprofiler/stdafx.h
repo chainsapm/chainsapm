@@ -19,6 +19,8 @@
 
 #define ATL_NO_ASSERT_ON_DESTROY_NONEXISTENT_WINDOW
 
+#define WIN32_LEAN_AND_MEAN
+
 #include "resource.h"
 #include <atlbase.h>
 #include <atlcom.h>
@@ -44,7 +46,7 @@
 
 // Boost Libraries
 //#include <boost/date_time.hpp>
-#include <boost/format.hpp>
+//#include <boost/format.hpp>
 
 #pragma comment(lib, "corguids.lib")
 #pragma comment(lib, "Ws2_32.lib")
