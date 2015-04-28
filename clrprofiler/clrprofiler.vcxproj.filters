@@ -148,6 +148,15 @@
     <ClCompile Include="FunctionEnterQuick.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
+    <ClCompile Include="FunctionEnterLong.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="FunctionLeaveLong.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="FunctionLeaveQuick.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="clrprofiler_i.h">
@@ -229,6 +238,15 @@
       <Filter>Commands</Filter>
     </ClInclude>
     <ClInclude Include="FunctionEnterQuick.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="FunctionEnterLong.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="FunctionLeaveLong.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="FunctionLeaveQuick.h">
       <Filter>Commands</Filter>
     </ClInclude>
   </ItemGroup>

@@ -240,7 +240,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       </AdditionalIncludeDirectories>
       <AdditionalOptions>/Zm111 %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <BrowseInformation>true</BrowseInformation>
+      <BrowseInformation>false</BrowseInformation>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -424,8 +424,11 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="FunctionEnterLong.cpp" />
     <ClCompile Include="FunctionEnterQuick.cpp" />
     <ClCompile Include="FunctionInfo.cpp" />
+    <ClCompile Include="FunctionLeaveLong.cpp" />
+    <ClCompile Include="FunctionLeaveQuick.cpp" />
     <ClCompile Include="FunctionStackItem.cpp" />
     <ClCompile Include="GarbageCollectionStackItem.cpp" />
     <ClCompile Include="ICommand.cpp" />
@@ -481,8 +484,11 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="CorProfilerCallbackImplementation.h" />
     <ClInclude Include="critsec_helper.h" />
     <ClInclude Include="dllmain.h" />
+    <ClInclude Include="FunctionEnterLong.h" />
     <ClInclude Include="FunctionEnterQuick.h" />
     <ClInclude Include="FunctionInfo.h" />
+    <ClInclude Include="FunctionLeaveLong.h" />
+    <ClInclude Include="FunctionLeaveQuick.h" />
     <ClInclude Include="ICommand.h" />
     <ClInclude Include="ILFactory.h" />
     <ClInclude Include="MetadataHelpers.h" />

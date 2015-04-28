@@ -21,19 +21,17 @@ EXTERN_C void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 #pragma once
 #include "resource.h"       // main symbols
 
-//#include "ICorProlfileInfoCallbacks.h"
 #include "commonstructures.h"
 #include "clrprofiler_i.h"
 #include <cor.h>
 #include <corprof.h>
-
-//#include "NetworkClient.h"
 #include "MetadataHelpers.h"
 #include "FunctionInfo.h"
 #include "stackitems.h"
-//#include "TimerItem.h"
 #include "CorProfilerCallbackImplementation.h"
-#include <http.h>
+#include "Commands.h"
+#include "networkclient.h"
+
 
 struct ContainerClass;
 
@@ -170,6 +168,7 @@ public:
 	static std::map<UINT_PTR, Cprofilermain*> * g_StaticContainerClass;
 	static CRITICAL_SECTION g_StaticContainerClassCritSec;
 	
+	NetworkClient *m_NetworkClient = NULL;
 	
 	/************************************************************************************
 	!!!NOTE!!!!
@@ -212,7 +211,7 @@ private:
 	// This is the all encompasing container class used by this class
 	ContainerClass * m_Container;
 
-	//NetworkClient *m_NetworkClient = NULL;
+	
 
 };
 

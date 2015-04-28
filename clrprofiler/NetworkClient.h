@@ -2,9 +2,15 @@
 #define NETCLIENT
 
 #pragma once
-#include "ICommand.h"
+#include "Commands.h"
 
 class Cprofilermain;
+
+
+#define _SECOND ((__int64) 10000000)
+#define _MINUTE (60 * _SECOND)
+#define _HOUR   (60 * _MINUTE)
+#define _DAY    (24 * _HOUR)
 
 enum NetworkCommands
 {
@@ -42,18 +48,31 @@ private:
 	
 
 	//Double buffered queues need double the locks
-	CRITICAL_SECTION lockNetworkReader;
-	CRITICAL_SECTION lockNetworkWriter;
-	CRITICAL_SECTION lockMemoryReader;
-	CRITICAL_SECTION lockMemoryWriter;
+	CRITICAL_SECTION FrontOutboundLock;
+	CRITICAL_SECTION BackOutboundLock;
+	CRITICAL_SECTION FrontInboundLock;
+	CRITICAL_SECTION BackInboundLock;
+
+	static VOID CALLBACK SendTimerCallback(
+		PTP_CALLBACK_INSTANCE pInstance, // See "Callback Termination Actions" section
+		PVOID pvContext,
+		PTP_TIMER pTimer);
+
+	static VOID CALLBACK ReceiveTimerCallback(
+		PTP_CALLBACK_INSTANCE pInstance, // See "Callback Termination Actions" section
+		PVOID pvContext,
+		PTP_TIMER pTimer);
+
+	bool insideSendLock = false;
+	bool insideReceiveLock = false;
+
+
+	
 
 	// This is the main loop that will be used for sending and receving data. When a call comes in we will have a callback to a correct processor
 	void ControllerLoop();
 
 	// Completion routines
-	LPWSAOVERLAPPED_COMPLETION_ROUTINE m_DataSent;
-	LPWSAOVERLAPPED_COMPLETION_ROUTINE m_DataReceived;
-
 	static void CALLBACK NewDataReceived(
 		IN DWORD dwError,
 		IN DWORD cbTransferred,

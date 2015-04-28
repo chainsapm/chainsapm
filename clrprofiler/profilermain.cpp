@@ -6,34 +6,10 @@
 #include "srw_helper.h"
 #include "critsec_helper.h"
 #include "webengine4helper.h"
-#include "networkclient.h"
-#include "Commands.h"
 #include <future>
 
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Definition of static members of the Cprofilermain class
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//MetadataHelpers *  Cprofilermain::g_MetadataHelpers;
-//
-//
-//std::map<FunctionID, FunctionInfo> * Cprofilermain::g_FunctionSet = new std::map<FunctionID, FunctionInfo>();
-//std::map<ThreadID, std::queue<StackItemBase*>> * Cprofilermain::g_ThreadStackMap = new std::map<ThreadID, std::queue<StackItemBase*>>();
-//std::map<ThreadID, volatile unsigned int> * Cprofilermain::g_ThreadStackDepth = new std::map<ThreadID, volatile unsigned int>();
-//std::map<ThreadID, volatile unsigned int> * Cprofilermain::g_ThreadStackSequence = new std::map<ThreadID, volatile unsigned int>();
-//std::map<ThreadID, volatile unsigned int> * Cprofilermain::g_ThreadFunctionCount = new std::map<ThreadID, volatile unsigned int>();
-//
-//
-//std::unordered_set<std::wstring> * Cprofilermain::g_FunctionNameSet = new std::unordered_set<std::wstring>();
-//std::unordered_set<std::wstring> * Cprofilermain::g_ClassNameSet = new std::unordered_set<std::wstring>();
-//
-//std::map<ThreadID, UINT_PTR> * Cprofilermain::g_ThreadSpawnMap = NULL;
-//
-//CRITICAL_SECTION Cprofilermain::g_ThreadingCriticalSection;
-//CRITICAL_SECTION Cprofilermain::g_ThreadStackSequenceCriticalSection;
-//CRITICAL_SECTION Cprofilermain::g_ThreadStackDepthCriticalSection;
-//CRITICAL_SECTION Cprofilermain::g_FunctionSetCriticalSection;
 
 std::map<UINT_PTR, Cprofilermain*> * Cprofilermain::g_StaticContainerClass = new std::map<UINT_PTR, Cprofilermain*>();
 CRITICAL_SECTION Cprofilermain::g_StaticContainerClassCritSec;
@@ -395,9 +371,9 @@ STDMETHODIMP Cprofilermain::DequeItems()
 
 	while (!this->m_Container->g_BigStack->empty())
 	{
-		critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
+		/*critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
 		this->m_Container->g_BigStack->front();
-		this->m_Container->g_BigStack->pop();
+		this->m_Container->g_BigStack->pop(); */
 	}
 	return S_OK;
 }
@@ -432,25 +408,21 @@ Cprofilermain::Cprofilermain()
 		this->m_Container = new ContainerClass();
 		this->m_ProcessId = GetCurrentProcessId();
 		this->AddCommonFunctions();
-		auto m_NetworkClient = new NetworkClient(this, TEXT("localhost"), TEXT("8080"));
+
+		m_NetworkClient = new NetworkClient(this, TEXT("localhost"), TEXT("8080"));
+
 		// CRITICAL 1 Research this critical section in the profiler main constructor.
 		InitializeCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
+
+		m_NetworkClient->Start();
 	}
 
 	DWORD tID = 0;
-	// CRITICAL 9 Remove this log writer thread.
-	HANDLE tHandle = CreateThread(
-		NULL,                   // default security attributes
-		0,                      // use default stack size  
-		MyThreadFunction,       // thread function name
-		this,					// argument to thread function 
-		0,                      // use default creation flags 
-		&tID);
+	
 }
 
 Cprofilermain::~Cprofilermain()
 {
-	WriteLogFile(0);
 	/*delete g_FunctionNameSet;
 	delete g_FunctionSet;
 	delete g_ThreadStackMap;
@@ -527,144 +499,9 @@ void Cprofilermain::AddCommonFunctions()
 	newMapping8->compare = STRINGCOMPARE::CONTAINS;
 	this->m_Container->g_FunctionNameSet->insert(newMapping8);
 
-
-
 	/*	this->m_Container->g_FunctionNameSet->insert(TEXT("ThreadStart"));
 		this->m_Container->g_FunctionNameSet->insert(TEXT("Start"))*/;
 
-}
-
-void Cprofilermain::WriteLogFile(int fileNum)
-{
-	//// TODO: Adapt some of this code into the server module to recreate a thread stack.
-	////std::string fileName = ;
-	//std::wstring fileName(str(boost::wformat(L"C:\\logfiles\\%d_%d_%s.log") % fileNum % m_ProcessId % m_ProcessName));
-	//std::wofstream outFile(fileName);
-	//if (outFile)
-	//{
-	//	//std::map<ThreadID, std::queue<StackItemBase*>>::iterator it;
-	//	std::locale loc("");
-	//	UINT_PTR highPart;
-	//	UINT_PTR lowPart;
-	//	UINT highPartParam;
-	//	UINT lowPartParam;
-	//	UINT highPartReturn;
-	//	UINT lowPartReturn;
-	//	outFile.imbue(std::locale(loc, new no_separator()));
-	//	std::map<FunctionID, FunctionInfo*>::iterator itFunc;
-	//	std::wstring spaces;
-	//	std::wstring separator(80, '=');
-	//	outFile << separator << std::endl;
-	//	outFile << this->m_ProcessName << L" " << boost::wformat(L"%u") % this->m_ProcessId << std::endl;
-	//	outFile << separator << std::endl;
-	//	outFile << std::endl;
-	//	for (auto it = this->m_Container->g_ThreadStackMap->begin();
-	//		it != this->m_Container->g_ThreadStackMap->end();
-	//		it++)
-	//	{
-	//		int depth = 0;
-	//		int previousDepth = 0;
-	//		highPart = (0xFFFFFFFF00000000 & it->first) >> 32;
-	//		lowPart = 0x00000000FFFFFFFF & it->first;
-
-
-	//		EnterCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
-	//		std::deque<StackItemBase*>::const_iterator constIt = it->second.cbegin();
-	//		LeaveCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
-
-	//		ThreadStackItem* threadStackItem = NULL;
-	//		try
-	//		{
-	//			threadStackItem = dynamic_cast<ThreadStackItem*>(*constIt);
-	//		}
-	//		catch (std::bad_cast* e)
-	//		{
-
-	//			outFile << e->what();
-	//		}
-	//		outFile << separator << std::endl;
-	//		if (threadStackItem != NULL)
-	//		{
-	//			outFile << "Thread: " << threadStackItem->ThreadName() << boost::wformat(TEXT(" (0x%08x`%08x)")) % highPart % lowPart << std::endl;
-	//		}
-	//		else {
-	//			outFile << "Thread: " << boost::wformat(TEXT("0x%08x`%08x")) % highPart % lowPart << std::endl;
-	//		}
-	//		outFile << separator << std::endl;
-	//		outFile << std::endl;
-	//		ULONGLONG totalTime = 0;
-	//		ULONGLONG profilerTime = 0;
-
-	//		while (constIt != it->second.cend())
-	//		{
-
-	//			FunctionStackItem* testItemConverted = NULL;
-	//			try
-	//			{
-	//				testItemConverted = dynamic_cast<FunctionStackItem*>(*constIt);
-	//			}
-	//			catch (std::bad_cast* e)
-	//			{
-	//				outFile << e->what();
-	//			}
-
-	//			if (testItemConverted != NULL)
-	//			{
-	//				itFunc = this->m_Container->g_FunctionSet->find(testItemConverted->FunctionId());
-
-	//				if (&itFunc != NULL && itFunc != this->m_Container->g_FunctionSet->end())
-	//				{
-	//					if ((*constIt)->Depth() >= 0)
-	//					{
-	//						depth = (*constIt)->Depth();
-	//					}
-	//					spaces.swap(std::wstring(depth * 2, ' '));
-	//					outFile << spaces << itFunc->second->SignatureString();
-	//					if ((*constIt)->LastReason() == TAIL)
-	//					{
-	//						outFile << _T(" !!TAIL CALL!! ");
-	//					}
-	//					outFile << std::endl;
-	//					if (testItemConverted->ParameterCount() != 0)
-	//					{
-	//						outFile << spaces;
-	//						int i = 0;
-	//						int paramNumber = 1;
-	//						for (auto &param : *testItemConverted->ItemStackParameters())
-	//						{
-	//							highPartParam = (0xFFFFFFFF00000000 & param) >> 32;
-	//							lowPartParam = 0x00000000FFFFFFFF & param;
-	//							if (itFunc->second->IsStatic() == FALSE && i == 0)
-	//							{
-	//								outFile << "Class Pointer: ";
-	//								paramNumber--;
-	//							}
-	//							else {
-	//								outFile << "Parameter " << paramNumber << ": ";
-
-	//							}
-	//							outFile << boost::wformat(TEXT("0x%08x`%08x")) % highPartParam % lowPartParam << " ";
-	//							++paramNumber;
-	//						}
-	//						outFile << std::endl;
-	//					}
-	//					highPartReturn = (0xFFFFFFFF00000000 & testItemConverted->ReturnValue()) >> 32;
-	//					lowPartReturn = 0x00000000FFFFFFFF & testItemConverted->ReturnValue();
-	//					outFile << spaces << "Return: " << boost::wformat(TEXT("0x%08x`%08x")) % highPartReturn % lowPartReturn << std::endl;
-	//					outFile << spaces << boost::wformat(TEXT("Total time: %uus\tProfiling Time: %uus")) % (*constIt)->ItemRunTime() % (*constIt)->ProfilingOverhead() << std::endl;
-	//					totalTime += (*constIt)->ItemRunTime();
-	//					profilerTime += (*constIt)->ProfilingOverhead();
-	//				}
-	//			}
-
-	//			constIt++;
-	//		};
-	//		outFile << separator << std::endl;
-	//		outFile << boost::wformat(TEXT("Total time: %uus\tProfiling Time: %uus")) % totalTime % profilerTime << std::endl;
-	//		outFile << separator << std::endl;
-
-	//	}
-	//}
 }
 
 void Cprofilermain::SetProcessName()
@@ -729,10 +566,10 @@ STDMETHODIMP Cprofilermain::SetMask()
 
 	DWORD eventMask = (DWORD)(
 		COR_PRF_MONITOR_APPDOMAIN_LOADS
-		//| COR_PRF_MONITOR_ENTERLEAVE
-		//| COR_PRF_ENABLE_FRAME_INFO
-		//| COR_PRF_ENABLE_FUNCTION_ARGS
-		//| COR_PRF_ENABLE_FUNCTION_RETVAL
+		| COR_PRF_MONITOR_ENTERLEAVE
+		| COR_PRF_ENABLE_FRAME_INFO
+		| COR_PRF_ENABLE_FUNCTION_ARGS
+		| COR_PRF_ENABLE_FUNCTION_RETVAL
 		| COR_PRF_MONITOR_THREADS
 		| COR_PRF_MONITOR_GC
 		| COR_PRF_MONITOR_SUSPENDS
@@ -873,8 +710,6 @@ STDMETHODIMP Cprofilermain::GetFuncArgs(FunctionID functionID, COR_PRF_FRAME_INF
 
 	return hr;
 }
-
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1052,8 +887,8 @@ STDMETHODIMP Cprofilermain::ThreadDestroyed(ThreadID threadId)
 			// Create 
 			// lastTimer.AddThreadStackItem(this->m_Container->g_ThreadStackMap->at(threadId).back());
 		}
+
 	}
-	//WriteLogFile();
 	return S_OK;
 }
 
@@ -1198,7 +1033,7 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionId, BOOL fI
 	this->m_pICorProfilerInfo->GetFunctionInfo(functionId, &classId, &moduleId, &mdToken);
 	std::wstring s;
 	Cprofilermain::GetFullMethodName(functionId, s);
-	
+
 	return S_OK;
 
 }
@@ -1216,55 +1051,11 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	// Make copies of the function parameters and pass them in as objects to the TP.
 	// Only use 2 threads, we should allow queueing to take place.
 
-	//// CRITICAL 2 Remove this code from this function block to speed up call time
-	//webengine4helper &helper = webengine4helper::createhelper();
 
-	//UINT_PTR reqInfo = *(UINT_PTR*)(argumentInfo->ranges[1].startAddress);
-	////UINT_PTR reqInfo = (UINT_PTR)(argumentInfo->ranges->startAddress + argumentInfo->ranges->length);
-	//UINT_PTR contType;
-	//UINT_PTR totalLen;
-	//UINT_PTR pathTranslated;
-	//UINT_PTR cchPathTranslated;
-	//UINT_PTR cacheURL;
-	//UINT_PTR cchCacheURL;
-	//UINT_PTR urlMax;
-	//UINT_PTR cookedUrl;
-
-	//helper.GetRequestBasics(
-	//	reqInfo,
-	//	&contType,
-	//	&totalLen,
-	//	&pathTranslated,
-	//	&cchPathTranslated,
-	//	&cacheURL,
-	//	&cchCacheURL,
-	//	&urlMax,
-	//	&cookedUrl);
-
-	//_HTTP_COOKED_URL * cooked = (_HTTP_COOKED_URL*)cookedUrl;
-
-	//helper.SetUnkHeader(reqInfo, false, true, "X-chainsAPM", "JamesDavis", 11);
 	/*
 	MSDN Article that describes the ELT methods and what COR flags need to be set.
 	http://msdn.microsoft.com/en-us/magazine/cc300553.aspx
 	*/
-	// Create a timer item that will calculate how long we spent trying to gather data
-
-
-
-
-	// As we could be mapping a function while trying to find this guy it's possible
-	// we would have a race condition.
-	// However we will more than likely stop using this behavior as testing shows we don't need it
-	//#pragma message(__TODO__"Do more testing around this 'feature' to see if we need it.")
-	/*EnterCriticalSection(&g_ThreadingCriticalSection);
-	std::map<FunctionID, FunctionInfo>::const_iterator it = g_FunctionSet->find(funcId);
-	LeaveCriticalSection(&g_ThreadingCriticalSection);*/
-
-	/*	if (it != g_FunctionSet->end())
-	{*/
-	//const FunctionInfo *fi = &it->second;
-
 	ThreadID threadId;
 	{
 		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
@@ -1293,6 +1084,7 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	critsec_helper cshFirst(&this->m_Container->g_FunctionSetCriticalSection);
 	auto functionInfoFirst = this->m_Container->g_FunctionSet->find(funcId);
 	cshFirst.leave_early(); // Leaving CS early because we don't need to worry about it
+
 	BOOL isEntry = functionInfoFirst->second->IsEntryPoint();
 	LONGLONG incremented = 0;
 	if (isEntry)
@@ -1320,13 +1112,7 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 			// Make a copy of the return value for the potential blocking operation.
 			auto itStack = this->m_Container->g_BigStack;
 			auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::ENTER, funcId, arguments);
-			// TODO add in function to add to network buffer
-			// We will  need to lock this as only one thread can act on this list.
-			{
-				critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
-				itStack->push(tsi);
-			}
-
+			this->m_NetworkClient->SendCommand(std::make_shared<FunctionEnterQuick>(FunctionEnterQuick(funcId)));
 		}
 	});
 }
@@ -1338,43 +1124,40 @@ void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 	// Make copies of the function parameters and pass them in as objects to the TP.
 	// Only use 2 threads, we should allow queueing to take place.
 
-
-	{ // Critsec block for thread find start
-		critsec_helper cshFirst(&this->m_Container->g_MetaDataCriticalSection);
-		// Leaving CS early because we don't need to worry about it
-		ThreadID threadId;
+	ThreadID threadId;
+	{
+		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
 		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
-		UINT_PTR returnVal = NULL;
-		int  threadDepth = 0;
-		int threadSequence = InterlockedIncrement(&this->m_Container->g_ThreadStackSequence->at(threadId));
-
-		if (argumentRange->startAddress != NULL)
-		{
-			returnVal = *(UINT_PTR*)argumentRange->startAddress;
-		}
-
-		if (this->m_Container->g_ThreadStackDepth->at(threadId) > 0)
-		{
-			threadDepth = InterlockedDecrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
-		}
-
-		std::async(std::launch::async, [&, funcId, threadId, threadDepth, threadSequence, returnVal]{
-			critsec_helper csh(&this->m_Container->g_FunctionSetCriticalSection);
-			auto it = this->m_Container->g_FunctionSet->find(funcId);
-			csh.leave_early();
-
-			if (it != this->m_Container->g_FunctionSet->end())
-			{
-				// Make a copy of the return value for the potential blocking operation.
-				auto itStack = this->m_Container->g_BigStack;
-				auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::EXIT, funcId, returnVal);
-				{
-					critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
-					itStack->push(tsi);
-				}
-			}
-		});
 	}
+
+	// Critsec block for thread find start
+	UINT_PTR returnVal = NULL;
+	int  threadDepth = 0;
+	int threadSequence = InterlockedIncrement(&this->m_Container->g_ThreadStackSequence->at(threadId));
+
+	if (argumentRange->startAddress != NULL)
+	{
+		returnVal = *(UINT_PTR*)argumentRange->startAddress;
+	}
+
+	if (this->m_Container->g_ThreadStackDepth->at(threadId) > 0)
+	{
+		threadDepth = InterlockedDecrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
+	}
+
+	std::async(std::launch::async, [&, funcId, threadId, threadDepth, threadSequence, returnVal]{
+		critsec_helper csh(&this->m_Container->g_FunctionSetCriticalSection);
+		auto it = this->m_Container->g_FunctionSet->find(funcId);
+		csh.leave_early();
+
+		if (it != this->m_Container->g_FunctionSet->end())
+		{
+			// Make a copy of the return value for the potential blocking operation.
+			auto itStack = this->m_Container->g_BigStack;
+			auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::EXIT, funcId, returnVal);
+		}
+	});
+
 }
 
 void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
@@ -1396,15 +1179,11 @@ void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 			threadDepth = InterlockedDecrement(&this->m_Container->g_ThreadStackDepth->at(threadId));
 		}
 		std::async(std::launch::async, [&, funcId, threadId, threadDepth, threadSequence]{
-				{
+			{
 
-					auto itStack = this->m_Container->g_BigStack;
-					auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::EXIT, funcId, NULL);
-					{
-						critsec_helper cshT(&this->m_Container->g_ThreadingCriticalSection);
-						itStack->push(tsi);
-					}
-				}
+				auto itStack = this->m_Container->g_BigStack;
+				auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::EXIT, funcId, NULL);
+			}
 		});
 
 	}
@@ -1483,9 +1262,9 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 		}
 		else {
 			*pbHookFunction = FALSE;
-	}
+		}
 
-}
+	}
 #endif // ALLMETHODS
 	if (clientData == 0x0)
 	{
