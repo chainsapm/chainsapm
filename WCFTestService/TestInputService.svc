@@ -1,1 +1,0 @@
-﻿<%@ ServiceHost Language="C#" Debug="true" Service="WCFTestService.TestInputService" CodeBehind="TestInputService.svc.cs" %>

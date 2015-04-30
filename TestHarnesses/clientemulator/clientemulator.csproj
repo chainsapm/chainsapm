@@ -69,7 +69,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\commonlib\commonlibrary.csproj">
+    <ProjectReference Include="..\..\commonlib\commonlibrary.csproj">
       <Project>{884e4a3d-40d8-4685-82a5-1e74c92f7698}</Project>
       <Name>commonlibrary</Name>
     </ProjectReference>

@@ -56,6 +56,10 @@ ipch/
 *.sdf
 *.cachefile
 
+#Random IDE and Code Folders
+packages/
+.\.ide/
+
 # Visual Studio profiler
 *.psess
 *.vsp
