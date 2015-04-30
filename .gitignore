@@ -58,7 +58,7 @@ ipch/
 
 #Random IDE and Code Folders
 packages/
-.*\.ide/
+chainsapm.sln.ide
 
 # Visual Studio profiler
 *.psess
@@ -100,10 +100,6 @@ publish/
 
 # Publish Web Output
 *.Publish.xml
-
-# NuGet Packages Directory
-## TODO: If you have NuGet Package Restore enabled, uncomment the next line
-#packages/
 
 # Windows Azure Build Output
 csx
