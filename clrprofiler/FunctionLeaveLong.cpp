@@ -1,12 +1,16 @@
 #include "stdafx.h"
 #include "FunctionLeaveLong.h"
 
-
-FunctionLeaveLong::FunctionLeaveLong()
+namespace Commands
 {
-}
+
+	FunctionLeaveLong::FunctionLeaveLong()
+	{
+	}
 
 
-FunctionLeaveLong::~FunctionLeaveLong()
-{
+	FunctionLeaveLong::~FunctionLeaveLong()
+	{
+	}
+
 }

@@ -38,7 +38,7 @@ private:
 	std::wstring m_HostPort;
 
 	// List of ICommand implementations by code
-	std::map<short, ICommand> m_CommandList;
+	std::map<short, Commands::ICommand> m_CommandList;
 
 	// Double buffered queues for reading and writing so we don't bog down the enter/exit methods
 	std::queue<std::shared_ptr<std::vector<char>>> m_OutboundQueueFront;
@@ -52,6 +52,10 @@ private:
 	CRITICAL_SECTION BackOutboundLock;
 	CRITICAL_SECTION FrontInboundLock;
 	CRITICAL_SECTION BackInboundLock;
+
+	PTP_TIMER recvTimer;
+
+	PTP_TIMER sendTimer;
 
 	static VOID CALLBACK SendTimerCallback(
 		PTP_CALLBACK_INSTANCE pInstance, // See "Callback Termination Actions" section
@@ -90,10 +94,22 @@ private:
 public:
 	// Start the network client when we're ready.
 	void Start();
-	HRESULT SendCommand(std::shared_ptr<ICommand> packet);
-	std::shared_ptr<ICommand> ReceiveCommand();
-	HRESULT SendCommands(std::vector<std::shared_ptr<ICommand>> &packet);
-	std::vector<std::shared_ptr<ICommand>>& ReceiveCommands();
+	// Shutdown the socket and stop send and recv.
+	void Shutdown();
+	HRESULT SendRoutedCommand(std::shared_ptr<Commands::RouteCommand> packet);
+
+	// Send a single command to the buffer to be processed.
+	template<typename C>
+	HRESULT SendCommand(std::shared_ptr<C> packet)
+	{
+		auto cshFQ = critsec_helper::critsec_helper(&FrontOutboundLock);
+		m_OutboundQueueFront.emplace(packet->Encode());
+		cshFQ.leave_early();
+		return S_OK;
+	}
+	std::shared_ptr<Commands::ICommand> ReceiveCommand();
+	HRESULT SendCommands(std::vector<std::shared_ptr<Commands::ICommand>> &packet);
+	std::vector<std::shared_ptr<Commands::ICommand>>& ReceiveCommands();
 	
 };
 

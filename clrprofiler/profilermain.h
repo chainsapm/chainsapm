@@ -33,8 +33,11 @@ EXTERN_C void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 #include "networkclient.h"
 
 
-struct ContainerClass;
 
+
+
+struct ContainerClass;
+class tp_helper;
 
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
@@ -74,7 +77,7 @@ public:
 	//out int pContentTotalLength, out IntPtr pPathTranslated, out int pcchPathTranslated, out IntPtr pCacheUrl, out int pcchCacheUrl, 
 	//out IntPtr pHttpMethod, out IntPtr pCookedUrl);
 
-	
+
 
 	DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERMAIN)
 
@@ -133,6 +136,8 @@ public:
 
 	STDMETHOD(DequeItems)(void);
 
+	STDMETHOD(Shutdown)(void);
+
 	void WriteLogFile(int fileNum);
 	void AddCommonFunctions();
 	void SetProcessName();
@@ -167,9 +172,9 @@ public:
 
 	static std::map<UINT_PTR, Cprofilermain*> * g_StaticContainerClass;
 	static CRITICAL_SECTION g_StaticContainerClassCritSec;
-	
+
 	NetworkClient *m_NetworkClient = NULL;
-	
+
 	/************************************************************************************
 	!!!NOTE!!!!
 
@@ -198,6 +203,7 @@ private:
 	std::shared_ptr<ICorProfilerInfo4> m_pICorProfilerInfo4;
 
 
+
 	// container for IL allocation
 	std::shared_ptr<IMethodMalloc> m_pIMethodMalloc;
 	//std::map<FunctionID, FunctionInfo> m_FunctionInfoMap;
@@ -211,13 +217,76 @@ private:
 	// This is the all encompasing container class used by this class
 	ContainerClass * m_Container;
 
-	
+	//Thread Pool Helper
+	tp_helper * tp = nullptr;
+
 
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(profilermain), Cprofilermain)
 
 
+
+class tp_helper
+{
+
+private:
+	static Cprofilermain * m_cprof;
+
+	PTP_POOL m_customThreadPool = nullptr;
+	PTP_CALLBACK_ENVIRON m_ptpcbe = nullptr;
+	PTP_CLEANUP_GROUP m_ptpcug = nullptr;
+
+	template <class C>
+	static VOID CALLBACK SendEventCallBack(PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WORK Work)
+	{
+		m_cprof->m_NetworkClient->SendCommand(std::make_shared<C>(*(C*)Parameter));
+	}
+
+
+public:
+
+	tp_helper(Cprofilermain * profiler, int min, int max);
+	~tp_helper();
+
+	template <class C>
+	void SendEvent(C *param)
+	{
+		auto tpw = CreateThreadpoolWork(&tp_helper::SendEventCallBack<C>, param, m_ptpcbe);
+		SubmitThreadpoolWork(tpw);
+	}
+
+
+
+
+
+	
+};
+
+
+
+Cprofilermain * tp_helper::m_cprof = nullptr;
+
+tp_helper::tp_helper(Cprofilermain * cpmain, int min, int max)
+{
+	tp_helper::m_cprof = cpmain;
+	m_ptpcbe = new TP_CALLBACK_ENVIRON();
+	InitializeThreadpoolEnvironment(m_ptpcbe);
+	m_customThreadPool = CreateThreadpool(NULL);
+	/*SetThreadpoolThreadMinimum(customThreadPool, 1);
+	SetThreadpoolThreadMaximum(customThreadPool, 1);*/
+	m_ptpcug = CreateThreadpoolCleanupGroup();
+	SetThreadpoolCallbackPool(m_ptpcbe, m_customThreadPool);
+	SetThreadpoolCallbackCleanupGroup(m_ptpcbe, m_ptpcug, NULL);
+}
+
+
+
+
+
+tp_helper::~tp_helper()
+{
+}
 
 
 #endif

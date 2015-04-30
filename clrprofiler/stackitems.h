@@ -6,7 +6,6 @@ class IStackItem
 {
 public:
 	virtual ~IStackItem() {};
-	virtual std::shared_ptr<std::vector<BYTE>> SendPacket() = 0;
 };
 
 // Base item entry for all stack objects. This provides a consistent way to access the data.
@@ -16,7 +15,7 @@ class StackItemBase : public IStackItem
 public:
 
 	StackItemBase();
-	StackItemBase(int depth, int sequence, ThreadID thread, ThreadStackReason reason);
+	StackItemBase(ThreadID thread, ThreadStackReason reason);
 	~StackItemBase() {};
 
 	ThreadStackReason& LastReason() const;
@@ -62,8 +61,8 @@ class FunctionStackItem : public StackItemBase
 {
 public:
 
-	FunctionStackItem(int depth, int sequence, ThreadID threadId, ThreadStackReason reason, FunctionID functionId, UINT_PTR returnValue);
-	FunctionStackItem(int depth, int sequence, ThreadID threadId, ThreadStackReason reason, FunctionID functionId, std::shared_ptr<std::vector<UINT_PTR>>& functionArguments);
+	FunctionStackItem(ThreadID threadId, ThreadStackReason reason, FunctionID functionId, UINT_PTR returnValue);
+	FunctionStackItem(ThreadID threadId, ThreadStackReason reason, FunctionID functionId, std::shared_ptr<std::vector<UINT_PTR>>& functionArguments);
 	~FunctionStackItem();
 	// Array of parameters
 	const std::shared_ptr<std::vector<UINT_PTR>>& ItemStackParameters() const;
@@ -73,10 +72,6 @@ public:
 	// Count of parameters
 	ULONG ParameterCount() const;
 	FunctionID FunctionId() const;
-
-	
-
-	std::shared_ptr<std::vector<BYTE>> SendPacket();
 
 private:
 	COR_PRF_FUNCTION_ARGUMENT_INFO m_ParameterInfo;
@@ -91,13 +86,10 @@ private:
 class ThreadStackItem : public StackItemBase
 {
 public:
-	ThreadStackItem(int depth, int sequence, ThreadID threadId, ThreadStackReason reason);
+	ThreadStackItem(ThreadID threadId, ThreadStackReason reason);
 	// Thread name getter and setter
 	const std::wstring& ThreadName() const;
 	void ThreadName(const std::wstring&);
-	
-	std::shared_ptr<std::vector<BYTE>> SendPacket();
-
 private:
 	std::wstring m_ThreadName;
 };
@@ -107,9 +99,6 @@ class RuntimeSuspensionStackItem : public StackItemBase
 {
 public:
 	RuntimeSuspensionStackItem(COR_PRF_SUSPEND_REASON suspensionReason);
-	
-	std::shared_ptr<std::vector<BYTE>>SendPacket();
-
 private:
 	COR_PRF_SUSPEND_REASON m_SuspensionReason;
 };
@@ -120,7 +109,6 @@ class GarbageCollectionStackItem : public StackItemBase
 public:
 	GarbageCollectionStackItem(COR_PRF_GC_REASON suspensionReason, int maxGenerationCollected);
 	GC_REASON GetGCReason() const;
-	std::shared_ptr<std::vector<BYTE>> SendPacket();
 private:
 	COR_PRF_GC_REASON m_GCReason;
 	int m_MaxGenerationsCollected;

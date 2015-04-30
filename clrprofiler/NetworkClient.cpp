@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include <WinSock2.h>
 #include <ws2tcpip.h>
-#include "profilermain.h"
 #include "NetworkClient.h"
 #include "critsec_helper.h"
 
@@ -59,28 +58,40 @@ void NetworkClient::Start()
 	WSAConnectByName(NetworkClient::m_SocketConnection, (LPWSTR)m_HostName.c_str(), (LPWSTR)m_HostPort.c_str(), NULL, NULL, NULL, NULL, &t, NULL);
 
 
-	auto recvTimer = CreateThreadpoolTimer(&NetworkClient::ReceiveTimerCallback, this, NULL); // See "Customized Thread Pools" section
-	auto sendTimer = CreateThreadpoolTimer(&NetworkClient::SendTimerCallback, this, NULL); // See "Customized Thread Pools" section
+	recvTimer = CreateThreadpoolTimer(&NetworkClient::ReceiveTimerCallback, this, NULL); // See "Customized Thread Pools" section
+	sendTimer = CreateThreadpoolTimer(&NetworkClient::SendTimerCallback, this, NULL); // See "Customized Thread Pools" section
 
-	__int64 dueFileTime = -10 * _SECOND;
+	__int64 dueFileTime = -1 * _SECOND;
 	FILETIME ftDue;
 	ftDue.dwLowDateTime = (DWORD)(dueFileTime & 0xFFFFFFFF);
 	ftDue.dwHighDateTime = (DWORD)(dueFileTime >> 32);
 	SetThreadpoolTimer(recvTimer, &ftDue, 500, 0);
 	SetThreadpoolTimer(sendTimer, &ftDue, 250, 0);
 }
-// Send a single command to the buffer to be processed.
-HRESULT NetworkClient::SendCommand(std::shared_ptr<ICommand> packet)
+
+// Start the network client when we're ready.
+void NetworkClient::Shutdown()
 {
-	auto cshFQ = critsec_helper::critsec_helper(&FrontOutboundLock);
+	Sleep(1500);
+	CloseThreadpoolTimer(sendTimer);
+	CloseThreadpoolTimer(recvTimer);
+	closesocket(m_SocketConnection);
+}
+
+// Send a single command to the buffer to be processed.
+HRESULT NetworkClient::SendRoutedCommand(std::shared_ptr<Commands::RouteCommand> packet)
+{
+	/*auto cshFQ = critsec_helper::critsec_helper(&FrontOutboundLock);
 	m_OutboundQueueFront.emplace(packet->Encode());
-	cshFQ.leave_early();
+	cshFQ.leave_early();*/
 	return S_OK;
 }
+
+
 // Receive a single command from the buffer to be processed.
-std::shared_ptr<ICommand> NetworkClient::ReceiveCommand()
+std::shared_ptr<Commands::ICommand> NetworkClient::ReceiveCommand()
 {
-	std::shared_ptr<ICommand> itemout;
+	std::shared_ptr<Commands::ICommand> itemout;
 	{
 		critsec_helper::critsec_helper(&FrontInboundLock);
 		auto itemtodecodeout = m_InboundQueueFront.front();
@@ -91,7 +102,7 @@ std::shared_ptr<ICommand> NetworkClient::ReceiveCommand()
 	return itemout;
 }
 // Send a list of commands the buffer to be processed.
-HRESULT NetworkClient::SendCommands(std::vector<std::shared_ptr<ICommand>> &packet)
+HRESULT NetworkClient::SendCommands(std::vector<std::shared_ptr<Commands::ICommand>> &packet)
 {
 	{
 		critsec_helper::critsec_helper(&FrontOutboundLock);
@@ -104,9 +115,9 @@ HRESULT NetworkClient::SendCommands(std::vector<std::shared_ptr<ICommand>> &pack
 	return S_OK;
 }
 // Receive a list of commands from the buffer to be processed.
-std::vector<std::shared_ptr<ICommand>>& NetworkClient::ReceiveCommands()
+std::vector<std::shared_ptr<Commands::ICommand>>& NetworkClient::ReceiveCommands()
 {
-	auto cmdlist = std::vector<std::shared_ptr<ICommand>>();
+	auto cmdlist = std::vector<std::shared_ptr<Commands::ICommand>>();
 	{
 		critsec_helper::critsec_helper(&FrontInboundLock);
 		while (!m_InboundQueueFront.empty())
@@ -118,7 +129,7 @@ std::vector<std::shared_ptr<ICommand>>& NetworkClient::ReceiveCommands()
 			m_InboundQueueBack.pop();
 		}
 	}
-	return cmdlist = std::vector<std::shared_ptr<ICommand>>();
+	return cmdlist = std::vector<std::shared_ptr<Commands::ICommand>>();
 }
 
 VOID CALLBACK NetworkClient::SendTimerCallback(
@@ -219,7 +230,10 @@ void CALLBACK NetworkClient::DataSent(
 {
 	if (cbTransferred > 0)
 	{
-		delete lpOverlapped->hEvent;
+		if (lpOverlapped->hEvent != NULL )
+		{
+			delete lpOverlapped->hEvent;
+		}
 		printf("We did it!\r\n");
 	}
 }

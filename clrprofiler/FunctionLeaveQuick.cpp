@@ -2,11 +2,15 @@
 #include "FunctionLeaveQuick.h"
 
 
-FunctionLeaveQuick::FunctionLeaveQuick()
+namespace Commands
 {
-}
+	FunctionLeaveQuick::FunctionLeaveQuick()
+	{
+	}
 
 
-FunctionLeaveQuick::~FunctionLeaveQuick()
-{
+	FunctionLeaveQuick::~FunctionLeaveQuick()
+	{
+	}
+
 }

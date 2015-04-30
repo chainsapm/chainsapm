@@ -2,16 +2,16 @@
 #include "stackitems.h"
 
 //
-FunctionStackItem::FunctionStackItem(int depth, int sequence, ThreadID threadId, 
+FunctionStackItem::FunctionStackItem(ThreadID threadId, 
 	ThreadStackReason reason, FunctionID funcId, std::shared_ptr<std::vector<UINT_PTR>>& byteData) 
-	: FunctionStackItem(depth, sequence, threadId, reason, funcId, NULL)
+	: FunctionStackItem(threadId, reason, funcId, NULL)
 {
 	this->m_ParameterValues.swap(byteData);
 }
 
-FunctionStackItem::FunctionStackItem(int depth, int sequence, ThreadID threadId,
+FunctionStackItem::FunctionStackItem(ThreadID threadId,
 	ThreadStackReason reason, FunctionID funcId, UINT_PTR returnValue)
-	: StackItemBase(depth, sequence, threadId, reason)
+	: StackItemBase(threadId, reason)
 {
 	this->m_FunctionID = funcId;
 	this->m_ReturnData = returnValue;
@@ -48,11 +48,4 @@ UINT_PTR FunctionStackItem::ReturnValue() const
 FunctionID FunctionStackItem::FunctionId() const
 {
 	return this->m_FunctionID;
-}
-
-std::shared_ptr<std::vector<BYTE>> FunctionStackItem::SendPacket()
-{
-	auto vec = std::vector < BYTE >();
-	auto sharedvec = std::make_shared<std::vector<BYTE>>(vec);
-	return sharedvec;
 }

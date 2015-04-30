@@ -11,9 +11,9 @@ StackItemBase::StackItemBase()
 	GetSystemTime(&m_StartWallTime);
 }
 
-StackItemBase::StackItemBase(int depth, int sequence, ThreadID thread, ThreadStackReason reason) : StackItemBase::StackItemBase()
+StackItemBase::StackItemBase(ThreadID thread, ThreadStackReason reason) : StackItemBase::StackItemBase()
 {
-	this->m_Depth = depth;
+	
 	this->m_Thread = thread;
 	this->m_Reason = reason;
 }

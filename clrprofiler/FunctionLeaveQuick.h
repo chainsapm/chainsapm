@@ -1,10 +1,13 @@
 #pragma once
 #include "ICommand.h"
-class FunctionLeaveQuick :
-	public ICommand
+namespace Commands
 {
-public:
-	FunctionLeaveQuick();
-	~FunctionLeaveQuick();
-};
+	class FunctionLeaveQuick :
+		public ICommand
+	{
+	public:
+		FunctionLeaveQuick();
+		~FunctionLeaveQuick();
+	};
 
+}
