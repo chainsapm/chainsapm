@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChainsAPM.Commands.Common
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
     public class SendString : Interfaces.ICommand<byte>
     {
         private string m_string;

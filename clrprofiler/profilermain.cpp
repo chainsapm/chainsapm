@@ -1148,6 +1148,8 @@ void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 	//	}
 	//});
 
+	tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId));
+
 }
 
 void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
@@ -1173,6 +1175,7 @@ void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 		//});
 
 	}
+	tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId));
 	// TODO extract argument 
 }
 

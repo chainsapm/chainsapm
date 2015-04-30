@@ -34,7 +34,6 @@ namespace ChainsAPM.Communication.Tcp
         object timerLock = new object();
         public int messagesSent = 0;
         int MAX_SENDBUFFER = 1024 * 70; // Keep this out of the LOH
-        private int messagesReceived = 0;
         private Queue<byte[]> m_buffers;
         private Queue<ArraySegment<byte>> m_items;
         private object queuelock = new object();
@@ -224,8 +223,9 @@ namespace ChainsAPM.Communication.Tcp
                 {
                     await m_PacketHandler.Send(sendArray.ToArray());
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
+                    //TODO Add logging
                 }
             }
         }
