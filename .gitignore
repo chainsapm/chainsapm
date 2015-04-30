@@ -58,7 +58,7 @@ ipch/
 
 #Random IDE and Code Folders
 packages/
-.\.ide/
+.*\.ide/
 
 # Visual Studio profiler
 *.psess
