@@ -304,9 +304,6 @@
     <None Include="profilermain.rgs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="registry.bin">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="clrprofiler.def">
       <Filter>DLLMain</Filter>
     </None>

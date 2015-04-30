@@ -18,6 +18,8 @@ The layout for a command packet is pretty simple. In order to ensure we have all
 * Individual commands will be terminated with 0x0000
 * For fields that are variable use bitflags
  - For instance if you have a max of 16 options use a 16 bit integer to check
+* Packet lengths will include terminator
+* Command lengths will include terminator
 
 
 ## Entire Packet

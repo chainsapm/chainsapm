@@ -139,6 +139,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugMVC|x64'">
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
@@ -169,7 +170,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\8.1\Include\um;C:\boost_1_55_0</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\8.1\Include\um</AdditionalIncludeDirectories>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -241,6 +242,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <AdditionalOptions>/Zm111 %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <BrowseInformation>false</BrowseInformation>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -535,7 +537,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </MASM>
     <None Include="profilermain.rgs" />
     <None Include="README.md" />
-    <None Include="registry.bin" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="clrprofiler.idl" />
