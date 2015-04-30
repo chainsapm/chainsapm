@@ -578,17 +578,18 @@ STDMETHODIMP Cprofilermain::SetMask()
 	DWORD eventMask = (DWORD)(
 		COR_PRF_MONITOR_APPDOMAIN_LOADS
 		| COR_PRF_MONITOR_ENTERLEAVE
-		//| COR_PRF_ENABLE_FRAME_INFO
-		//| COR_PRF_ENABLE_FUNCTION_ARGS
-		//| COR_PRF_ENABLE_FUNCTION_RETVAL
+		| COR_PRF_ENABLE_FRAME_INFO
+		| COR_PRF_ENABLE_FUNCTION_ARGS
+		| COR_PRF_ENABLE_FUNCTION_RETVAL
 		| COR_PRF_MONITOR_THREADS
-		//| COR_PRF_MONITOR_GC
-		//| COR_PRF_MONITOR_SUSPENDS
-		//| COR_PRF_MONITOR_EXCEPTIONS
-		//| COR_PRF_MONITOR_CLR_EXCEPTIONS
-		//| COR_PRF_MONITOR_MODULE_LOADS
-		//| COR_PRF_MONITOR_ASSEMBLY_LOADS
-		//| COR_PRF_MONITOR_APPDOMAIN_LOADS
+		| COR_PRF_MONITOR_GC
+		| COR_PRF_MONITOR_SUSPENDS
+		| COR_PRF_MONITOR_EXCEPTIONS
+		| COR_PRF_MONITOR_CLR_EXCEPTIONS
+		| COR_PRF_MONITOR_MODULE_LOADS
+		| COR_PRF_MONITOR_ASSEMBLY_LOADS
+		| COR_PRF_MONITOR_APPDOMAIN_LOADS
+		| COR_PRF_MONITOR_CODE_TRANSITIONS
 		//| COR_PRF_ENABLE_REJIT
 		//| COR_PRF_DISABLE_ALL_NGEN_IMAGES
 		| COR_PRF_MONITOR_JIT_COMPILATION);
@@ -1085,7 +1086,7 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	}
 
 	// In order to stay async we need to copy this data before passing it off to a potentially blocking
-	// operation, such as adding items to our global vectors.
+	// operation, such as sending data over the wire.
 
 	auto argumentsPtrRaw = new std::vector<UINT_PTR>();
 	if (argumentInfo != NULL && argumentInfo->numRanges != 0)
@@ -1104,27 +1105,6 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	}
 
 	tp->SendEvent<Commands::FunctionEnterQuick>(new Commands::FunctionEnterQuick(funcId));
-
-
-
-	//std::async(std::launch::any, [&, funcId, threadId, isEntry, incremented, threadDepth, threadSequence, argumentsPtrRaw]  {
-	//	// We are not completely doing the right thing here as I should use a C++11 contract to pass the shared_ptr
-	//	auto arguments = std::make_shared<std::vector<UINT_PTR >>();
-	//	arguments.reset(argumentsPtrRaw); // This however assigns the pointer to this shared_ptr and should live on.
-
-
-	//	critsec_helper csh(&this->m_Container->g_FunctionSetCriticalSection);
-	//	auto it = this->m_Container->g_FunctionSet->find(funcId);
-	//	csh.leave_early();
-
-	//	if (it != this->m_Container->g_FunctionSet->end())
-	//	{
-	//		// Make a copy of the return value for the potential blocking operation.
-	//		auto itStack = this->m_Container->g_BigStack;
-	//		auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::ENTER, funcId, arguments);
-	//		this->m_NetworkClient->SendCommand(std::make_shared<FunctionEnterQuick>(FunctionEnterQuick(funcId)));
-	//	}
-	//});
 }
 
 

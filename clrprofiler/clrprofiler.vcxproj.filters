@@ -184,6 +184,12 @@
     <ClCompile Include="ICommand.cpp">
       <Filter>Commands\Interface</Filter>
     </ClCompile>
+    <ClCompile Include="ModuleDefinition.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="SetFunctionsToMonitor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="clrprofiler_i.h">
@@ -290,6 +296,12 @@
     </ClInclude>
     <ClInclude Include="ICommand.h">
       <Filter>Commands\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="ModuleDefinition.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="SetFunctionsToMonitor.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

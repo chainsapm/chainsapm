@@ -139,7 +139,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugMVC|x64'">
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
@@ -242,7 +242,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <AdditionalOptions>/Zm111 %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <BrowseInformation>false</BrowseInformation>
-      <EnablePREfast>true</EnablePREfast>
+      <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -443,12 +443,14 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClCompile Include="ICommand.cpp" />
     <ClCompile Include="ILFactory.cpp" />
     <ClCompile Include="MetadataHelpers.cpp" />
+    <ClCompile Include="ModuleDefinition.cpp" />
     <ClCompile Include="networkclient.cpp" />
     <ClCompile Include="ParameterInfo.cpp" />
     <ClCompile Include="ProcessInfo.cpp" />
     <ClCompile Include="profilermain.cpp" />
     <ClCompile Include="RuntimeSuspensionStackItem.cpp" />
     <ClCompile Include="SendString.cpp" />
+    <ClCompile Include="SetFunctionsToMonitor.cpp" />
     <ClCompile Include="srw_helper.cpp" />
     <ClCompile Include="StackItemBase.cpp" />
     <ClCompile Include="static_il_bodies.cpp" />
@@ -506,12 +508,14 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="ICommand.h" />
     <ClInclude Include="ILFactory.h" />
     <ClInclude Include="MetadataHelpers.h" />
+    <ClInclude Include="ModuleDefinition.h" />
     <ClInclude Include="networkclient.h" />
     <ClInclude Include="ParameterInfo.h" />
     <ClInclude Include="ProcessInfo.h" />
     <ClInclude Include="profilermain.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SendString.h" />
+    <ClInclude Include="SetFunctionsToMonitor.h" />
     <ClInclude Include="srw_helper.h" />
     <ClInclude Include="static_il_bodies.h" />
     <ClInclude Include="stdafx.h" />
