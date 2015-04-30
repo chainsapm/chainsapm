@@ -65,6 +65,15 @@
     <Filter Include="Commands">
       <UniqueIdentifier>{090acdf8-18a3-4853-80b0-1a852ef63772}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common Classes\Agent Info Classes">
+      <UniqueIdentifier>{1894a27d-19f7-4e0c-a9a7-7d140a81b80a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Commands\Interface">
+      <UniqueIdentifier>{610d6ece-f75b-44bc-8153-56ba0308ebaa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Documents">
+      <UniqueIdentifier>{ab0071da-ff9a-4a0b-bd5b-1fa8b4288340}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clrprofiler_i.c">
@@ -109,9 +118,6 @@
     <ClCompile Include="networkclient.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="StackItem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="StackItemBase.cpp">
       <Filter>Common Classes\Stack Items</Filter>
     </ClCompile>
@@ -136,9 +142,6 @@
     <ClCompile Include="GarbageCollectionStackItem.cpp">
       <Filter>Common Classes\Stack Items</Filter>
     </ClCompile>
-    <ClCompile Include="ICommand.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
     <ClCompile Include="SendString.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
@@ -153,6 +156,33 @@
     </ClCompile>
     <ClCompile Include="FunctionLeaveQuick.cpp">
       <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="AgentInfo.cpp">
+      <Filter>Common Classes\Agent Info Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessInfo.cpp">
+      <Filter>Common Classes\Agent Info Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="FunctionDefinition.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="AssemblyDefinition.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="ClassDefinition.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="GarbageCollectionFinished.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="GarbageCollectionStarted.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="GetString.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="ICommand.cpp">
+      <Filter>Commands\Interface</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -204,9 +234,6 @@
     <ClInclude Include="networkclient.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="StackItem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="stackitems.h">
       <Filter>Common Classes\Stack Items</Filter>
     </ClInclude>
@@ -218,12 +245,6 @@
     </ClInclude>
     <ClInclude Include="ContainerClass.h">
       <Filter>Common Classes\Main Container</Filter>
-    </ClInclude>
-    <ClInclude Include="bitconverters.hpp">
-      <Filter>Helpers</Filter>
-    </ClInclude>
-    <ClInclude Include="ICommand.h">
-      <Filter>Commands</Filter>
     </ClInclude>
     <ClInclude Include="SendString.h">
       <Filter>Commands</Filter>
@@ -242,6 +263,33 @@
     </ClInclude>
     <ClInclude Include="FunctionLeaveQuick.h">
       <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="AgentInfo.h">
+      <Filter>Common Classes\Agent Info Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessInfo.h">
+      <Filter>Common Classes\Agent Info Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="FunctionDefinition.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="AssemblyDefinition.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="ClassDefinition.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="GarbageCollectionFinished.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="GarbageCollectionStarted.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="GetString.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="ICommand.h">
+      <Filter>Commands\Interface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -279,5 +327,10 @@
     <Midl Include="clrprofiler.idl">
       <Filter>DLLMain</Filter>
     </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CommandPacketLayout.md">
+      <Filter>Documents</Filter>
+    </Text>
   </ItemGroup>
 </Project>

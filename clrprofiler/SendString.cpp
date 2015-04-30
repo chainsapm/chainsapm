@@ -42,7 +42,7 @@ namespace Commands
 
 				m_internalvector = std::vector<char>(size);
 				hasEncoded = true;
-
+				
 				char *intchar = (char*)&size;
 				wchar_t *str = m_wstring._Myptr();
 

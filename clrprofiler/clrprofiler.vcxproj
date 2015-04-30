@@ -380,6 +380,9 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AgentInfo.cpp" />
+    <ClCompile Include="AssemblyDefinition.cpp" />
+    <ClCompile Include="ClassDefinition.cpp" />
     <ClCompile Include="clrprofiler.cpp" />
     <ClCompile Include="clrprofiler_i.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -424,23 +427,27 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="FunctionDefinition.cpp" />
     <ClCompile Include="FunctionEnterLong.cpp" />
     <ClCompile Include="FunctionEnterQuick.cpp" />
     <ClCompile Include="FunctionInfo.cpp" />
     <ClCompile Include="FunctionLeaveLong.cpp" />
     <ClCompile Include="FunctionLeaveQuick.cpp" />
     <ClCompile Include="FunctionStackItem.cpp" />
+    <ClCompile Include="GarbageCollectionFinished.cpp" />
     <ClCompile Include="GarbageCollectionStackItem.cpp" />
+    <ClCompile Include="GarbageCollectionStarted.cpp" />
+    <ClCompile Include="GetString.cpp" />
     <ClCompile Include="ICommand.cpp" />
     <ClCompile Include="ILFactory.cpp" />
     <ClCompile Include="MetadataHelpers.cpp" />
     <ClCompile Include="networkclient.cpp" />
     <ClCompile Include="ParameterInfo.cpp" />
+    <ClCompile Include="ProcessInfo.cpp" />
     <ClCompile Include="profilermain.cpp" />
     <ClCompile Include="RuntimeSuspensionStackItem.cpp" />
     <ClCompile Include="SendString.cpp" />
     <ClCompile Include="srw_helper.cpp" />
-    <ClCompile Include="StackItem.cpp" />
     <ClCompile Include="StackItemBase.cpp" />
     <ClCompile Include="static_il_bodies.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -475,7 +482,9 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bitconverters.hpp" />
+    <ClInclude Include="AgentInfo.h" />
+    <ClInclude Include="AssemblyDefinition.h" />
+    <ClInclude Include="ClassDefinition.h" />
     <ClInclude Include="clrprofiler_i.h" />
     <ClInclude Include="Commands.h" />
     <ClInclude Include="commonstructures.h" />
@@ -483,21 +492,25 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="CorProfilerCallbackImplementation.h" />
     <ClInclude Include="critsec_helper.h" />
     <ClInclude Include="dllmain.h" />
+    <ClInclude Include="FunctionDefinition.h" />
     <ClInclude Include="FunctionEnterLong.h" />
     <ClInclude Include="FunctionEnterQuick.h" />
     <ClInclude Include="FunctionInfo.h" />
     <ClInclude Include="FunctionLeaveLong.h" />
     <ClInclude Include="FunctionLeaveQuick.h" />
+    <ClInclude Include="GarbageCollectionFinished.h" />
+    <ClInclude Include="GarbageCollectionStarted.h" />
+    <ClInclude Include="GetString.h" />
     <ClInclude Include="ICommand.h" />
     <ClInclude Include="ILFactory.h" />
     <ClInclude Include="MetadataHelpers.h" />
     <ClInclude Include="networkclient.h" />
     <ClInclude Include="ParameterInfo.h" />
+    <ClInclude Include="ProcessInfo.h" />
     <ClInclude Include="profilermain.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SendString.h" />
     <ClInclude Include="srw_helper.h" />
-    <ClInclude Include="StackItem.h" />
     <ClInclude Include="static_il_bodies.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -526,6 +539,9 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="clrprofiler.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CommandPacketLayout.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

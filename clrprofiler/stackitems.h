@@ -114,3 +114,4 @@ private:
 	int m_MaxGenerationsCollected;
 
 };
+
