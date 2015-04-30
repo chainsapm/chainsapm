@@ -10,14 +10,15 @@ Feel free to fork and ask to contribute. The project is a bit adventurous but it
 ##How to build
 In order to build this project you can clone the repository in it's current state. I will do my best to not have a broken commit at any time. I plan on adding a build script that will compile the entire solution without the need for the Visual Studio IDE.
 
-***Right now only the x64 binaries will work as expected.*** I have not compiled and tested the x86 binaries, but I know as of now they are missing the ELT hook directives that point to the x86 versions of code.
+***Right now only the x64 binaries will work as expected.*** I have not tested the x86 binaries extensively.
 
 1. Clone repository
-2. Open opensource-clrprofiler.sln
+2. Open chainsapm.sln
 1. *Make changes to [Cprofilermain()][profmain] to set the application name filter*
 2. *Make changes to [AddCommonFunctions()][commonfunc] to include more functions*
 3. Select Debug x64 from the build configurations
 4. Select Build from the BUILD menu
+5. Wait, since this has NuGet packages it will try to restore them
 
 Steps 3 and 4 are optional and really only need to be completed if you want to test with another application.
 
