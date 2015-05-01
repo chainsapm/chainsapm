@@ -128,7 +128,7 @@ STDMETHODIMP MetadataHelpers::InjectFieldToModule(const ModuleID& ModuleId, cons
 	return S_OK;
 }
 
-STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, FunctionInfo* funcInfo)
+STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, InformationClasses::FunctionInfo* funcInfo)
 {
 
 	mdMethodDef funcToken;
@@ -280,7 +280,7 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Function
 					i++)
 				{
 					
-					ParameterInfo paramInfo;
+					InformationClasses::ParameterInfo paramInfo;
 					sigHolder.clear();
 					sigBlob = ParseElementType(_MetaDataImport, sigBlob, &sigHolder);
 					paramInfo.ParameterTypeString(sigHolder);

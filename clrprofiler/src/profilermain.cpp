@@ -864,7 +864,7 @@ STDMETHODIMP Cprofilermain::AppDomainCreationStarted(AppDomainID appDomainId)
 
 STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 {
-	std::shared_ptr<ThreadStackItem> firstItem = std::make_shared<ThreadStackItem>(threadId, THREAD_START);
+	std::shared_ptr<ThreadStackItem> firstItem = std::make_shared<ThreadStackItem>(threadId, ThreadStackReason::THREAD_START);
 
 	//TODO Create ThreadPool thread created event
 
@@ -1224,7 +1224,7 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 
 		// funcInfo declared in this block so they are not created if the function is found
 
-		FunctionInfo *funcInfo = new FunctionInfo();
+		InformationClasses::FunctionInfo *funcInfo = new InformationClasses::FunctionInfo();
 
 		this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, funcInfo);
 		// These iterator operations should not cause a lock since it's only a read
@@ -1245,7 +1245,7 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 			this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, funcInfo);
 			{ // Critsec block for thread depth start
 				critsec_helper csh(&this->m_Container->g_FunctionSetCriticalSection);
-				this->m_Container->g_FunctionSet->insert(std::pair<FunctionID, FunctionInfo*>(funcId, funcInfo));
+				this->m_Container->g_FunctionSet->insert(std::pair<FunctionID, InformationClasses::FunctionInfo*>(funcId, funcInfo));
 			}
 			*pbHookFunction = TRUE;
 		}

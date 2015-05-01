@@ -1,33 +1,33 @@
 #include "stdafx.h"
-#include "FunctionDefinition.h"
+#include "FunctionEnterLong.h"
 
 namespace Commands{
 
-	FunctionDefinition::FunctionDefinition(FunctionInfo funcinfo) : m_data(funcinfo)
+	FunctionEnterLong::FunctionEnterLong(InformationClasses::FunctionInfo funcinfo) : m_data(funcinfo)
 	{
 	}
 
-	FunctionDefinition::FunctionDefinition(FunctionDefinition&& funcinfo)
+	FunctionEnterLong::FunctionEnterLong(FunctionEnterLong&& funcinfo) 
 	{
 		m_data = funcinfo.m_data;
 		m_internalvector = (funcinfo.m_internalvector);
 	}
 
-	FunctionDefinition::~FunctionDefinition()
+	FunctionEnterLong::~FunctionEnterLong()
 	{
 	}
 
-	std::wstring FunctionDefinition::Name()
+	std::wstring FunctionEnterLong::Name()
 	{
 		return L"Function Enter (Long)";
 	}
 
-	std::wstring FunctionDefinition::Description()
+	std::wstring FunctionEnterLong::Description()
 	{
 		return L"Sends over an enter method, from the ELT calls, this method will include threads, function ids, parameters, and return values";
 	}
 
-	std::shared_ptr<std::vector<char>> FunctionDefinition::Encode()
+	std::shared_ptr<std::vector<char>> FunctionEnterLong::Encode()
 	{
 		if (!hasEncoded)
 		{
@@ -61,7 +61,7 @@ namespace Commands{
 		return std::make_shared<std::vector<char> >(m_internalvector);
 	}
 
-	std::shared_ptr<ICommand> FunctionDefinition::Decode(std::shared_ptr<std::vector<char>> &data)
+	std::shared_ptr<ICommand> FunctionEnterLong::Decode(std::shared_ptr<std::vector<char>> &data)
 	{
 		return std::make_shared<ICommand>(ICommand());
 	}

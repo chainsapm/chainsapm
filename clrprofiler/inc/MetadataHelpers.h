@@ -20,7 +20,7 @@ public:
 	~MetadataHelpers();
 
 	STDMETHOD(GetCurrentThread)(ThreadID* threadId);
-	STDMETHOD(GetFunctionInformation)(FunctionID funcId, FunctionInfo* funcInfo);
+	STDMETHOD(GetFunctionInformation)(FunctionID funcId, InformationClasses::FunctionInfo* funcInfo);
 	STDMETHOD(GetArguments)(FunctionID funcId, mdToken MethodDataToken);
 	STDMETHOD(InjectFieldToModule)(const ModuleID& ModuleId, const mdTypeDef& classTypeDef,
 		const std::wstring& fieldName);

@@ -1,4 +1,4 @@
-enum STRINGCOMPARE
+enum class STRINGCOMPARE
 {
 	BEGIN,
 	CONTAINS,
@@ -53,7 +53,8 @@ public:
 // This public only implementation of the class hold ALL the pointers to the newed up containers when initializing 
 // a new profiler.  This container simplifies the process of mapping the proper profiler to the static method
 //class Cprofilermain;
-class FunctionInfo;
+#pragma once
+#include "FunctionInfo.h"
 class StackItemBase;
 class MetadataHelpers;
 
@@ -78,7 +79,7 @@ struct  ContainerClass
 
 	// As a function is mapped we want to keep a reference to it's specific details so we can 
 	// use it again when generating the call stack.
-	std::map<FunctionID, FunctionInfo*> * g_FunctionSet;
+	std::map<FunctionID, InformationClasses::FunctionInfo*> * g_FunctionSet;
 
 	// Holds pointers to StackItemBase polymorphic class. This class is an extensible map of objects
 	// that describe the state of this thread.

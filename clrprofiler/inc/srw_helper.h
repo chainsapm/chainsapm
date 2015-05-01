@@ -3,7 +3,7 @@
 class srw_helper
 {
 public:
-	static enum LockType
+	static enum class LockType
 	{
 		SHARED,
 		EXCLUSIVE

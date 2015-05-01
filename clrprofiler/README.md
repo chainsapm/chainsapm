@@ -1,8 +1,9 @@
 clrprofiler
 ===========
-This is the core class for the .NET profiling API.  This folder contains all of the implementation details for the ICorProfilerCallback interfaces.
+This is the core class for the .NET profiling API.  This folder contains all of the implementation details for the ICorProfilerCallback interfaces. Below is a quick list of features implemented and those set for the future.
 
-This class is responsible for the following
+## Current Features
+
 - .NET Function Calls (Enter/Leave/Tail)
 - .NET Events
   - Garbage Collection
@@ -15,3 +16,10 @@ This class is responsible for the following
   - Recieve updates from the core components
 - Performance Monitoring
   - Monitor performance counters on the local machine
+- Agent Information
+  - Process Information
+  - Machine Information
+
+## Future
+
+- IL Re-Writing

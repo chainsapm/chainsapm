@@ -10,7 +10,7 @@
 
 #define NAME_BUFFER_SIZE 2048
 
-enum ThreadStackReason {
+enum class ThreadStackReason {
 	ENTER,
 	EXIT,
 	TAIL,
