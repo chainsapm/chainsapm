@@ -76,7 +76,7 @@ The instructions below will run the default Debuging behavior with the HelloWorl
 2. Set the following environment variable
   - COR_PROFILER=**{41DB4CB9-F3A1-44B2-87DC-52BF4E8E8EB2}**
 3. Create the *C:\logfiles\* directory
-  - ~The application **WILL FAIL** if you do not.~
+  - ~~The application **WILL FAIL** if you do not.~~
 4. Press F5 or Select Build -> Debug
   - The solution is set to run the HelloWorldTestHarness.exe when using Debug or Release
   - The solution is set to run the Websites and Webservices when using DebugMVC
