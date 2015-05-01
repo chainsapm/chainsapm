@@ -1,11 +1,50 @@
 [chainsapm](http://chainsapm.github.io/chainsapm/)
 ======================
 
-This project is an attempt to bring some opensourcness to the .NET profiling and APM world.
+This project is an attempt to bring some opensourcness to the .NET profiling and APM world. Applications like AppNeta, AppDynamics, dynaTrace, Fogligth and the like have changed the way we monitor applications. Most of these companies provide some level of free entry level monitoring. Some are in the cloud and some are on premesis.
+
+My goal is to give any organization--large or small--the ability to monitor a number of interconnected systems and provide real time data and analysis on them.
 
 [Scott Hackett](mailto:code@scotthackett.com) provided the idea for the use of ATL boiler plate code for the CLR profiler with his [article](http://www.codeproject.com/Articles/15410/Creating-a-Custom-NET-Profiler) at CodeProect. The code I am using references a lot of resources. If you browse the Wiki you will find the major ones.
 
 Feel free to fork and ask to contribute. The project is a bit adventurous but it will be great fun and a good learning experience for all.
+
+##What does it do?
+Right now, not much :smile:. But what it will do is pretty limitless. Here is the outline of what I want in the way of features. Some have been implemented, most have not.
+
+- Simple Web Based Interface
+  - View System Info
+  - View Process Info
+- DocumentDB Backed Data Store
+- ELT Method Hooking
+  - Track Entry/Exit
+  - Gather Arguments
+- Event Monitoring
+  - GC
+  - JIT
+  - Assembly Load
+  - etc.
+- System Information
+  - Operating System
+  - Hardware (CPU/Disk/Memory)
+  - Network Configuration
+  - Network Utilization
+  - CPU Utilization
+  - Disk Utilzation
+  - Memory Utilization
+- Process Information
+  - Image Name
+  - Command Line
+  - Environment Variables
+  - CPU Utilization (app specific)
+  - Memory Utilization (app specific)
+- Change Tracking / Auditing
+  - Assemblies
+  - Config Files
+  - System Reboots
+  - User Logins
+  - Application Installations
+- IL Rewriting
 
 ##How to build
 In order to build this project you can clone the repository in it's current state. I will do my best to not have a broken commit at any time. I plan on adding a build script that will compile the entire solution without the need for the Visual Studio IDE.
@@ -37,9 +76,9 @@ The instructions below will run the default Debuging behavior with the HelloWorl
 2. Set the following environment variable
   - COR_PROFILER=**{41DB4CB9-F3A1-44B2-87DC-52BF4E8E8EB2}**
 3. Create the *C:\logfiles\* directory
-  - The application **WILL FAIL** if you do not.
+  - ~The application **WILL FAIL** if you do not.~
 4. Press F5 or Select Build -> Debug
-  - The solution is set to run the HelloWorldTestHarness.exe when using Debug
+  - The solution is set to run the HelloWorldTestHarness.exe when using Debug or Release
   - The solution is set to run the Websites and Webservices when using DebugMVC
 
 **NOTE** You can have both the 32bit and 64bit versions of the DLL registered at the same time. If you're not seeing expected results make sure you are rebuilding the proper bitness version.
