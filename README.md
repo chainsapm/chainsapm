@@ -1,7 +1,7 @@
 [chainsapm](http://chainsapm.github.io/chainsapm/)
 ======================
 
-This project is an attempt to bring some opensourcness to the .NET profiling and APM world. Applications like AppNeta, AppDynamics, dynaTrace, Fogligth and the like have changed the way we monitor applications. Most of these companies provide some level of free entry level monitoring. Some are in the cloud and some are on premesis.
+This project is an attempt to bring some opensourcness to the .NET profiling and APM world. Applications like AppNeta, AppDynamics, dynaTrace, Foglight and the like have changed the way we monitor applications. Most of these companies provide some level of free entry level monitoring. Some are in the cloud and some are on premesis.
 
 My goal is to give any organization--large or small--the ability to monitor a number of interconnected systems and provide real time data and analysis on them.
 
