@@ -1,3 +1,31 @@
-HKCR
+HKLM
 {
+	NoRemove 'SOFTWARE'
+	{
+		'ChainsAPM' = s 'Chains APM Profiler Agent Definitions'
+		{
+			'Agents'
+			{
+				'w3wp0'
+				{
+					val 'Enabled' = d '1'
+					val 'LinkName' = s 'SomeAppDomain'
+					val 'ProcessName' = s 'w3wp.exe'
+					val 'Directory' = s 'C:\Windows\system32'
+					val 'CommandLine' = s '-ap SomeAppDomain'
+					val 'Server' = s 'localhost'
+					val 'Port' = d '8080'
+				}
+				'HelloWorld0'
+				{
+					val 'Enabled' = d '1'
+					val 'LinkName' = s 'HelloWorldTestHarness'
+					val 'ProcessName' = s 'HelloWorldTestHarness.exe'
+					val 'CommandLine' = s ''
+					val 'Server' = s 'localhost'
+					val 'Port' = d '8080'
+				}
+			}
+		}
+	}
 }

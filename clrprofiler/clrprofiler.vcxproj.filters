@@ -193,11 +193,14 @@
     <ClCompile Include="src\ClassInfo.cpp">
       <Filter>Common Classes\Info Classes</Filter>
     </ClCompile>
+    <ClCompile Include="src\SendPackedStructure.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
     <ClCompile Include="src\clrprofiler_i.c">
-      <Filter>Source Files</Filter>
+      <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="src\xdlldata.c">
-      <Filter>Source Files</Filter>
+      <Filter>Generated Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -321,6 +324,9 @@
     <ClInclude Include="inc\ClassInfo.h">
       <Filter>Common Classes\Info Classes</Filter>
     </ClInclude>
+    <ClInclude Include="inc\SendPackedStructure.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="rsrc\clrprofiler.rc">
@@ -328,9 +334,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="profilermain.rgs">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="defs\clrprofiler.def">
       <Filter>Source Files</Filter>
     </None>
@@ -340,16 +343,19 @@
     <None Include="README.md">
       <Filter>Documents</Filter>
     </None>
+    <None Include="rsrc\profilermain.rgs">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="src\etl_enter_x64.asm">
-      <Filter>Source Files</Filter>
+      <Filter>x64 Function Hooks</Filter>
     </MASM>
     <MASM Include="src\etl_leave_x64.asm">
-      <Filter>Source Files</Filter>
+      <Filter>x64 Function Hooks</Filter>
     </MASM>
     <MASM Include="src\etl_tail_x64.asm">
-      <Filter>Source Files</Filter>
+      <Filter>x64 Function Hooks</Filter>
     </MASM>
   </ItemGroup>
   <ItemGroup>

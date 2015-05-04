@@ -3,12 +3,5 @@
 
 namespace InformationClasses {
 
-	AgentInfo::AgentInfo()
-	{
-	}
-
-
-	AgentInfo::~AgentInfo()
-	{
-	}
+	
 }

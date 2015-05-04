@@ -1,22 +1,19 @@
 #pragma once
 #include "ICommand.h"
-namespace Commands
-{
-	class FunctionLeaveQuick :
+namespace Commands {
+	class SendPackedStructure :
 		public ICommand
 	{
 	public:
-		FunctionLeaveQuick(FunctionID data, ThreadID threadid);
-		~FunctionLeaveQuick();
+		SendPackedStructure(UINT_PTR RawStructure);
+		~SendPackedStructure();
 		virtual std::shared_ptr<std::vector<char>> Encode();
 		virtual std::shared_ptr<ICommand> Decode(std::shared_ptr<std::vector<char>> &data);
 		virtual std::wstring Name();
 		virtual std::wstring Description();
 
 	private:
-		__int64 function;
-		__int64 thread;
-		short code;
+		UINT_PTR m_data;
 		std::shared_ptr<std::vector<char>> m_internalvector;
 		bool hasEncoded;
 	};

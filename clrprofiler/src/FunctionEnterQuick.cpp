@@ -30,32 +30,32 @@ namespace Commands
 		if (!hasEncoded)
 		{
 #pragma warning(suppress : 4267) // I'm only sending max 4k of data in one command however, the length() prop is long long. This is valid.
-			__int32 size = 4 + 1 + sizeof(FunctionID) + 2;
+			__int32 size = sizeof(__int32) + sizeof(short) + sizeof(__int64) + sizeof(__int64) + sizeof(short);
 			auto vector = std::vector<char>(size);
 
 			int runningCount = 0;
 
 			for (size_t i = 0; i < 4; i++, runningCount++)
 			{
-				vector[i] = ((char*)(&size))[i];
+				vector[runningCount] = ((char*)(&size))[i];
 			}
 
-			for (size_t i = runningCount; i < 2; i++, runningCount++)
+			for (size_t i = 0; i < 2; i++, runningCount++)
 			{
-				vector[i] = ((char*)&code)[i];
+				vector[runningCount] = ((char*)(&code))[i];
 			}
 
-			for (size_t i = runningCount; i < sizeof(__int64); i++, runningCount++)
+			for (size_t i = 0; i < sizeof(__int64); i++, runningCount++)
 			{
-				vector[i] = ((char*)&function)[i];
+				vector[runningCount] = ((char*)(&function))[i];
 			}
-			for (size_t i = runningCount; i < sizeof(__int64); i++, runningCount++)
+			for (size_t i = 0; i < sizeof(__int64); i++, runningCount++)
 			{
-				vector[i] = ((char*)&thread)[i];
+				vector[runningCount] = ((char*)(&thread))[i];
 			}
-			for (size_t i = runningCount; i < 2; i++)
+			for (size_t i = 0; i < 2; i++)
 			{
-				vector[i] = 0x00;
+				vector[runningCount] = 0x00;
 			}
 			hasEncoded = true;
 			m_internalvector = std::make_shared<std::vector<char>>(vector);

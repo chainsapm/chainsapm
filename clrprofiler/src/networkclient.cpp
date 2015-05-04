@@ -30,6 +30,9 @@ NetworkClient::NetworkClient(Cprofilermain *profMain, std::wstring hostName, std
 	InitializeCriticalSection(&FrontOutboundLock);
 	InitializeCriticalSection(&BackOutboundLock);
 
+
+
+
 }
 
 
@@ -55,8 +58,7 @@ void NetworkClient::Start()
 	timeval t;
 	t.tv_sec = 2;
 	// Just connect to the 
-	WSAConnectByName(NetworkClient::m_SocketConnection, (LPWSTR)m_HostName.c_str(), (LPWSTR)m_HostPort.c_str(), NULL, NULL, NULL, NULL, &t, NULL);
-
+	WSAConnectByName(NetworkClient::m_SocketConnection, (LPWSTR)m_HostName.data(), (LPWSTR)m_HostPort.data(), NULL, NULL, NULL, NULL, &t, NULL);
 
 	recvTimer = CreateThreadpoolTimer(&NetworkClient::ReceiveTimerCallback, this, NULL); // See "Customized Thread Pools" section
 	sendTimer = CreateThreadpoolTimer(&NetworkClient::SendTimerCallback, this, NULL); // See "Customized Thread Pools" section
@@ -104,14 +106,12 @@ std::shared_ptr<Commands::ICommand> NetworkClient::ReceiveCommand()
 // Send a list of commands the buffer to be processed.
 HRESULT NetworkClient::SendCommands(std::vector<std::shared_ptr<Commands::ICommand>> &packet)
 {
+	auto csh = critsec_helper::critsec_helper(&FrontOutboundLock);
+	for (auto &x : packet)
 	{
-		critsec_helper::critsec_helper(&FrontOutboundLock);
-		for (auto &x : packet)
-		{
-			m_OutboundQueueFront.emplace(x->Encode());
-		}
+		m_OutboundQueueFront.emplace(x->Encode());
 	}
-
+	csh.leave_early();
 	return S_OK;
 }
 // Receive a list of commands from the buffer to be processed.
@@ -137,13 +137,12 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 	PVOID pvContext,
 	PTP_TIMER pTimer)
 {
-	printf("Timerfired.\r\n");
-
 	auto netClient = static_cast<NetworkClient*>(pvContext);
 	if (!netClient->insideSendLock)
 	{
-		std::queue<std::shared_ptr<std::vector<char>>> * m_Passable = new std::queue<std::shared_ptr<std::vector<char>>>();
 		netClient->insideSendLock = true;
+		std::queue<std::shared_ptr<std::vector<char>>> * m_Passable = new std::queue<std::shared_ptr<std::vector<char>>>();
+
 		WSABUF *bufs = NULL;
 		int bufscount = 0;
 		{
@@ -179,12 +178,11 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 		bufs[0].len = 4;
 		bufs[counter].buf = term;
 		bufs[counter].len = 4;
-		
+
 		bufscount = buffersize;
 
 		if (bufscount > 2)
 		{
-
 			DWORD bytesSent = 0;
 			DWORD flags = 0;
 			WSAOVERLAPPED overlapped;
@@ -204,6 +202,25 @@ VOID CALLBACK NetworkClient::ReceiveTimerCallback(
 	PTP_TIMER pTimer)
 {
 
+	auto netClient = static_cast<NetworkClient*>(pvContext);
+	if (!netClient->insideReceiveLock)
+	{
+		netClient->insideReceiveLock = true;
+
+		auto bigBufferChars = new char[1 * 1024 * 1024];
+		LPWSABUF bigBuffer = new WSABUF;
+		bigBuffer->buf = bigBufferChars;
+		bigBuffer->len = 1 * 1024 * 1024;
+		DWORD bytesRecvd = 0;
+		DWORD flags = 0;
+		WSAOVERLAPPED overlapped;
+		SecureZeroMemory(&overlapped, sizeof(WSAOVERLAPPED));
+		overlapped.hEvent = bigBuffer;
+		WSARecv(netClient->m_SocketConnection, bigBuffer, 1, &bytesRecvd, &flags, &overlapped, &NetworkClient::NewDataReceived);
+		int err = WSAGetLastError();
+		DWORD flag2s = 0;
+		netClient->insideReceiveLock = false;
+	}
 }
 
 
@@ -216,8 +233,25 @@ void CALLBACK NetworkClient::NewDataReceived(
 {
 	if (cbTransferred > 0)
 	{
-		
-		printf("We did it!\r\n");
+		auto buffOut = (LPWSABUF)lpOverlapped->hEvent;
+		auto charBuff = (char*)buffOut->buf;
+		auto iterBuff = (char*)buffOut->buf;
+		int totalBuffSize = *(int*)charBuff;
+		if (totalBuffSize == cbTransferred)
+		{
+			auto term = *(unsigned int*)charBuff[totalBuffSize - 4];
+			if (term == 0xCCCCCCCC)
+			{
+				iterBuff += 4;
+				while (iterBuff < iterBuff + (totalBuffSize - 4))
+				{
+					int localBufferSize = *(int*)iterBuff;
+					short term = *(short*)(iterBuff + localBufferSize - 2);
+					iterBuff += localBufferSize;
+				}
+			}
+		}
+
 	}
 }
 
@@ -230,11 +264,59 @@ void CALLBACK NetworkClient::DataSent(
 {
 	if (cbTransferred > 0)
 	{
-		if (lpOverlapped->hEvent != NULL )
-		{
-			delete lpOverlapped->hEvent;
-		}
-		printf("We did it!\r\n");
 	}
 }
 
+void NetworkClient::SendDataSynchronus()
+{
+	std::queue<std::shared_ptr<std::vector<char>>> * m_Passable = new std::queue<std::shared_ptr<std::vector<char>>>();
+	WSABUF *bufs = NULL;
+	int bufscount = 0;
+	{
+		auto cshFQ = critsec_helper::critsec_helper(&this->FrontInboundLock);
+		auto cshBQ = critsec_helper::critsec_helper(&this->BackInboundLock);
+		this->m_InboundQueueBack.swap(this->m_InboundQueueFront);
+		cshBQ.leave_early();
+		cshFQ.leave_early();
+	}
+
+
+	auto cshBQ = critsec_helper::critsec_helper(&this->BackInboundLock);
+	int buffersize = this->m_InboundQueueBack.size() + 2;
+	bufs = new WSABUF[buffersize];
+	int counter = 1;
+	int sizeCounter = 0;
+	while (!this->m_InboundQueueBack.empty())
+	{
+		auto itemtodecodeout = this->m_InboundQueueBack.front();
+		bufs[counter].buf = itemtodecodeout->data();
+#pragma warning(suppress : 4267) // I'm only sending max 4k of data in one command however, the size() prop is long long. This is valid.
+		bufs[counter].len = itemtodecodeout->size();
+		this->m_InboundQueueBack.pop();
+		m_Passable->emplace(itemtodecodeout);
+		++counter;
+		sizeCounter += itemtodecodeout->size();
+	}
+	cshBQ.leave_early();
+	sizeCounter += 8;
+	char *size = (char*)&sizeCounter;
+	char term[] = { 0xCC, 0xCC, 0xCC, 0xCC };
+	bufs[0].buf = size;
+	bufs[0].len = 4;
+	bufs[counter].buf = term;
+	bufs[counter].len = 4;
+
+	bufscount = buffersize;
+
+	if (bufscount > 2)
+	{
+		DWORD bytesSent = 0;
+		DWORD flags = 0;
+		WSAOVERLAPPED overlapped;
+		SecureZeroMemory(&overlapped, sizeof(WSAOVERLAPPED));
+		overlapped.hEvent = m_Passable;
+		WSASend(this->m_SocketConnection, bufs, bufscount, &bytesSent, flags, NULL, NULL);
+		int err = WSAGetLastError();
+		DWORD flag2s = 0;
+	}
+}

@@ -7,6 +7,7 @@
 #include "critsec_helper.h"
 #include "webengine4helper.h"
 #include <future>
+#include "AgentInfo.h"
 
 
 
@@ -405,12 +406,133 @@ Cprofilermain::Cprofilermain()
 	// For example, the w3wp process should include the application pool name.
 
 	this->SetProcessName();
+
 	// TODO: Make the act of selectively attaching to a process more dynamic.
-	// TODO: Consider using an ini file.
+	// TODO: Use registry
+	HKEY openKey;
+	HRESULT result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\ChainsAPM\\Agents", NULL, KEY_READ, &openKey);
+	if (result != S_OK)
+	{
+		int lastErr = GetLastError();
+	}
+	wchar_t* lpStr = new wchar_t[255];
+	unsigned long lpDw = 255;
+
+	HRESULT key = RegEnumKeyEx(openKey, 0, lpStr, &lpDw, nullptr, nullptr, nullptr, nullptr);
+	auto fullString = std::wstring(TEXT("SOFTWARE\\ChainsAPM\\Agents\\"));
+	auto currentKey = std::wstring(L"");
+	
+	HRESULT gotValue;
+	unsigned long	Enabled = 0;
+	wchar_t*		BufferForStrings = new wchar_t[255];
+	unsigned long	BufferSize = 255;
+	unsigned long	BufferForDWORD = 4;
+	unsigned long	Port = 0;
+	unsigned long	PortType = 0;
+	bool IsAMatch = false;
+	int counter = 0;
+	while (key == ERROR_SUCCESS && !IsAMatch)
+	{
+		
+		currentKey.append(fullString);
+		currentKey.append(lpStr);
+		
+		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"Enabled", RRF_RT_ANY | RRF_ZEROONFAILURE, NULL, &Enabled, &BufferForDWORD);
+		if (gotValue != S_OK | Enabled == 0)
+		{
+			currentKey.assign(nullptr);
+			continue;
+		}
+		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"LinkName", RRF_RT_ANY | RRF_ZEROONFAILURE, nullptr, nullptr, &BufferSize);
+		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"LinkName", RRF_RT_ANY | RRF_ZEROONFAILURE, nullptr, BufferForStrings, &BufferSize);
+		if (gotValue == S_OK)
+		{
+			if (BufferForStrings != NULL)
+			{
+				IsAMatch = true;
+				m_AgentName.insert(0, BufferForStrings, BufferSize);
+			}
+			else {
+				IsAMatch = false;
+			}
+			
+		}
+
+		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"ProcessName", RRF_RT_ANY | RRF_ZEROONFAILURE, nullptr, nullptr, &BufferSize);
+		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"ProcessName", RRF_RT_ANY | RRF_ZEROONFAILURE, nullptr, BufferForStrings, &BufferSize);
+		if (gotValue == S_OK)
+		{
+			if (BufferForStrings != NULL && m_ProcessName.compare(BufferForStrings) != 0)
+			{
+				IsAMatch = false; 
+			}
+			IsAMatch = true;
+		}
+		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"Directory", RRF_RT_ANY | RRF_ZEROONFAILURE, nullptr, nullptr, &BufferSize);
+		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"Directory", RRF_RT_ANY | RRF_ZEROONFAILURE, nullptr, BufferForStrings, &BufferSize);
+		if (gotValue == S_OK)
+		{
+			if (BufferForStrings != NULL && m_ProcessName.find(BufferForStrings) != 0)
+			{
+				IsAMatch = false;
+			}
+			IsAMatch = true;
+		}
+		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"CommandLine", RRF_RT_ANY | RRF_ZEROONFAILURE, nullptr, nullptr, &BufferSize);
+		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"CommandLine", RRF_RT_ANY | RRF_ZEROONFAILURE, nullptr, BufferForStrings, &BufferSize);
+		if (gotValue == S_OK)
+		{
+			if (BufferForStrings != NULL && m_ProcessName.find(BufferForStrings) != 0)
+			{
+				IsAMatch = false;
+			}
+			IsAMatch = true;
+		}
+		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"Server", RRF_RT_ANY | RRF_ZEROONFAILURE, nullptr, nullptr, &BufferSize);
+		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"Server", RRF_RT_ANY | RRF_ZEROONFAILURE, nullptr, BufferForStrings, &BufferSize);
+		if (gotValue == S_OK)
+		{
+			if (BufferForStrings == NULL || BufferForStrings == L"")
+			{
+				IsAMatch = true;
+				m_ServerName.insert(0, BufferForStrings, BufferSize);
+			}
+			else {
+				IsAMatch = false;
+			}
+		}
+		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"Port", RRF_RT_ANY | RRF_ZEROONFAILURE, NULL, &Port, &BufferForDWORD);
+		if (gotValue == S_OK)
+		{
+			if (Port < 0 | Port > 0xFFFF)
+			{
+				IsAMatch = false;
+			}
+			else {
+				m_ServerPort = std::to_wstring(Port);
+				IsAMatch = true;
+			}
+			
+		}
+		if (IsAMatch)
+		{
+			continue;
+		}
+		else {
+			currentKey.assign(nullptr);
+		}
+		key = RegEnumKeyEx(openKey, ++counter, lpStr, &lpDw, NULL, NULL, NULL, NULL);
+		
+	}
+
+	RegCloseKey(openKey);
+
 	if ((this->m_ProcessName.compare(L"w3wp.exe") == 0)
 		|| (this->m_ProcessName.compare(L"HelloWorldTestHarness.exe") == 0)
 		|| (this->m_ProcessName.compare(L"iisexpress.exe") == 0))
 	{
+		LPWSTR cmdline = GetCommandLine();
+
 		// No reason to execute this code if the process is not what we're looking for.
 		this->m_Container = new ContainerClass();
 		this->m_ProcessId = GetCurrentProcessId();
@@ -421,8 +543,22 @@ Cprofilermain::Cprofilermain()
 		// CRITICAL 1 Research this critical section in the profiler main constructor.
 		InitializeCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
 
-		m_NetworkClient->Start();
+		
+		InformationClasses::AgentInfo ainfo;
+		ainfo.AgentCapabilities = InformationClasses::AgentInfo::Capabilities::PROFILE;
+		auto strhasher = std::hash<std::wstring>();
+		ainfo.AgentHash = strhasher(this->m_ProcessName);
+		SecureZeroMemory(ainfo.AgentName, 255);
+		this->m_ProcessName.copy(ainfo.AgentName, this->m_ProcessName.length(), 0);
+		ainfo.AgentMajorVersion = 0;
+		ainfo.AgentMinorVersion = 1;
+		ainfo.AgentIncrementalVersion = 0;
+		ainfo.AgentNameLen = this->m_ProcessName.length();
+		ainfo.Length = sizeof(InformationClasses::AgentInfo);
+		auto sps = new Commands::SendPackedStructure((UINT_PTR)&ainfo);
+		auto out = sps->Encode();
 
+		m_NetworkClient->Start();
 		tp = new tp_helper(this, 1, 1);
 	}
 
@@ -734,8 +870,6 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 		|| (this->m_ProcessName.compare(L"HelloWorldTestHarness.exe") == 0)
 		|| (this->m_ProcessName.compare(L"iisexpress.exe") == 0))
 	{
-
-
 		// get the ICorProfilerInfo interface
 
 		HRESULT hr;
@@ -807,7 +941,6 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 			m_pICorProfilerInfo2->SetFunctionIDMapper((FunctionIDMapper*)&Cprofilermain::Mapper1);
 #ifdef _WIN64 
 			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_Wrapper_x64, (FunctionLeave2*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall2*)&FunctionTail2_Wrapper_x64);
-			// TODO: Implement the x86 versions of the Enter/Tail/Leave function hooks.
 #else
 			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_x86, (FunctionLeave2*)&FunctionLeave2_x86, (FunctionTailcall2*)&FunctionTail2_x86);
 #endif
@@ -820,8 +953,6 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 #ifdef _WIN64 
 
 			m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_Wrapper_x64, (FunctionLeave2*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall2*)&FunctionTail2_Wrapper_x64);
-			//m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks2((FunctionEnter3*)&FunctionEnter2_Wrapper_x64, (FunctionLeave3*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall3*)&FunctionTail2_Wrapper_x64);
-			// TODO: Implement the x86 versions of the Enter/Tail/Leave function hooks.
 #else
 
 			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_x86, (FunctionLeave2*)&FunctionLeave2_x86, (FunctionTailcall2*)&FunctionTail2_x86);
@@ -1068,12 +1199,6 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
 {
 
-
-	// CRITICAL 3 Create a threadpool and call it from these functions.
-	// Make copies of the function parameters and pass them in as objects to the TP.
-	// Only use 2 threads, we should allow queueing to take place.
-
-
 	/*
 	MSDN Article that describes the ELT methods and what COR flags need to be set.
 	http://msdn.microsoft.com/en-us/magazine/cc300553.aspx
@@ -1108,74 +1233,31 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 }
 
 
-
-
-
 void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentRange)
 {
-	// CRITICAL 3 Create a threadpool and call it from these functions.
-	// Make copies of the function parameters and pass them in as objects to the TP.
-	// Only use 2 threads, we should allow queueing to take place.
+	ThreadID threadId;
+	{
+		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
+		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+		csh.leave_early();
+	}
 
-	//ThreadID threadId;
-	//{
-	//	critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
-	//	this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
-	//}
-
-	//// Critsec block for thread find start
-	//UINT_PTR returnVal = NULL;
-	//int  threadDepth = 0;
-	//int threadSequence = 0; // InterlockedIncrement(&this->m_Container->g_ThreadStackSequence->at(threadId));
-
-	//if (argumentRange != NULL && argumentRange->startAddress != NULL)
-	//{
-	//	returnVal = *(UINT_PTR*)argumentRange->startAddress;
-	//}
-	//
-
-	//std::async(std::launch::async, [&, funcId, threadId, threadDepth, threadSequence, returnVal]{
-	//	critsec_helper csh(&this->m_Container->g_FunctionSetCriticalSection);
-	//	auto it = this->m_Container->g_FunctionSet->find(funcId);
-	//	csh.leave_early();
-
-	//	if (it != this->m_Container->g_FunctionSet->end())
-	//	{
-	//		// Make a copy of the return value for the potential blocking operation.
-	//		auto itStack = this->m_Container->g_BigStack;
-	//		auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::EXIT, funcId, returnVal);
-	//	}
-	//});
-
-	tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId));
+	tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId, threadId));
 
 }
 
 void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func)
 {
-	// CRITICAL 3 Create a threadpool and call it from these functions.
-	// Make copies of the function parameters and pass them in as objects to the TP.
-	// Only use 2 threads, we should allow queueing to take place.
-
-	{ // Critsec block for thread find start
-		//critsec_helper cshFirst(&this->m_Container->g_MetaDataCriticalSection);
-		//ThreadID threadId;
-		//this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
-		//cshFirst.leave_early(); // Leaving CS early because we don't need to worry about it
-		//int threadDepth = 0;
-		//int threadSequence = 0; // InterlockedIncrement(&this->m_Container->g_ThreadStackSequence->at(threadId));
-		//std::async(std::launch::async, [&, funcId, threadId, threadDepth, threadSequence]{
-		//	{
-
-		//		auto itStack = this->m_Container->g_BigStack;
-		//		auto  tsi = std::make_shared<FunctionStackItem>(threadDepth, threadSequence, threadId, ThreadStackReason::EXIT, funcId, NULL);
-		//	}
-		//});
-
+	ThreadID threadId;
+	{
+		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
+		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+		csh.leave_early();
 	}
-	tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId));
+
+	tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId, threadId));
 	// TODO extract argument 
 }
 

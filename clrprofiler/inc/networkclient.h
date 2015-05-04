@@ -110,6 +110,7 @@ public:
 	std::shared_ptr<Commands::ICommand> ReceiveCommand();
 	HRESULT SendCommands(std::vector<std::shared_ptr<Commands::ICommand>> &packet);
 	std::vector<std::shared_ptr<Commands::ICommand>>& ReceiveCommands();
+	void SendDataSynchronus();
 	
 };
 

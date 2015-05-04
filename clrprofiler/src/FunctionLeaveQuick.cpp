@@ -4,7 +4,7 @@
 
 namespace Commands
 {
-	FunctionLeaveQuick::FunctionLeaveQuick(FunctionID data) : function(data), hasEncoded(false)
+	FunctionLeaveQuick::FunctionLeaveQuick(FunctionID data, ThreadID threadid) : function((__int64)data), thread((__int64)threadid), code(2), hasEncoded(false)
 	{
 	}
 
@@ -29,34 +29,39 @@ namespace Commands
 		if (!hasEncoded)
 		{
 #pragma warning(suppress : 4267) // I'm only sending max 4k of data in one command however, the length() prop is long long. This is valid.
-			__int32 size = 4 + 1 + sizeof(FunctionID) + 2;
+			__int32 size = sizeof(__int32) + sizeof(short) + sizeof(__int64) + sizeof(__int64) + sizeof(short);
+			auto vector = std::vector<char>(size);
 
+			int runningCount = 0;
 
-			m_internalvector = std::vector<char>(size);
-
-			char *intchar = (char*)&size;
-			char *func = (char*)&function;
-
-
-			for (size_t i = 0; i < 4; i++)
+			for (size_t i = 0; i < 4; i++, runningCount++)
 			{
-				m_internalvector[i] = intchar[i];
+				vector[runningCount] = ((char*)(&size))[i];
 			}
 
-			m_internalvector[4] = 0x02;
-
-			for (size_t i = 0; i < sizeof(FunctionID); i++)
+			for (size_t i = 0; i < 2; i++, runningCount++)
 			{
-				m_internalvector[i + 5] = func[i];
+				vector[runningCount] = ((char*)(&code))[i];
+			}
+
+			for (size_t i = 0; i < sizeof(__int64); i++, runningCount++)
+			{
+				vector[runningCount] = ((char*)(&function))[i];
+			}
+			for (size_t i = 0; i < sizeof(__int64); i++, runningCount++)
+			{
+				vector[runningCount] = ((char*)(&thread))[i];
 			}
 			for (size_t i = 0; i < 2; i++)
 			{
-				m_internalvector[i + size - 2] = 0x00;
+				vector[runningCount] = 0x00;
 			}
 			hasEncoded = true;
+			m_internalvector = std::make_shared<std::vector<char>>(vector);
 		}
 
-		return std::make_shared<std::vector<char>>(m_internalvector);
+		return m_internalvector;
+
 	}
 
 	std::shared_ptr<ICommand> FunctionLeaveQuick::Decode(std::shared_ptr<std::vector<char>> &data)

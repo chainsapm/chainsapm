@@ -2,13 +2,5 @@
 #include "ProcessInfo.h"
 
 namespace InformationClasses {
-	ProcessInfo::ProcessInfo()
-	{
-		
-	}
 
-
-	ProcessInfo::~ProcessInfo()
-	{
-	}
 }

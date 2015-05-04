@@ -245,7 +245,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>X64;_WINDOWS;_DEBUG;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
+      <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)inc</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zm111 %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
@@ -271,7 +271,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <ModuleDefinitionFile>.\clrprofiler.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>defs\clrprofiler.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RegisterOutput>true</RegisterOutput>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
@@ -392,6 +392,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\SendPackedStructure.cpp" />
     <ClCompile Include="src\AgentInfo.cpp" />
     <ClCompile Include="src\AssemblyDefinition.cpp" />
     <ClCompile Include="src\AssemblyInfo.cpp" />
@@ -539,6 +540,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="inc\stackitems.h" />
     <ClInclude Include="inc\webengine4helper.h" />
     <ClInclude Include="inc\xdlldata.h" />
+    <ClInclude Include="inc\SendPackedStructure.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="rsrc\clrprofiler.rc" />
@@ -555,7 +557,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <MASM Include="src\etl_tail_x64.asm">
       <FileType>Document</FileType>
     </MASM>
-    <None Include="profilermain.rgs" />
+    <None Include="rsrc\profilermain.rgs" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>

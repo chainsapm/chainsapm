@@ -212,6 +212,9 @@ private:
 	BOOL m_IsRuntimeSuspended;
 	std::wstring m_ProcessName;
 	DWORD m_ProcessId;
+	std::wstring m_ServerName;
+	std::wstring m_ServerPort;
+	std::wstring m_AgentName;
 	HMODULE m_webengineHandle;
 
 	// This is the all encompasing container class used by this class

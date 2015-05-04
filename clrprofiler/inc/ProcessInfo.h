@@ -4,11 +4,6 @@ namespace InformationClasses {
 	class ProcessInfo
 	{
 	public:
-		ProcessInfo();
-		~ProcessInfo();
-	private:
-
-		PROCESS_INFORMATION_CLASS pic;
 
 		enum class _ProcessTraits
 		{
