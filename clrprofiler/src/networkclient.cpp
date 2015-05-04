@@ -87,7 +87,7 @@ HRESULT NetworkClient::SendRoutedCommand(std::shared_ptr<Commands::RouteCommand>
 	m_OutboundQueueFront.emplace(packet->Encode());
 	cshFQ.leave_early();*/
 	return S_OK;
-}
+}  
 
 
 // Receive a single command from the buffer to be processed.
@@ -262,8 +262,13 @@ void CALLBACK NetworkClient::DataSent(
 	IN DWORD dwFlags
 	)
 {
+	printf("We did it!");
 	if (cbTransferred > 0)
 	{
+		if (lpOverlapped->hEvent != NULL)
+		{
+			delete lpOverlapped->hEvent;
+		}
 	}
 }
 

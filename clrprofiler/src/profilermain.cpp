@@ -1236,7 +1236,7 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentRange)
 {
-	ThreadID threadId;
+	ThreadID threadId = 0;
 	{
 		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
 		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
@@ -1250,7 +1250,7 @@ void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func)
 {
-	ThreadID threadId;
+	ThreadID threadId = 0;
 	{
 		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
 		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
