@@ -58,9 +58,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\Common\FunctionEnterQuick.cs" />
+    <Compile Include="Commands\Agent\FunctionLeaveQuick.cs" />
+    <Compile Include="Commands\Agent\FunctionEnterQuick.cs" />
     <Compile Include="Commands\Common\SendString.cs" />
     <Compile Include="Commands\Common\GetString.cs" />
+    <Compile Include="Helpers\ArraySegmentStream.cs" />
     <Compile Include="Helpers\FNV1a.cs" />
     <Compile Include="Interfaces\ICommand.cs" />
     <Compile Include="Interfaces\IConnectionHandler.cs" />
@@ -72,7 +74,6 @@
     <Compile Include="Communication\Tcp\TcpByteTransport.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Commands\Agent\" />
     <Folder Include="Commands\Aggregator\" />
     <Folder Include="Commands\Server\" />
   </ItemGroup>

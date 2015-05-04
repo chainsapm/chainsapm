@@ -331,12 +331,14 @@
     <None Include="profilermain.rgs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="README.md" />
     <None Include="defs\clrprofiler.def">
       <Filter>Source Files</Filter>
     </None>
     <None Include="rsrc\clrprofiler.rgs">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="README.md">
+      <Filter>Documents</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -356,6 +358,8 @@
     </Midl>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="docs\CommandPacketLayout.md" />
+    <Text Include="docs\CommandPacketLayout.md">
+      <Filter>Documents</Filter>
+    </Text>
   </ItemGroup>
 </Project>

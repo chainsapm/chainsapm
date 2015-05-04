@@ -16,7 +16,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorldTestHarness", "Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LaunchAllTests", "TestHarnesses\LaunchAllTests\LaunchAllTests.csproj", "{C94ECD74-EFA2-4FCB-81ED-3C9282296330}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documents", "Documents", "{27301A3D-9E5A-4C4C-9AE8-9276F95627C4}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Repo Documents", "Repo Documents", "{27301A3D-9E5A-4C4C-9AE8-9276F95627C4}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection

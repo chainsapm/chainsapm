@@ -28,10 +28,12 @@ namespace ChainsAPM.ConsoleServer
         {
             Dictionary<int, ChainsAPM.Interfaces.ICommand<byte>> CommandList = new Dictionary<int, ICommand<byte>>() ;
             var cmd1 = new ChainsAPM.Commands.Common.SendString("");
-            var cmd2 = new ChainsAPM.Commands.Common.FunctionEnterQuick(0);
+            var cmd2 = new ChainsAPM.Commands.Agent.FunctionEnterQuick(0, 0);
+            var cmd3 = new ChainsAPM.Commands.Agent.FunctionLeaveQuick(0, 0);
             CommandList.Add(cmd1.Code, cmd1);
             CommandList.Add(0x03, cmd1); // SendString handles Unicode and ASCII
             CommandList.Add(cmd2.Code, cmd2);
+            CommandList.Add(cmd3.Code, cmd3);
             CallContext.LogicalSetData("CommandProviders", CommandList);
             GC.RegisterForFullGCNotification(30, 50);
             System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.LowLatency;

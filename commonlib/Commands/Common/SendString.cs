@@ -39,16 +39,16 @@ namespace ChainsAPM.Commands.Common
         {
             get { return typeof(string); }
         }
-        public Interfaces.ICommand<byte> Decode(ArraySegment<byte> input2)
+        public Interfaces.ICommand<byte> Decode(ArraySegment<byte> input)
         {
-            byte[] input = input2.ToArray();
-            if (input.Length != 0)
+            if (input.Count != 0)
             {
-                int size = BitConverter.ToInt32(input, 0);
-                if (input.Length == size)
+                int offsetStart = input.Offset;
+                int size = BitConverter.ToInt32(input.Array, offsetStart);
+                if (input.Count == size)
                 {
-                    byte code = input[4];
-                    if (code == 0x01 | code == 0x03)
+                    short code = BitConverter.ToInt16(input.Array, offsetStart + 4);
+                    if (code == 0x01 | code == 0x02)
                     {
                         // 4 bytes for the len
                         // 1 byte for the code
@@ -58,11 +58,11 @@ namespace ChainsAPM.Commands.Common
                         string s = null;
                         if (code == 0x03)
                         {
-                            s = System.Text.UnicodeEncoding.Unicode.GetString(input, 9, size - 11);
+                            s = System.Text.UnicodeEncoding.Unicode.GetString(input.Array, offsetStart + 9, size - 11);
                         }
                         else
                         {
-                            s = System.Text.UnicodeEncoding.Default.GetString(input, 9, size - 11);
+                            s = System.Text.UnicodeEncoding.Default.GetString(input.Array, offsetStart + 9, size - 11);
                         }
                         
                         return new SendString(s);
