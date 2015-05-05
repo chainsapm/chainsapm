@@ -256,6 +256,9 @@ public:
 		SubmitThreadpoolWork(tpw);
 	}
 
+	void CreateNetworkIoThreadPool(NetworkClient* NetClient);
+	
+
 
 
 
@@ -281,7 +284,11 @@ tp_helper::tp_helper(Cprofilermain * cpmain, int min, int max)
 }
 
 
-
+void tp_helper::CreateNetworkIoThreadPool(NetworkClient* NetClient)
+{
+	 NetClient->SetPTPIO(CreateThreadpoolIo(reinterpret_cast<HANDLE>(NetworkClient::m_SocketConnection),
+			&NetworkClient::IoCompletionCallback, NetClient, nullptr));
+}
 
 
 tp_helper::~tp_helper()
