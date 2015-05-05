@@ -187,15 +187,15 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 			if (!result)
 			{
 				result = WSA_IO_PENDING;
-			}
+		}
 			else
 			{
 				result = WSAGetLastError();
-			}
+	}
 			if (WSA_IO_PENDING != result)
 			{
 				CancelThreadpoolIo(NetworkClient::m_ptpIO);
-			}
+}
 		}
 		WaitForThreadpoolIoCallbacks(NetworkClient::m_ptpIO, FALSE);
 		netClient->insideSendLock = false;
@@ -266,7 +266,7 @@ void CALLBACK NetworkClient::NewDataReceived(
 			{
 				iterBuff += 4;
 				while (iterBuff < iterBuff + (totalBuffSize - 4))
-				{
+		{
 					int localBufferSize = *(int*)iterBuff;
 					short term = *(short*)(iterBuff + localBufferSize - 2);
 					iterBuff += localBufferSize;

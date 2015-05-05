@@ -1263,6 +1263,7 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 			{ // Critsec block for thread depth start
 				critsec_helper csh(&this->m_Container->g_FunctionSetCriticalSection);
 				this->m_Container->g_FunctionSet->insert(std::pair<FunctionID, InformationClasses::FunctionInfo*>(funcId, funcInfo));
+				csh.leave_early();
 			}
 			*pbHookFunction = TRUE;
 		}
