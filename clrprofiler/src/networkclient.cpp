@@ -9,17 +9,12 @@
 
 // Initialize the socket to NULL.
 SOCKET NetworkClient::m_SocketConnection = NULL;
-
-//NetworkClient::NetworkClient()
-//{
-//}
+PTP_IO NetworkClient::m_ptpIO = NULL;
+HANDLE NetworkClient::SendRecvEvent;
 
 
-/**
-*
-*
-*/
-NetworkClient::NetworkClient(Cprofilermain *profMain, std::wstring hostName, std::wstring port)
+
+NetworkClient::NetworkClient(std::wstring hostName, std::wstring port)
 {
 	// TODO: Complete the network client.
 	// TODO: Create packet structure to allow ease of transmission of data.
@@ -29,7 +24,17 @@ NetworkClient::NetworkClient(Cprofilermain *profMain, std::wstring hostName, std
 	InitializeCriticalSection(&BackInboundLock);
 	InitializeCriticalSection(&FrontOutboundLock);
 	InitializeCriticalSection(&BackOutboundLock);
-
+	
+	// Select the highest socket version 2.2
+	WORD wVersionRequested = MAKEWORD(2, 2);
+	WSADATA wsaData;
+	WSAStartup(wVersionRequested, &wsaData);
+	NetworkClient::m_SocketConnection = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, WSA_FLAG_OVERLAPPED);
+	timeval t;
+	t.tv_sec = 2;
+	// Just connect to the 
+	WSAConnectByName(NetworkClient::m_SocketConnection, (LPWSTR)m_HostName.c_str(), (LPWSTR)m_HostPort.c_str(), NULL, NULL, NULL, NULL, &t, NULL);
+	
 }
 
 
@@ -47,16 +52,6 @@ void NetworkClient::ControllerLoop()
 // Start the network client when we're ready.
 void NetworkClient::Start()
 {
-	// Select the highest socket version 2.2
-	WORD wVersionRequested = MAKEWORD(2, 2);
-	WSADATA wsaData;
-	WSAStartup(wVersionRequested, &wsaData);
-	NetworkClient::m_SocketConnection = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, WSA_FLAG_OVERLAPPED);
-	timeval t;
-	t.tv_sec = 2;
-	// Just connect to the 
-	WSAConnectByName(NetworkClient::m_SocketConnection, (LPWSTR)m_HostName.c_str(), (LPWSTR)m_HostPort.c_str(), NULL, NULL, NULL, NULL, &t, NULL);
-
 
 	recvTimer = CreateThreadpoolTimer(&NetworkClient::ReceiveTimerCallback, this, NULL); // See "Customized Thread Pools" section
 	sendTimer = CreateThreadpoolTimer(&NetworkClient::SendTimerCallback, this, NULL); // See "Customized Thread Pools" section
@@ -152,7 +147,6 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 			cshFQ.leave_early();
 		}
 
-
 		auto cshBQ = critsec_helper::critsec_helper(&netClient->BackOutboundLock);
 		int buffersize = netClient->m_OutboundQueueBack.size() + 2;
 		bufs = new WSABUF[buffersize];
@@ -189,12 +183,23 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 			DWORD flags = 0;
 			WSAOVERLAPPED overlapped;
 			SecureZeroMemory(&overlapped, sizeof(WSAOVERLAPPED));
-			overlapped.hEvent = ncc;
-			WSASend(netClient->m_SocketConnection, bufs, bufscount, &bytesSent, flags, &overlapped, &NetworkClient::DataSent);
-			int err = WSAGetLastError();
-			DWORD flag2s = 0;
+			StartThreadpoolIo(NetworkClient::m_ptpIO);
+			auto result = WSASend(netClient->m_SocketConnection, bufs, bufscount, &bytesSent, flags, &overlapped, nullptr);
+			if (!result)
+			{
+				result = WSA_IO_PENDING;
+			}
+			else
+			{
+				result = WSAGetLastError();
+			}
+			if (WSA_IO_PENDING != result)
+			{
+				CancelThreadpoolIo(NetworkClient::m_ptpIO);
+			}
 		}
-		//netClient->insideSendLock = false;
+		WaitForThreadpoolIoCallbacks(NetworkClient::m_ptpIO, FALSE);
+		netClient->insideSendLock = false;
 	}
 }
 
@@ -222,12 +227,24 @@ VOID CALLBACK NetworkClient::ReceiveTimerCallback(
 		NetClietCallback *ncc = new NetClietCallback();
 		ncc->netclient = netClient;
 		ncc->queue = bigBuffer;
-
-		overlapped.hEvent = ncc;
-		WSARecv(netClient->m_SocketConnection, bigBuffer, 1, &bytesRecvd, &flags, &overlapped, &NetworkClient::NewDataReceived);
+		StartThreadpoolIo(NetworkClient::m_ptpIO);
+		auto result = WSARecv(netClient->m_SocketConnection, bigBuffer, 1, &bytesRecvd, &flags, &overlapped, nullptr);
+		if (!result)
+		{
+			result = WSA_IO_PENDING;
+		}
+		else
+		{
+			result = WSAGetLastError();
+		}
+		if (WSA_IO_PENDING != result)
+		{
+			CancelThreadpoolIo(NetworkClient::m_ptpIO);
+		}
 		int err = WSAGetLastError();
 		DWORD flag2s = 0;
-		//netClient->insideReceiveLock = false;
+		WaitForThreadpoolIoCallbacks(NetworkClient::m_ptpIO, FALSE);
+		netClient->insideReceiveLock = false;
 	}
 }
 
@@ -268,3 +285,29 @@ void CALLBACK NetworkClient::DataSent(
 		}
 }
 
+
+VOID CALLBACK NetworkClient::SendRecvData(
+	_In_ PVOID   lpParameter,
+	_In_ BOOLEAN TimerOrWaitFired
+	)
+{
+	Sleep(5000);
+	ResetEvent(NetworkClient::SendRecvEvent);
+}
+
+VOID CALLBACK NetworkClient::IoCompletionCallback(
+	_Inout_     PTP_CALLBACK_INSTANCE Instance,
+	_Inout_opt_ PVOID                 Context,
+	_Inout_opt_ PVOID                 Overlapped,
+	_In_        ULONG                 IoResult,
+	_In_        ULONG_PTR             NumberOfBytesTransferred,
+	_Inout_     PTP_IO                Io
+	)
+{
+	ResetEvent(NetworkClient::SendRecvEvent);
+}
+
+void NetworkClient::SetPTPIO(PTP_IO ptpIO)
+{
+	NetworkClient::m_ptpIO = ptpIO;
+}

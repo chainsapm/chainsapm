@@ -416,14 +416,11 @@ Cprofilermain::Cprofilermain()
 		this->m_ProcessId = GetCurrentProcessId();
 		this->AddCommonFunctions();
 
-		m_NetworkClient = new NetworkClient(this, TEXT("localhost"), TEXT("8080"));
-
-		// CRITICAL 1 Research this critical section in the profiler main constructor.
+		m_NetworkClient = new NetworkClient(TEXT("localhost"), TEXT("8080"));
 		InitializeCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
-
-		m_NetworkClient->Start();
-
 		tp = new tp_helper(this, 1, 1);
+		tp->CreateNetworkIoThreadPool(m_NetworkClient);
+		m_NetworkClient->Start();
 	}
 
 	DWORD tID = 0;
