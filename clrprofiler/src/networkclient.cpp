@@ -133,9 +133,8 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 	auto netClient = static_cast<NetworkClient*>(pvContext);
 	if (!netClient->insideSendLock)
 	{
-		netClient->insideSendLock = true;
 		std::queue<std::shared_ptr<std::vector<char>>> * m_Passable = new std::queue<std::shared_ptr<std::vector<char>>>();
-
+		netClient->insideSendLock = true;
 		WSABUF *bufs = NULL;
 		int bufscount = 0;
 		{
