@@ -271,7 +271,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <ModuleDefinitionFile>.\clrprofiler.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>defs\clrprofiler.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RegisterOutput>true</RegisterOutput>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>

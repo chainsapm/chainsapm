@@ -6,7 +6,7 @@ namespace Commands
 		public ICommand
 	{
 	public:
-		FunctionLeaveQuick(FunctionID data);
+		FunctionLeaveQuick(FunctionID data, ThreadID threadid);
 		~FunctionLeaveQuick();
 		virtual std::shared_ptr<std::vector<char>> Encode();
 		virtual std::shared_ptr<ICommand> Decode(std::shared_ptr<std::vector<char>> &data);
@@ -14,8 +14,10 @@ namespace Commands
 		virtual std::wstring Description();
 
 	private:
-		FunctionID function;
-		std::vector<char> m_internalvector;
+		__int64 function;
+		__int64 thread;
+		short code;
+		std::shared_ptr<std::vector<char>> m_internalvector;
 		bool hasEncoded;
 	};
 

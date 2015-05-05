@@ -1148,7 +1148,13 @@ void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 	//	}
 	//});
 
-	tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId));
+	ThreadID threadId = 0;
+	{
+		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
+		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+		csh.leave_early();
+	}
+	tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId, threadId));
 
 }
 
@@ -1175,7 +1181,13 @@ void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 		//});
 
 	}
-	tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId));
+	ThreadID threadId = 0;
+	{
+		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
+		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+		csh.leave_early();
+	}
+	tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId, threadId));
 	// TODO extract argument 
 }
 

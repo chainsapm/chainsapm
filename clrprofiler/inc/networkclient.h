@@ -23,6 +23,8 @@ enum NetworkCommands
 	
 };
 
+
+
 class NetworkClient
 {
 public:
@@ -114,7 +116,12 @@ public:
 };
 
 
-
+struct NetClietCallback
+{
+	NetworkClient *netclient;
+	std::queue<std::shared_ptr<std::vector<char>>> *sendqueue;
+	LPWSABUF queue;
+};
 
 
 #endif // !NETCLIENT

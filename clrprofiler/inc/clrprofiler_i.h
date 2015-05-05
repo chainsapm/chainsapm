@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 8.00.0603 */
-/* at Fri May 01 09:52:06 2015
+/* at Mon May 04 16:07:20 2015
  */
 /* Compiler settings for defs\clrprofiler.idl:
     Oicf, W1, Zp8, env=Win64 (32b run), target_arch=AMD64 8.00.0603 

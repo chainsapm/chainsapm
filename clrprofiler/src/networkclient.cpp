@@ -65,7 +65,7 @@ void NetworkClient::Start()
 	FILETIME ftDue;
 	ftDue.dwLowDateTime = (DWORD)(dueFileTime & 0xFFFFFFFF);
 	ftDue.dwHighDateTime = (DWORD)(dueFileTime >> 32);
-	SetThreadpoolTimer(recvTimer, &ftDue, 500, 0);
+	SetThreadpoolTimer(recvTimer, &ftDue, 1000, 0);
 	SetThreadpoolTimer(sendTimer, &ftDue, 250, 0);
 }
 
@@ -137,8 +137,6 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 	PVOID pvContext,
 	PTP_TIMER pTimer)
 {
-	printf("Timerfired.\r\n");
-
 	auto netClient = static_cast<NetworkClient*>(pvContext);
 	if (!netClient->insideSendLock)
 	{
@@ -184,17 +182,19 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 
 		if (bufscount > 2)
 		{
-
+			NetClietCallback *ncc = new NetClietCallback();
+			ncc->netclient = netClient;
+			ncc->sendqueue = m_Passable;
 			DWORD bytesSent = 0;
 			DWORD flags = 0;
 			WSAOVERLAPPED overlapped;
 			SecureZeroMemory(&overlapped, sizeof(WSAOVERLAPPED));
-			overlapped.hEvent = m_Passable;
+			overlapped.hEvent = ncc;
 			WSASend(netClient->m_SocketConnection, bufs, bufscount, &bytesSent, flags, &overlapped, &NetworkClient::DataSent);
 			int err = WSAGetLastError();
 			DWORD flag2s = 0;
 		}
-		netClient->insideSendLock = false;
+		//netClient->insideSendLock = false;
 	}
 }
 
@@ -203,7 +203,32 @@ VOID CALLBACK NetworkClient::ReceiveTimerCallback(
 	PVOID pvContext,
 	PTP_TIMER pTimer)
 {
+	auto netClient = static_cast<NetworkClient*>(pvContext);
+	if (!netClient->insideReceiveLock)
+	{
+		netClient->insideReceiveLock = true;
 
+
+		auto bigBufferChars = new char[10 * 1024];
+		LPWSABUF bigBuffer = new WSABUF;
+		bigBuffer->buf = bigBufferChars;
+		bigBuffer->len = 10 * 1024;
+		SecureZeroMemory(bigBufferChars, 10 * 1024);
+		DWORD bytesRecvd = 0;
+		DWORD flags = 0;
+		WSAOVERLAPPED overlapped;
+		SecureZeroMemory(&overlapped, sizeof(WSAOVERLAPPED));
+
+		NetClietCallback *ncc = new NetClietCallback();
+		ncc->netclient = netClient;
+		ncc->queue = bigBuffer;
+
+		overlapped.hEvent = ncc;
+		WSARecv(netClient->m_SocketConnection, bigBuffer, 1, &bytesRecvd, &flags, &overlapped, &NetworkClient::NewDataReceived);
+		int err = WSAGetLastError();
+		DWORD flag2s = 0;
+		//netClient->insideReceiveLock = false;
+	}
 }
 
 
@@ -216,8 +241,14 @@ void CALLBACK NetworkClient::NewDataReceived(
 {
 	if (cbTransferred > 0)
 	{
-		
-		printf("We did it!\r\n");
+		if (lpOverlapped->hEvent != NULL)
+		{
+			NetClietCallback *ncc = (NetClietCallback*)lpOverlapped->hEvent;
+			ncc->netclient->insideReceiveLock = false;
+			auto myqueue = ncc->queue;
+			ncc->netclient = NULL;
+			delete lpOverlapped->hEvent;
+		}
 	}
 }
 
@@ -228,13 +259,12 @@ void CALLBACK NetworkClient::DataSent(
 	IN DWORD dwFlags
 	)
 {
-	if (cbTransferred > 0)
-	{
 		if (lpOverlapped->hEvent != NULL )
 		{
+			NetClietCallback *ncc = (NetClietCallback*)lpOverlapped->hEvent;
+			ncc->netclient->insideSendLock = false;
+			ncc->netclient = NULL;
 			delete lpOverlapped->hEvent;
 		}
-		printf("We did it!\r\n");
-	}
 }
 
