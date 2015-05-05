@@ -259,6 +259,9 @@ public:
 		SubmitThreadpoolWork(tpw);
 	}
 
+	void CreateNetworkIoThreadPool(NetworkClient* NetClient);
+	
+
 
 
 
@@ -276,15 +279,19 @@ tp_helper::tp_helper(Cprofilermain * cpmain, int min, int max)
 	m_ptpcbe = new TP_CALLBACK_ENVIRON();
 	InitializeThreadpoolEnvironment(m_ptpcbe);
 	m_customThreadPool = CreateThreadpool(NULL);
-	/*SetThreadpoolThreadMinimum(customThreadPool, 1);
-	SetThreadpoolThreadMaximum(customThreadPool, 1);*/
+	SetThreadpoolThreadMinimum(m_customThreadPool, min);
+	SetThreadpoolThreadMaximum(m_customThreadPool, max);
 	m_ptpcug = CreateThreadpoolCleanupGroup();
 	SetThreadpoolCallbackPool(m_ptpcbe, m_customThreadPool);
 	SetThreadpoolCallbackCleanupGroup(m_ptpcbe, m_ptpcug, NULL);
 }
 
 
-
+void tp_helper::CreateNetworkIoThreadPool(NetworkClient* NetClient)
+{
+	 NetClient->SetPTPIO(CreateThreadpoolIo(reinterpret_cast<HANDLE>(NetworkClient::m_SocketConnection),
+			&NetworkClient::IoCompletionCallback, NetClient, nullptr));
+}
 
 
 tp_helper::~tp_helper()

@@ -15,20 +15,24 @@ class Cprofilermain;
 enum NetworkCommands
 {
 	PING_SERVER,// 0x1
-	PING_AGGREGATOR, 
+	PING_AGGREGATOR,
 	PING_AGENT,
 	SEND_MODULENAME,
 	SEND_CLASSNAME,
 	SEND_FUNCTIONNAME
-	
+
 };
+
+
 
 class NetworkClient
 {
 public:
-	NetworkClient(Cprofilermain *profMain, std::wstring hostName, std::wstring port);
+	NetworkClient(std::wstring hostName, std::wstring port);
 	~NetworkClient();
 	static SOCKET m_SocketConnection;
+	static PTP_IO m_ptpIO;
+	void SetPTPIO(PTP_IO ptpIO);
 
 private:
 	// Create a singleton socket so we can control what happens if this
@@ -36,6 +40,7 @@ private:
 
 	std::wstring m_HostName;
 	std::wstring m_HostPort;
+	
 
 	// List of ICommand implementations by code
 	std::map<short, Commands::ICommand> m_CommandList;
@@ -45,7 +50,7 @@ private:
 	std::queue<std::shared_ptr<std::vector<char>>> m_OutboundQueueBack;
 	std::queue<std::shared_ptr<std::vector<char>>> m_InboundQueueFront;
 	std::queue<std::shared_ptr<std::vector<char>>> m_InboundQueueBack;
-	
+
 
 	//Double buffered queues need double the locks
 	CRITICAL_SECTION FrontOutboundLock;
@@ -71,7 +76,7 @@ private:
 	bool insideReceiveLock = false;
 
 
-	
+
 
 	// This is the main loop that will be used for sending and receving data. When a call comes in we will have a callback to a correct processor
 	void ControllerLoop();
@@ -89,6 +94,11 @@ private:
 		IN DWORD cbTransferred,
 		IN LPWSAOVERLAPPED lpOverlapped,
 		IN DWORD dwFlags
+		);
+
+	static VOID CALLBACK SendRecvData(
+		_In_ PVOID   lpParameter,
+		_In_ BOOLEAN TimerOrWaitFired
 		);
 
 public:
@@ -110,12 +120,25 @@ public:
 	std::shared_ptr<Commands::ICommand> ReceiveCommand();
 	HRESULT SendCommands(std::vector<std::shared_ptr<Commands::ICommand>> &packet);
 	std::vector<std::shared_ptr<Commands::ICommand>>& ReceiveCommands();
-	void SendDataSynchronus();
-	
+	static HANDLE SendRecvEvent;
+	static VOID CALLBACK IoCompletionCallback(
+		_Inout_     PTP_CALLBACK_INSTANCE Instance,
+		_Inout_opt_ PVOID                 Context,
+		_Inout_opt_ PVOID                 Overlapped,
+		_In_        ULONG                 IoResult,
+		_In_        ULONG_PTR             NumberOfBytesTransferred,
+		_Inout_     PTP_IO                Io
+		);
 };
 
 
-
+struct NetClietCallback
+{
+	HANDLE rstHandle;
+	NetworkClient *netclient;
+	std::queue<std::shared_ptr<std::vector<char>>> *sendqueue;
+	LPWSABUF queue;
+};
 
 
 #endif // !NETCLIENT

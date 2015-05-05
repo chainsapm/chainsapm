@@ -206,6 +206,7 @@ namespace ChainsAPM.ConsoleServer
         {
             var tcbah = sender as TcpByteAgentHandler;
             var stringCmd = new ChainsAPM.Commands.Common.SendString("Done!");
+            tcbah.SendCommand(stringCmd);
             var arr = tcbah.GetCommands();
             foreach (var item in arr)
             {

@@ -538,9 +538,7 @@ Cprofilermain::Cprofilermain()
 		this->m_ProcessId = GetCurrentProcessId();
 		this->AddCommonFunctions();
 
-		m_NetworkClient = new NetworkClient(this, TEXT("localhost"), TEXT("8080"));
-
-		// CRITICAL 1 Research this critical section in the profiler main constructor.
+		m_NetworkClient = new NetworkClient(TEXT("localhost"), TEXT("8080"));
 		InitializeCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
 
 		
@@ -560,6 +558,8 @@ Cprofilermain::Cprofilermain()
 
 		m_NetworkClient->Start();
 		tp = new tp_helper(this, 1, 1);
+		tp->CreateNetworkIoThreadPool(m_NetworkClient);
+		m_NetworkClient->Start();
 	}
 
 	DWORD tID = 0;
@@ -995,60 +995,17 @@ STDMETHODIMP Cprofilermain::AppDomainCreationStarted(AppDomainID appDomainId)
 
 STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 {
-	std::shared_ptr<ThreadStackItem> firstItem = std::make_shared<ThreadStackItem>(threadId, ThreadStackReason::THREAD_START);
-
-	//TODO Create ThreadPool thread created event
-
-	{ // Critsec block for thread depth start
-		critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
-		this->m_Container->g_ThreadStackDepth->insert(std::pair<ThreadID, volatile unsigned int>(threadId, 0));
-	}
-
-	{ // Critsec block for thread sequence start
-		critsec_helper csh(&this->m_Container->g_ThreadStackSequenceCriticalSection);
-		this->m_Container->g_ThreadStackSequence->insert(std::pair<ThreadID, volatile unsigned int>(threadId, 0));
-	}
-
-	{ // Critsec block for thread insert start
-		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
-		this->m_Container->g_BigStack->push(firstItem);
-	}  // Crit
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::ThreadDestroyed(ThreadID threadId)
 {
 
-	//TODO Create ThreadPool thread destroyed event
-
-	{ // Critsec block for thread depth start
-		critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
-		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
-		if (itStack != this->m_Container->g_ThreadStackMap->end())
-		{
-			// The front item should ALWAYS be the thread stack start item
-			// If it's not some how something inserted a TSI before the top item and that is not likely.
-			// Create 
-			// lastTimer.AddThreadStackItem(this->m_Container->g_ThreadStackMap->at(threadId).back());
-		}
-
-	}
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::ThreadNameChanged(ThreadID threadId, ULONG cchName, _In_reads_opt_(cchName) WCHAR name[])
 {
-	//MAINCSENTER;
-	{ // Critsec block for thread depth start
-		critsec_helper csh(&this->m_Container->g_ThreadStackDepthCriticalSection);
-		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
-		if (itStack != this->m_Container->g_ThreadStackMap->end())
-		{
-			// The front item should ALWAYS be the thread stack start item
-			// If it's not some how something inserted a TSI before the top item and that is not likely.
-			std::dynamic_pointer_cast<ThreadStackItem>(this->m_Container->g_ThreadStackMap->at(threadId)[0])->ThreadName(name);
-		} // Critsec block for thread depth start
-	}
 	return S_OK;
 }
 
@@ -1099,33 +1056,11 @@ STDMETHODIMP Cprofilermain::ClassLoadFinished(ClassID classId, HRESULT hrStatus)
 
 STDMETHODIMP Cprofilermain::RuntimeThreadSuspended(ThreadID threadId)
 {
-	// For all other runtime suspensions we'd like to know
-
-	{ // Critsec block for thread depth start
-		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
-		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
-
-		if (itStack != this->m_Container->g_ThreadStackMap->end())
-		{
-			// TODO Implement a stack item insertion for the buffer
-			//ti.AddThreadStackItem(itStack->second.back());
-		}
-	}
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::RuntimeThreadResumed(ThreadID threadId)
 {
-	{ // Critsec block for thread depth start
-		critsec_helper csh(&this->m_Container->g_ThreadingCriticalSection);
-		auto itStack = this->m_Container->g_ThreadStackMap->find(threadId);
-
-		if (itStack != this->m_Container->g_ThreadStackMap->end())
-		{
-			// TODO Implement a stack item insertion for the buffer
-			// ti.AddThreadStackItem(itStack->second.back());
-		}
-	}
 	return S_OK;
 }
 
@@ -1205,9 +1140,9 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	*/
 	ThreadID threadId = 0;
 	{
-		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
+		//critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
 		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
-		csh.leave_early();
+		//csh.leave_early();
 	}
 
 	// In order to stay async we need to copy this data before passing it off to a potentially blocking
@@ -1238,9 +1173,9 @@ void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 {
 	ThreadID threadId = 0;
 	{
-		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
+		//critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
 		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
-		csh.leave_early();
+		//csh.leave_early();
 	}
 
 	tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId, threadId));
@@ -1252,9 +1187,9 @@ void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 {
 	ThreadID threadId = 0;
 	{
-		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
+		//critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
 		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
-		csh.leave_early();
+		//csh.leave_early();
 	}
 
 	tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId, threadId));
@@ -1298,9 +1233,9 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 
 #else
 	// While this method does not cause any upthe one below it does.
-	critsec_helper csh(&this->m_Container->g_FunctionSetCriticalSection);
+	//critsec_helper csh(&this->m_Container->g_FunctionSetCriticalSection);
 	auto it = this->m_Container->g_FunctionSet->find(funcId);
-	csh.leave_early();
+	//csh.leave_early();
 	if (it == this->m_Container->g_FunctionSet->end())
 	{
 
