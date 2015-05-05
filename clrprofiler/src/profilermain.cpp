@@ -555,8 +555,6 @@ Cprofilermain::Cprofilermain()
 		ainfo.Length = sizeof(InformationClasses::AgentInfo);
 		auto sps = new Commands::SendPackedStructure((UINT_PTR)&ainfo);
 		auto out = sps->Encode();
-
-		m_NetworkClient->Start();
 		tp = new tp_helper(this, 1, 1);
 		tp->CreateNetworkIoThreadPool(m_NetworkClient);
 		m_NetworkClient->Start();
