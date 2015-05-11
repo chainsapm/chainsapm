@@ -5,30 +5,21 @@
 
 
 
-
-
-
-BOOL ItemMapping::operator== (const std::wstring &strCompare)
+bool ItemMapping::operator== (const std::wstring &strCompare)
 {
-	return !(this->ItemName.compare(strCompare));
+	return !(this->HashString.compare(strCompare));
 }
 
 ContainerClass::ContainerClass()
 {
 	// TODO: Issue #2 Add more containers to properly handle a proper entry point.
 
-	this->g_FunctionSet = new std::map<FunctionID, InformationClasses::FunctionInfo*>(); // Start with allowing 
-	this->g_ThreadStackMap = new std::map<ThreadID, std::deque<std::shared_ptr<StackItemBase>>>();
-	this->g_BigStack = new std::queue<std::shared_ptr<StackItemBase>>();
-	this->g_EntryPointStackMap = new std::map<LONGLONG, std::deque<std::shared_ptr<StackItemBase>>>();
-	this->g_ThreadEntrypointID = new std::map<ThreadID, ULONGLONG>();
-	this->g_FunctionNameSet = new std::unordered_set < ItemMapping*, Hasher, EqualFn>();
-	this->g_ClassNameSet = new std::unordered_set<std::wstring>();
-	this->g_ThreadStackDepth = new std::map<ThreadID, volatile unsigned int>();
-	this->g_ThreadStackSequence = new std::map<ThreadID, volatile unsigned int>();
-	this->g_ThreadFunctionCount = new std::map<ThreadID, volatile unsigned int>();
-	this->g_ThreadSpawnMap = new std::map<ThreadID, UINT_PTR>();
-	this->currentEntryPointCounter = 0L;
+	this->g_FunctionSet = new std::map<FunctionID, std::unique_ptr<InformationClasses::FunctionInfo>>();
+	this->g_ClassSet = new  std::map<ClassID, std::unique_ptr<InformationClasses::ClassInfo>>();
+	this->g_AssemblySet = new std::map<AssemblyID, std::unique_ptr<InformationClasses::AssemblyInfo>>();
+	this->g_ModuleSet = new std::map<ModuleID, std::unique_ptr<InformationClasses::ModuleInfo>>();
+	this->g_FullyQualifiedMethodsToProfile = new std::unordered_multiset<ItemMapping>();
+
 
 	// CRITICAL 1 Thread synchronization for Function Mapper
 	InitializeCriticalSection(&this->g_FunctionSetCriticalSection);
@@ -42,6 +33,7 @@ ContainerClass::ContainerClass()
 
 ContainerClass::~ContainerClass()
 {
+	delete this->g_FunctionSet;
 	DeleteCriticalSection(&this->g_FunctionSetCriticalSection);
 	DeleteCriticalSection(&this->g_ThreadingCriticalSection);
 	DeleteCriticalSection(&this->g_ThreadStackDepthCriticalSection);

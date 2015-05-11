@@ -1,8 +1,10 @@
 #pragma once
-class AssemblyInfo
-{
-public:
-	AssemblyInfo();
-	~AssemblyInfo();
-};
+namespace InformationClasses {
+	class AssemblyInfo
+	{
+	public:
+		AssemblyInfo();
+		~AssemblyInfo();
+	};
 
+}

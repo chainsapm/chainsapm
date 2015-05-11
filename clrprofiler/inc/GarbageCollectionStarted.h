@@ -4,7 +4,7 @@
 namespace Commands
 {
 	class GarbageCollectionStarted :
-		public ICommand
+		public virtual ICommand
 	{
 	public:
 		GarbageCollectionStarted();

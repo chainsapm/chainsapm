@@ -44,6 +44,183 @@ class tp_helper;
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
 #endif
 
+
+
+extern std::wofstream g_wLogFile;
+
+extern WCHAR g_wszCmdFilePath[];
+extern WCHAR g_wszResponseFilePath[];
+extern WCHAR g_wszLogFilePath[];
+extern WCHAR g_wszResultFilePath[];
+
+class CSHolder
+{
+public:
+	CSHolder(CRITICAL_SECTION * pcs)
+	{
+		m_pcs = pcs;
+		EnterCriticalSection(m_pcs);
+	}
+
+	~CSHolder()
+	{
+		assert(m_pcs != NULL);
+		LeaveCriticalSection(m_pcs);
+	}
+
+private:
+	CRITICAL_SECTION * m_pcs;
+};
+
+template <class _ID, class _Info>
+class IDToInfoMap
+{
+public:
+	typedef std::map<_ID, _Info> Map;
+	typedef typename Map::iterator Iterator;
+	typedef typename Map::const_iterator Const_Iterator;
+	typedef typename Map::size_type Size_type;
+
+	IDToInfoMap()
+	{
+		InitializeCriticalSection(&m_cs);
+	}
+
+	Size_type GetCount()
+	{
+		CSHolder csHolder(&m_cs);
+		return m_map.size();
+	}
+
+	BOOL LookupIfExists(_ID id, _Info * pInfo)
+	{
+		CSHolder csHolder(&m_cs);
+		Const_Iterator iterator = m_map.find(id);
+		if (iterator == m_map.end())
+		{
+			return FALSE;
+		}
+
+		*pInfo = iterator->second;
+		return TRUE;
+	}
+
+	_Info Lookup(_ID id)
+	{
+		CSHolder csHolder(&m_cs);
+		_Info info;
+		if (!LookupIfExists(id, &info))
+		{
+		}
+
+		return info;
+	}
+
+	void Erase(_ID id)
+	{
+		CSHolder csHolder(&m_cs);
+		Size_type cElementsRemoved = m_map.erase(id);
+		if (cElementsRemoved != 1)
+		{
+			g_wLogFile.open(g_wszLogFilePath, std::ios::app);
+			g_wLogFile << L"\nIDToInfoMap: " << cElementsRemoved <<
+				L" elements removed, 1 expected.";
+			g_wLogFile.close();
+		}
+	}
+
+	void Update(_ID id, _Info info)
+	{
+		CSHolder csHolder(&m_cs);
+		m_map[id] = info;
+	}
+
+	Const_Iterator Begin()
+	{
+		return m_map.begin();
+	}
+
+	Const_Iterator End()
+	{
+		return m_map.end();
+	}
+
+	class LockHolder
+	{
+	public:
+		LockHolder(IDToInfoMap<_ID, _Info> * pIDToInfoMap) :
+			m_csHolder(&(pIDToInfoMap->m_cs))
+		{
+		}
+
+	private:
+		CSHolder m_csHolder;
+	};
+
+private:
+	Map m_map;
+	CRITICAL_SECTION m_cs;
+};
+
+typedef IDToInfoMap<mdMethodDef, int> MethodDefToLatestVersionMap;
+
+struct ModuleInfo
+{
+	WCHAR                               m_wszModulePath[512];
+	IMetaDataImport *                   m_pImport;
+	mdToken                             m_mdEnterProbeRef;
+	mdToken                             m_mdExitProbeRef;
+	MethodDefToLatestVersionMap *       m_pMethodDefToLatestVersionMap;
+};
+
+typedef IDToInfoMap<ModuleID, ModuleInfo> ModuleIDToInfoMap;
+
+template <class MetaInterface>
+class COMPtrHolder
+{
+public:
+	COMPtrHolder()
+	{
+		m_ptr = NULL;
+	}
+
+	~COMPtrHolder()
+	{
+		if (m_ptr != NULL)
+		{
+			m_ptr->Release();
+			m_ptr = NULL;
+		}
+	}
+
+	MetaInterface* operator->()
+	{
+		return m_ptr;
+	}
+
+	MetaInterface** operator&()
+	{
+		return &m_ptr;
+	}
+
+	operator MetaInterface*()
+	{
+		return m_ptr;
+	}
+
+private:
+	MetaInterface* m_ptr;
+};
+
+// A single entry in the single-thread shadow stack
+struct ShadowStackFrameInfo
+{
+	ModuleID m_moduleID;
+	mdMethodDef m_methodDef;
+	int m_nVersion;
+	ULONGLONG m_ui64TickCountOnEntry;
+};
+
 using namespace ATL;
 
 
@@ -117,6 +294,7 @@ public:
 	STDMETHOD(ModuleLoadStarted)(ModuleID moduleId);
 	STDMETHOD(ModuleLoadFinished)(ModuleID moduleId, HRESULT hrStatus);
 	STDMETHOD(ClassLoadFinished)(ClassID classId, HRESULT hrStatus);
+	STDMETHOD(AssemblyLoadFinished)(AssemblyID moduleId, HRESULT hrStatus);
 
 	STDMETHOD(GarbageCollectionStarted)(int cGenerations, BOOL generationCollected[], COR_PRF_GC_REASON reason);
 	STDMETHOD(GarbageCollectionFinished)(void);
@@ -138,9 +316,37 @@ public:
 
 	STDMETHOD(Shutdown)(void);
 
+	STDMETHOD(DoWeProfile)(void);
+
 	void WriteLogFile(int fileNum);
 	void AddCommonFunctions();
 	void SetProcessName();
+
+
+	// Attach / Embed Events
+	void AddMemberRefs(
+		IMetaDataAssemblyImport * pAssemblyImport,
+		IMetaDataAssemblyEmit * pAssemblyEmit,
+		IMetaDataEmit * pEmit,
+		ModuleInfo * pModuleInfo);
+
+	HRESULT AddPInvoke(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdMethodDef * pmdPInvoke);
+	HRESULT GetSecuritySafeCriticalAttributeToken(IMetaDataImport * pImport, mdMethodDef * pmdSafeCritical);
+	HRESULT AddManagedHelperMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod);
+	void AddHelperMethodDefs(IMetaDataImport * pImport, IMetaDataEmit * pEmit);
+	BOOL FindMscorlibReference(IMetaDataAssemblyImport * pAssemblyImport, mdAssemblyRef * rgAssemblyRefs, ULONG cAssemblyRefs, mdAssemblyRef * parMscorlib);
+
+	// OUT-OF-THREAD REQUEST CALLS
+	HRESULT CallRequestReJIT(UINT cFunctionsToRejit, ModuleID * rgModuleIDs, mdMethodDef * rgMethodIDs);
+	HRESULT CallRequestRevert(UINT cFunctionsToRejit, ModuleID * rgModuleIDs, mdMethodDef * rgMethodIDs);
+
+	// P-INVOKED FUNCTIONS
+	void NtvEnteredFunction(ModuleID moduleIDCur, mdMethodDef mdCur, int nVersionCur);
+	void NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, int nVersionCur);
+
+	// Pipe operations with the GUI
+	void LaunchLogListener(LPCWSTR wszPath);
+	void GetClassAndFunctionNamesFromMethodDef(IMetaDataImport * pImport, ModuleID moduleID, mdMethodDef methodDef, LPWSTR wszTypeDefName, ULONG cchTypeDefName, LPWSTR wszMethodDefName, ULONG cchMethodDefName);
 
 
 	// Enter call back for ICorProfilerCallback
@@ -210,11 +416,19 @@ private:
 	COR_PRF_SUSPEND_REASON m_CurrentSuspendReason;
 	COR_PRF_GC_REASON m_CurrentGCReason;
 	BOOL m_IsRuntimeSuspended;
-	std::wstring m_ProcessName;
 	DWORD m_ProcessId;
+
+	std::wstring m_ProcessName;
+	std::wstring m_ProcessDirectory;
+	std::wstring m_ProcessCommandLine;
+	std::wstring m_ComputerName;
+	std::wstring m_FQDN;
+	std::wstring m_ClusterName;
+
 	std::wstring m_ServerName;
 	std::wstring m_ServerPort;
 	std::wstring m_AgentName;
+
 	HMODULE m_webengineHandle;
 
 	// This is the all encompasing container class used by this class
@@ -222,6 +436,22 @@ private:
 
 	//Thread Pool Helper
 	tp_helper * tp = nullptr;
+
+
+	/* If the instrumented code must call into managed helpers that we pump into mscorlib (as
+	* opposed to calling into managed helpers statically compiled into ProfilerHelper.dll), then
+	* the tokens are used to refer to the helpers as they will be in modified mscorlib metadata. */
+	mdMethodDef m_mdIntPtrExplicitCast;
+	mdMethodDef m_mdEnterPInvoke;
+	mdMethodDef m_mdExitPInvoke;
+	mdMethodDef m_mdEnter;
+	mdMethodDef m_mdExit;
+
+	volatile long m_refCount;
+	ModuleID m_modidMscorlib;
+	BOOL m_fInstrumentationHooksInSeparateAssembly;
+	DWORD m_dwThresholdMs;
+	DWORD m_dwShadowStackTlsIndex;
 
 
 };
@@ -245,6 +475,7 @@ private:
 	{
 		m_cprof->m_NetworkClient->SendCommand(std::make_shared<C>(*(C*)Parameter));
 	}
+
 
 
 public:

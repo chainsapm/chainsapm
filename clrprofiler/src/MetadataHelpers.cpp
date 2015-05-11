@@ -22,16 +22,22 @@ MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo> profilerInfo,
 
 MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo2> profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
 {
+	m_pICorProfilerInfo = profilerInfo;
 	m_pICorProfilerInfo2 = profilerInfo;
 }
 
 MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo3> profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
 {
+	m_pICorProfilerInfo = profilerInfo;
+	m_pICorProfilerInfo2 = profilerInfo;
 	m_pICorProfilerInfo3 = profilerInfo;
 }
 
 MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo4> profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
 {
+	m_pICorProfilerInfo = profilerInfo;
+	m_pICorProfilerInfo2 = profilerInfo;
+	m_pICorProfilerInfo3 = profilerInfo;
 	m_pICorProfilerInfo4 = profilerInfo;
 }
 
@@ -188,6 +194,15 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Informat
 		funcInfo->SignatureRaw(sigBlob); // Create a clone
 
 		/*
+			Get class and module of function
+		*/
+		ClassID funcClassID;
+		ModuleID funcModuleID;
+		mdToken funcmdToken;
+		m_pICorProfilerInfo->GetFunctionInfo(funcId, &funcClassID, &funcModuleID, &funcmdToken);
+		funcInfo->ClassInformation().ClassId(funcClassID);
+
+		/*
 		MSDN link for GetTypeDefProps
 		http://msdn.microsoft.com/en-us/library/ms230143(v=vs.110).aspx
 
@@ -198,7 +213,7 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Informat
 		DWORD flags;
 		ULONG typeDefPointer;
 		mdToken extends;
-
+		 
 		hr = _MetaDataImport->GetTypeDefProps(
 			classTypeDef,
 			szClassName,
@@ -207,7 +222,9 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Informat
 			&flags,
 			&extends);
 
-		funcInfo->ClassName(std::wstring(szClassName));
+		funcInfo->ClassInformation().ClassName(std::wstring(szClassName));
+
+		
 
 		/*
 		MSDN link for GetParamForMethodIndex
@@ -329,6 +346,22 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Informat
 	_MetaDataImport2.release();
 	return E_FAIL;
 }
+STDMETHODIMP MetadataHelpers::GetClassInformation(ClassID classID, InformationClasses::ClassInfo* funcInfo)
+{
+	return S_OK;
+	
+}
+STDMETHODIMP MetadataHelpers::GetModuleInformation(ModuleID classID, InformationClasses::ModuleInfo* funcInfo)
+{
+
+	return S_OK;
+}
+STDMETHODIMP MetadataHelpers::GetAssemblyInformation(AssemblyID funcId, InformationClasses::AssemblyInfo* funcInfo)
+{
+
+	return S_OK;
+}
+
 
 /* static public */
 PCCOR_SIGNATURE MetadataHelpers::ParseElementType(const std::unique_ptr<IMetaDataImport>&  pMDImport,

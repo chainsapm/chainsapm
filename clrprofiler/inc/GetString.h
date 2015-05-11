@@ -3,7 +3,7 @@
 namespace Commands
 {
 	class GetString :
-		public ICommand
+		public virtual ICommand
 	{
 	public:
 		GetString();

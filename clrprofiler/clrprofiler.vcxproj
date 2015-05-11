@@ -173,12 +173,14 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)inc</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -207,12 +209,14 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)inc</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -242,16 +246,18 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>X64;_WINDOWS;_DEBUG;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>false</SDLCheck>
+      <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)inc</AdditionalIncludeDirectories>
       <AdditionalOptions>/Zm111 %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <BrowseInformation>false</BrowseInformation>
       <EnablePREfast>false</EnablePREfast>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -283,7 +289,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugMVC|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>X64;_WINDOWS;_DEBUG;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
@@ -291,6 +297,8 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <AdditionalOptions>/Zm111 %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -322,12 +330,14 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)inc</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -358,12 +368,14 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>X64;_WINDOWS;NDEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)inc</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -392,6 +404,13 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\DefineAssembly.cpp" />
+    <ClCompile Include="src\DefineClass.cpp" />
+    <ClCompile Include="src\DefineFunction.cpp" />
+    <ClCompile Include="src\DefineModule.cpp" />
+    <ClCompile Include="src\FunctionLeaveQuick.cpp" />
+    <ClCompile Include="src\FunctionTailQuick.cpp" />
+    <ClCompile Include="src\ilrewriter.cpp" />
     <ClCompile Include="src\SendPackedStructure.cpp" />
     <ClCompile Include="src\AgentInfo.cpp" />
     <ClCompile Include="src\AssemblyDefinition.cpp" />
@@ -442,12 +461,10 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\FunctionDefinition.cpp" />
     <ClCompile Include="src\FunctionEnterLong.cpp" />
     <ClCompile Include="src\FunctionEnterQuick.cpp" />
     <ClCompile Include="src\FunctionInfo.cpp" />
     <ClCompile Include="src\FunctionLeaveLong.cpp" />
-    <ClCompile Include="src\FunctionLeaveQuick.cpp" />
     <ClCompile Include="src\FunctionStackItem.cpp" />
     <ClCompile Include="src\GarbageCollectionFinished.cpp" />
     <ClCompile Include="src\GarbageCollectionStackItem.cpp" />
@@ -456,7 +473,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClCompile Include="src\ICommand.cpp" />
     <ClCompile Include="src\ILFactory.cpp" />
     <ClCompile Include="src\MetadataHelpers.cpp" />
-    <ClCompile Include="src\ModuleDefinition.cpp" />
     <ClCompile Include="src\ModuleInfo.cpp" />
     <ClCompile Include="src\networkclient.cpp" />
     <ClCompile Include="src\ParameterInfo.cpp" />
@@ -511,20 +527,23 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="inc\ContainerClass.h" />
     <ClInclude Include="inc\CorProfilerCallbackImplementation.h" />
     <ClInclude Include="inc\critsec_helper.h" />
+    <ClInclude Include="inc\DefineAssembly.h" />
+    <ClInclude Include="inc\DefineClass.h" />
+    <ClInclude Include="inc\DefineFunction.h" />
+    <ClInclude Include="inc\DefineModule.h" />
     <ClInclude Include="inc\dllmain.h" />
-    <ClInclude Include="inc\FunctionDefinition.h" />
     <ClInclude Include="inc\FunctionEnterLong.h" />
     <ClInclude Include="inc\FunctionEnterQuick.h" />
     <ClInclude Include="inc\FunctionInfo.h" />
     <ClInclude Include="inc\FunctionLeaveLong.h" />
     <ClInclude Include="inc\FunctionLeaveQuick.h" />
+    <ClInclude Include="inc\FunctionTailQuick.h" />
     <ClInclude Include="inc\GarbageCollectionFinished.h" />
     <ClInclude Include="inc\GarbageCollectionStarted.h" />
     <ClInclude Include="inc\GetString.h" />
     <ClInclude Include="inc\ICommand.h" />
     <ClInclude Include="inc\ILFactory.h" />
     <ClInclude Include="inc\MetadataHelpers.h" />
-    <ClInclude Include="inc\ModuleDefinition.h" />
     <ClInclude Include="inc\ModuleInfo.h" />
     <ClInclude Include="inc\networkclient.h" />
     <ClInclude Include="inc\ParameterInfo.h" />
@@ -547,6 +566,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   </ItemGroup>
   <ItemGroup>
     <None Include="defs\clrprofiler.def" />
+    <None Include="inc\sigparse.inl" />
     <None Include="rsrc\clrprofiler.rgs" />
     <MASM Include="src\etl_enter_x64.asm">
       <FileType>MASM</FileType>

@@ -12,14 +12,14 @@ namespace InformationClasses {
 	{
 	}
 
-	const std::wstring& FunctionInfo::ClassName()
+	InformationClasses::ClassInfo& FunctionInfo::ClassInformation()
 	{
-		return this->m_ClassName;
+		return this->m_ClassInfo;
 	}
 
-	void FunctionInfo::ClassName(const std::wstring& className)
+	void FunctionInfo::ClassInformation(InformationClasses::ClassInfo& classInfo)
 	{
-		this->m_ClassName.assign(className);
+		this->m_ClassInfo = classInfo;
 	}
 
 	const std::wstring& FunctionInfo::FunctionName()
@@ -48,7 +48,7 @@ namespace InformationClasses {
 		{
 			this->m_SignatureString.append(this->m_ReturnType);
 			this->m_SignatureString.append(TEXT(" "));
-			this->m_SignatureString.append(this->m_ClassName);
+			this->m_SignatureString.append(this->ClassInformation().ClassName());
 			this->m_SignatureString.append(TEXT("::"));
 			this->m_SignatureString.append(this->m_FunctionName);
 			this->m_SignatureString.append(TEXT("("));

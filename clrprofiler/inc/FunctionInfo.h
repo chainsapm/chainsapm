@@ -1,6 +1,7 @@
 
 #pragma once
 #include "commonstructures.h"
+#include "ClassInfo.h"
 #include "ParameterInfo.h"
 
 namespace InformationClasses {
@@ -12,8 +13,8 @@ namespace InformationClasses {
 		~FunctionInfo();
 
 		// Getter and setter for class name
-		const std::wstring& ClassName();
-		void ClassName(const std::wstring&);
+		InformationClasses::ClassInfo& ClassInformation();
+		void ClassInformation(InformationClasses::ClassInfo& classinfo);
 
 		// Getter and setter for the function name
 		const std::wstring& FunctionName();
@@ -50,7 +51,7 @@ namespace InformationClasses {
 		void AlwaysCreateNewEntryPoint(BOOL);
 
 	private:
-		std::wstring m_ClassName;
+		InformationClasses::ClassInfo m_ClassInfo;
 		std::wstring m_FunctionName;
 		FunctionID m_FunctionID;
 		PCCOR_SIGNATURE m_RawSignature;

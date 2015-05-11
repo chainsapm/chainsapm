@@ -1,17 +1,13 @@
 #pragma once
 #include "ICommand.h"
-#pragma once
-#include "FunctionInfo.h"
 namespace Commands
 {
-	class FunctionEnterLong :
+	class FunctionTailQuick :
 		public virtual ICommand
 	{
 	public:
-		FunctionEnterLong(InformationClasses::FunctionInfo funcinfo);
-		FunctionEnterLong::FunctionEnterLong(FunctionEnterLong&& funcinfo);
-		FunctionEnterLong::FunctionEnterLong(FunctionEnterLong& funcinfo) = delete;
-		~FunctionEnterLong();
+		FunctionTailQuick(FunctionID data, ThreadID threadid, __int64 timestamp);
+		~FunctionTailQuick();
 		virtual std::shared_ptr<std::vector<char>> Encode();
 		virtual std::shared_ptr<ICommand> Decode(std::shared_ptr<std::vector<char>> &data);
 		virtual std::wstring Name();
@@ -19,10 +15,12 @@ namespace Commands
 		virtual short Code() { return code; }
 
 	private:
-		InformationClasses::FunctionInfo m_data;
-		std::vector<char> m_internalvector;
+		__int64 function;
+		__int64 thread;
 		short code;
+		std::shared_ptr<std::vector<char>> m_internalvector;
 		bool hasEncoded;
+		__int64 timestamp;
 	};
 
 }

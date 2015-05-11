@@ -1,16 +1,44 @@
-enum class STRINGCOMPARE
-{
-	BEGIN,
-	CONTAINS,
-	END
-};
+
+
+
 struct ItemMapping
 {
-	std::wstring ItemName;
-	STRINGCOMPARE compare;
-	BOOL IsEntryPoint;
-	BOOL NegateCompare;
-	BOOL operator == (const std::wstring &strCompare);
+	enum class MatchType
+	{
+		FullyQualified,				// System.Console::WriteLine(string)
+		FunctionAndSignature,		// WriteLine(string)
+		FunctionAndClass,			// System.Console::WriteLine
+		FunctionOnly,				// WriteLine
+		FullyQualifiedDerivesFrom,	// System.Data.IDbCommand::.ctor(System.Data.IDbConnection)
+		DerivesFrom,				// System.Data.IDbCommand::Execute
+		AllInModule,				// EVERYTHING in the specified Module
+		AllInClass,					// EVERYTHING in the specified Class
+		AllInAssembly				// EVERYTHING in the specified Assembly
+	};
+
+	enum class StringMatchMethod
+	{
+		BEGIN,
+		CONTAINS,
+		END
+	};
+
+	std::wstring FunctionName;
+	std::wstring ClassName;
+	std::wstring AssemblyName;
+	std::wstring ModuleName;
+	std::wstring DerivesFrom;
+	std::wstring Signature;
+
+	std::wstring HashString;
+
+	StringMatchMethod Compare;
+	MatchType Match;
+
+	bool operator == (const std::wstring &strCompare);
+
+	bool IgnoreGetters;
+	bool IgnoreSetters;
 };
 
 class EqualFn
@@ -18,18 +46,111 @@ class EqualFn
 public:
 	bool operator() (ItemMapping * t1, ItemMapping * t2) const
 	{
-
-		return !(t1->ItemName.compare(t2->ItemName));
+		switch (t1->Match)
+		{
+		case ItemMapping::MatchType::AllInAssembly:
+			return t1->AssemblyName == t2->AssemblyName;
+			break;
+		case ItemMapping::MatchType::AllInClass:
+			return t1->ClassName == t2->ModuleName;
+			break;
+		case ItemMapping::MatchType::AllInModule:
+			return t1->ModuleName == t2->ClassName;
+			break;
+		case ItemMapping::MatchType::DerivesFrom:
+			return t1->DerivesFrom == t2->DerivesFrom;
+			break;
+		case ItemMapping::MatchType::FullyQualified:
+			return (t1->ClassName == t2->ClassName) && (t1->FunctionName == t2->FunctionName) && (t1->Signature == t2->Signature);
+			break;
+		case ItemMapping::MatchType::FullyQualifiedDerivesFrom:
+			return (t1->DerivesFrom == t2->DerivesFrom) && (t1->ClassName == t2->ClassName) && (t1->FunctionName == t2->FunctionName) && (t1->Signature == t2->Signature);
+			break;
+		case ItemMapping::MatchType::FunctionAndClass:
+			return (t1->ClassName == t2->ClassName) && (t1->FunctionName == t2->FunctionName);
+			break;
+		case ItemMapping::MatchType::FunctionAndSignature:
+			return (t1->FunctionName == t2->FunctionName) && (t1->Signature == t2->Signature);
+			break;
+		case ItemMapping::MatchType::FunctionOnly:
+			return t1->FunctionName == t2->FunctionName;
+			break;
+		default:
+			break;
+		}
 	}
 };
-
 
 class Hasher
 {
 public:
 	size_t operator() (ItemMapping *key) const
 	{
-		return std::hash<std::wstring>()(key->ItemName);
+		switch (key->Match)
+		{
+		case ItemMapping::MatchType::AllInAssembly:
+			if (!key->HashString.length() > 0)
+			{
+				key->HashString = key->AssemblyName;
+			}
+			break;
+		case ItemMapping::MatchType::AllInClass:
+			if (!key->HashString.length() > 0)
+			{
+				key->HashString = key->ClassName;
+			}
+			break;
+		case ItemMapping::MatchType::AllInModule:
+			if (!key->HashString.length() > 0)
+			{
+				key->HashString = key->ModuleName;
+			}
+			break;
+		case ItemMapping::MatchType::DerivesFrom:
+			if (!key->HashString.length() > 0)
+			{
+				key->HashString = key->DerivesFrom;
+			}
+			break;
+		case ItemMapping::MatchType::FullyQualified:
+			if (!key->HashString.length() > 0)
+			{
+				key->HashString.insert(0, key->DerivesFrom);
+				key->HashString.insert(key->DerivesFrom.length(), key->FunctionName);
+			}
+			break;
+		case ItemMapping::MatchType::FullyQualifiedDerivesFrom:
+			if (!key->HashString.length() > 0)
+			{
+				key->HashString.insert(0, key->DerivesFrom);
+				key->HashString.insert(key->DerivesFrom.length(), key->FunctionName);
+				key->HashString.insert(key->DerivesFrom.length() + key->FunctionName.length(), key->Signature);
+			}
+			break;
+		case ItemMapping::MatchType::FunctionAndClass:
+			if (!key->HashString.length() > 0)
+			{
+				key->HashString.insert(0, key->ClassName);
+				key->HashString.insert(key->ClassName.length(), key->FunctionName);
+			}
+			break;
+		case ItemMapping::MatchType::FunctionAndSignature:
+			if (!key->HashString.length() > 0)
+			{
+				key->HashString.insert(0, key->FunctionName);
+				key->HashString.insert(key->FunctionName.length(), key->Signature);
+			}
+			break;
+		case ItemMapping::MatchType::FunctionOnly:
+			if (!key->HashString.length() > 0)
+			{
+				key->HashString = key->FunctionName;
+			}
+			break;
+		default:
+			break;
+		}
+		return std::hash<std::wstring>()(key->HashString);
 	}
 };
 
@@ -44,6 +165,7 @@ public:
 };
 
 #include <list>
+#include <set>
 #include <memory>
 #include <allocators>
 
@@ -55,6 +177,7 @@ public:
 //class Cprofilermain;
 #pragma once
 #include "FunctionInfo.h"
+
 class StackItemBase;
 class MetadataHelpers;
 
@@ -64,7 +187,100 @@ _ALLOCATOR_DECL(CACHE_FREELIST(stdext::allocators::max_fixed_size<50000>), stdex
 
 namespace std{
 	template<>
-	class hash < ItemMapping > ;
+	class hash < ItemMapping >
+	{
+	public:
+		size_t operator() (const ItemMapping& key)
+		{
+			return std::hash<std::wstring>()(key.FunctionName);
+		}
+	};
+}
+
+namespace std{
+	template<>
+	class equal_to < ItemMapping >
+	{
+	public:
+		bool operator() (const ItemMapping& t1, const ItemMapping& t2) const
+		{
+			switch (t1.Match)
+			{
+			case ItemMapping::MatchType::AllInAssembly:
+				return t1.AssemblyName == t2.AssemblyName;
+				break;
+			case ItemMapping::MatchType::AllInClass:
+				return t1.ClassName == t2.ModuleName;
+				break;
+			case ItemMapping::MatchType::AllInModule:
+				return t1.ModuleName == t2.ClassName;
+				break;
+			case ItemMapping::MatchType::DerivesFrom:
+				return t1.DerivesFrom == t2.DerivesFrom;
+				break;
+			case ItemMapping::MatchType::FullyQualified:
+				return (t1.ClassName == t2.ClassName) && (t1.FunctionName == t2.FunctionName) && (t1.Signature == t2.Signature);
+				break;
+			case ItemMapping::MatchType::FullyQualifiedDerivesFrom:
+				return (t1.DerivesFrom == t2.DerivesFrom) && (t1.ClassName == t2.ClassName) && (t1.FunctionName == t2.FunctionName) && (t1.Signature == t2.Signature);
+				break;
+			case ItemMapping::MatchType::FunctionAndClass:
+				return (t1.ClassName == t2.ClassName) && (t1.FunctionName == t2.FunctionName);
+				break;
+			case ItemMapping::MatchType::FunctionAndSignature:
+				return (t1.FunctionName == t2.FunctionName) && (t1.Signature == t2.Signature);
+				break;
+			case ItemMapping::MatchType::FunctionOnly:
+				return t1.FunctionName == t2.FunctionName;
+				break;
+			default:
+				break;
+			}
+		}
+	};
+}
+
+namespace std{
+	template<>
+	class less < ItemMapping >
+	{
+	public:
+		bool operator() (const ItemMapping& t1, const ItemMapping&  t2) const
+		{
+			switch (t2.Match)
+			{
+			case ItemMapping::MatchType::AllInAssembly:
+				return t1.AssemblyName == t2.AssemblyName;
+				break;
+			case ItemMapping::MatchType::AllInClass:
+				return t1.ClassName == t2.ModuleName;
+				break;
+			case ItemMapping::MatchType::AllInModule:
+				return t1.ModuleName == t2.ClassName;
+				break;
+			case ItemMapping::MatchType::DerivesFrom:
+				return t1.DerivesFrom == t2.DerivesFrom;
+				break;
+			case ItemMapping::MatchType::FullyQualified:
+				return (t1.ClassName == t2.ClassName) && (t1.FunctionName == t2.FunctionName) && (t1.Signature == t2.Signature);
+				break;
+			case ItemMapping::MatchType::FullyQualifiedDerivesFrom:
+				return (t1.DerivesFrom == t2.DerivesFrom) && (t1.ClassName == t2.ClassName) && (t1.FunctionName == t2.FunctionName) && (t1.Signature == t2.Signature);
+				break;
+			case ItemMapping::MatchType::FunctionAndClass:
+				return (t1.ClassName == t2.ClassName) && (t1.FunctionName == t2.FunctionName);
+				break;
+			case ItemMapping::MatchType::FunctionAndSignature:
+				return (t1.FunctionName == t2.FunctionName) && (t1.Signature == t2.Signature);
+				break;
+			case ItemMapping::MatchType::FunctionOnly:
+				return t1.FunctionName == t2.FunctionName;
+				break;
+			default:
+				break;
+			}
+		}
+	};
 }
 
 
@@ -79,54 +295,13 @@ struct  ContainerClass
 
 	// As a function is mapped we want to keep a reference to it's specific details so we can 
 	// use it again when generating the call stack.
-	std::map<FunctionID, InformationClasses::FunctionInfo*> * g_FunctionSet;
-
-	// Holds pointers to StackItemBase polymorphic class. This class is an extensible map of objects
-	// that describe the state of this thread.
-	std::map<ThreadID, std::deque<std::shared_ptr<StackItemBase>>> * g_ThreadStackMap;
-
-	std::queue<std::shared_ptr<StackItemBase>> * g_BigStack;
-
-	// In order to properly capture units of work we need to have a container that allows for an "arbitrary" entry point
-	// the best example is a web request. It is assigned to a thread on a thread pool, so the thread may have to be created
-	// or it can be reused. In this case we would not have an entry point and the thread would execute "forever".
-	std::map<LONGLONG, std::deque<std::shared_ptr<StackItemBase>>> * g_EntryPointStackMap;
-
-	// Entrypoint counter. The max number is 18,446,744,073,709,551,614 ... we should NEVER reach that.
-	// If we were to assume that each entrypoint executed in 1ms and we could execute 96 at a time, that means we could execute 96,000 in a second.
-	// Doing the math it would be about 600,000 years before we hit the counter limit. 
-	volatile LONGLONG currentEntryPointCounter;
-
-	// Keeps track of the current entrypoint on a thread.
-	std::map<ThreadID, ULONGLONG> * g_ThreadEntrypointID;
-
-	// Holds the current depth of the stack based on the Enter / Leave / Tail calls
-	std::map<ThreadID, volatile unsigned int> * g_ThreadStackDepth;
-
-	// Holds the current sequence of the stack items
-	std::map<ThreadID, volatile unsigned int> * g_ThreadStackSequence;
-
-	// Holds the current number of functions that we've entered and exited. This will be used to stop
-	// further additions to the stack. This really won't change performance too drastically, however it
-	// will allow us to save memory
-	std::map<ThreadID, volatile unsigned int> * g_ThreadFunctionCount;
-
-	// This map is used to link together two threads as a parent and child. 
-	std::map<ThreadID, UINT_PTR> * g_ThreadSpawnMap;
+	std::map<FunctionID, std::unique_ptr<InformationClasses::FunctionInfo>> * g_FunctionSet;
+	std::map<ClassID, std::unique_ptr<InformationClasses::ClassInfo>> * g_ClassSet;
+	std::map<AssemblyID, std::unique_ptr<InformationClasses::AssemblyInfo>> * g_AssemblySet;
+	std::map<ModuleID, std::unique_ptr<InformationClasses::ModuleInfo>> * g_ModuleSet;
+	std::unordered_multiset<ItemMapping> * g_FullyQualifiedMethodsToProfile;
 
 
-	// **************************************** TESTING CLASSES ****************************************
-	// This collection is used to validate that we should be mapping this function. As of right now,
-	// for testing, we have this in both the mapper function and the ELT functions. Once we're out of
-	// the testing phase this collection will only be used in the mapper and we can remove the extraneous
-	// call to the find() method in the hooks.
-	std::unordered_set < ItemMapping*, Hasher, EqualFn> *g_FunctionNameSet;
-	// This collection is used to validate that we should be mapping this entire class. As of right now,
-	// for testing, we have this in both the mapper function and the ELT functions. Once we're out of
-	// the testing phase this collection will only be used in the mapper and we can remove the extraneous
-	// call to the find() method in the hooks.
-	std::unordered_set<std::wstring> * g_ClassNameSet;
-	// **************************************** TESTING CLASSES ****************************************
 
 	///////////////////////////////////////////////////////////////////////////////////////
 	// _Critical Sections 

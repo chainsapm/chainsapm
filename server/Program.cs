@@ -26,14 +26,21 @@ namespace ChainsAPM.ConsoleServer
 
         static void Main(string[] args)
         {
-            Dictionary<int, ChainsAPM.Interfaces.ICommand<byte>> CommandList = new Dictionary<int, ICommand<byte>>() ;
+            Dictionary<int, ChainsAPM.Interfaces.ICommand<byte>> CommandList = new Dictionary<int, ICommand<byte>>();
             var cmd1 = new ChainsAPM.Commands.Common.SendString("");
-            var cmd2 = new ChainsAPM.Commands.Agent.FunctionEnterQuick(0, 0);
-            var cmd3 = new ChainsAPM.Commands.Agent.FunctionLeaveQuick(0, 0);
+            var cmd2 = new ChainsAPM.Commands.Agent.FunctionEnterQuick(0, 0, 0);
+            var cmd3 = new ChainsAPM.Commands.Agent.FunctionLeaveQuick(0, 0, 0);
+            var cmd4 = new ChainsAPM.Commands.Agent.AgentInformation();
+            var cmd5 = new ChainsAPM.Commands.Agent.FunctionTailQuick(0, 0, 0);
+            var cmd6 = new ChainsAPM.Commands.Agent.DefineFunction(0, 0, "", 0);
+
             CommandList.Add(cmd1.Code, cmd1);
-            CommandList.Add(0x03, cmd1); // SendString handles Unicode and ASCII
+            CommandList.Add(cmd1.Code + 1, cmd1); // SendString handles Unicode and ASCII
             CommandList.Add(cmd2.Code, cmd2);
             CommandList.Add(cmd3.Code, cmd3);
+            CommandList.Add(cmd4.Code, cmd4);
+            CommandList.Add(cmd5.Code, cmd5);
+            CommandList.Add(cmd6.Code, cmd6);
             CallContext.LogicalSetData("CommandProviders", CommandList);
             GC.RegisterForFullGCNotification(30, 50);
             System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.LowLatency;
@@ -117,8 +124,6 @@ namespace ChainsAPM.ConsoleServer
                 lock (lockConsole)
                 {
                     Console.WriteLine("Current connected clients: {0}\t\tPackets: {1}", clientsConnected, messagesRecvd);
-                    //Console.WriteLine("Collection Counts:\tGen0: {0:00}\tGen1: {1:00}\tGen2: {2:00}", GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
-
                 }
                 System.Threading.Thread.Sleep(1000);
             }
@@ -182,16 +187,28 @@ namespace ChainsAPM.ConsoleServer
             var tcbah = sender as TcpByteAgentHandler;
             lock (lockConsole)
             {
-                Console.WriteLine("Agent {0:X} disconnected.", tcbah.GetHashCode());
+                tcbah.DisconnectedTime = DateTime.Now;
+                Console.WriteLine("Agent {0} disconnected. It was connected for {1}", tcbah.AgentInfo.AgentName, (tcbah.DisconnectedTime - tcbah.ConnectedTime));
             }
 
+            var fstream = System.IO.File.CreateText(string.Format(@"C:\Logfiles\{0}_{1}.txt", tcbah.AgentInfo.AgentName, tcbah.ConnectedTime.ToFileTime()));
+            foreach (var item in tcbah.ThreadEntryPoint)
+            {
+                fstream.WriteLine("Starting Thread {0:X}", item.Key);
+                foreach (var tpe_list in item.Value)
+                {
+                    fstream.WriteLine("{0}{1}", "".PadLeft((int)tpe_list.Item1), tcbah.FunctionList[tpe_list.Item2]);
+                }
+            }
+            fstream.Flush();
+            fstream.Close();
             TcpByteAgentHandler refOut = null;
             concurrentAgentHandlerList.TryRemove(tcbah.GetHashCode(), out refOut);
             if (refOut != null)
             {
                 lock (lockConsole)
                 {
-                    Console.WriteLine("<<<<Agent {0:X} removed from list.", tcbah.GetHashCode());
+                    Console.WriteLine("<<<<Agent {0} removed from list.", tcbah.AgentInfo.AgentName);
                 }
                 Task.Factory.StartNew(async () =>
                 {
@@ -206,13 +223,73 @@ namespace ChainsAPM.ConsoleServer
         {
             var tcbah = sender as TcpByteAgentHandler;
             var stringCmd = new ChainsAPM.Commands.Common.SendString("Done!");
-            tcbah.SendCommand(stringCmd);
             var arr = tcbah.GetCommands();
             foreach (var item in arr)
             {
                 System.Threading.Interlocked.Increment(ref messagesRecvd);
                 if (item != null)
                 {
+                    if (item is ChainsAPM.Commands.Agent.DefineFunction)
+                    {
+                        var DefFunc = item as ChainsAPM.Commands.Agent.DefineFunction;
+                        tcbah.FunctionList.Add(DefFunc.FunctionID, DefFunc.FunctionName);
+                    }
+                    if (item is ChainsAPM.Commands.Agent.AgentInformation)
+                    {
+                        tcbah.AgentInfo = item as ChainsAPM.Commands.Agent.AgentInformation;
+                        tcbah.ConnectedTime = DateTime.Now;
+                        Console.WriteLine("Agent {0} connected with version {1} from machine {2}", ((ChainsAPM.Commands.Agent.AgentInformation)item).AgentName, ((ChainsAPM.Commands.Agent.AgentInformation)item).Version, ((ChainsAPM.Commands.Agent.AgentInformation)item).MachineName);
+                    }
+                    if (item is ChainsAPM.Commands.Agent.FunctionEnterQuick)
+                    {
+                        var feq = item as ChainsAPM.Commands.Agent.FunctionEnterQuick;
+                        if (!tcbah.ThreadDepth.ContainsKey(feq.ThreadID))
+                            tcbah.ThreadDepth.Add(feq.ThreadID, 0);
+
+                        if (!tcbah.ThreadEntryPoint.ContainsKey(feq.ThreadID))
+                            tcbah.ThreadEntryPoint.Add(feq.ThreadID, new List<Tuple<long, long>>());
+
+                        tcbah.ThreadEntryPoint[feq.ThreadID].Add(new Tuple<long, long>(tcbah.ThreadDepth[feq.ThreadID], feq.FunctionID));
+                        tcbah.ThreadDepth[feq.ThreadID]++;
+                    }
+
+                    if (item is ChainsAPM.Commands.Agent.FunctionTailQuick)
+                    {
+                        var feq = item as ChainsAPM.Commands.Agent.FunctionTailQuick;
+                        if (!tcbah.ThreadDepth.ContainsKey(feq.ThreadID))
+                            tcbah.ThreadDepth.Add(feq.ThreadID, 0);
+
+                        if (tcbah.ThreadDepth[feq.ThreadID] > 0)
+                        {
+                            tcbah.ThreadDepth[feq.ThreadID]--;
+                        }
+
+
+                        if (!tcbah.ThreadEntryPoint.ContainsKey(feq.ThreadID))
+                            tcbah.ThreadEntryPoint.Add(feq.ThreadID, new List<Tuple<long, long>>());
+
+                        tcbah.ThreadEntryPoint[feq.ThreadID].Add(new Tuple<long, long>(tcbah.ThreadDepth[feq.ThreadID], feq.FunctionID));
+
+
+                    }
+
+                    if (item is ChainsAPM.Commands.Agent.FunctionLeaveQuick)
+                    {
+                        var feq = item as ChainsAPM.Commands.Agent.FunctionLeaveQuick;
+                        if (!tcbah.ThreadDepth.ContainsKey(feq.ThreadID))
+                            tcbah.ThreadDepth.Add(feq.ThreadID, 0);
+
+                        if (tcbah.ThreadDepth[feq.ThreadID] > 0)
+                        {
+                            tcbah.ThreadDepth[feq.ThreadID]--;
+                        }
+
+                        if (!tcbah.ThreadEntryPoint.ContainsKey(feq.ThreadID))
+                            tcbah.ThreadEntryPoint.Add(feq.ThreadID, new List<Tuple<long, long>>());
+
+                        tcbah.ThreadEntryPoint[feq.ThreadID].Add(new Tuple<long, long>(tcbah.ThreadDepth[feq.ThreadID], feq.FunctionID));
+
+                    }
                     if (item is ChainsAPM.Commands.Common.SendString)
                     {
                         if (((ChainsAPM.Commands.Common.SendString)item).StringData == "Done!")

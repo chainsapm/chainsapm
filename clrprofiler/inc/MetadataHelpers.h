@@ -1,8 +1,7 @@
 #ifndef METADATAHELPERS_H
 #define METADATAHELPERS_H
-#include "commonstructures.h"
 #include "FunctionInfo.h"
-#include "ParameterInfo.h"
+
 
 #define MAX_LENGTH 2048
 
@@ -21,7 +20,12 @@ public:
 
 	STDMETHOD(GetCurrentThread)(ThreadID* threadId);
 	STDMETHOD(GetFunctionInformation)(FunctionID funcId, InformationClasses::FunctionInfo* funcInfo);
+	STDMETHOD(GetClassInformation)(ClassID classId, InformationClasses::ClassInfo* funcInfo);
+	STDMETHOD(GetModuleInformation)(ModuleID moduleId, InformationClasses::ModuleInfo* funcInfo);
+	STDMETHOD(GetAssemblyInformation)(AssemblyID assemblyId, InformationClasses::AssemblyInfo* funcInfo);
 	STDMETHOD(GetArguments)(FunctionID funcId, mdToken MethodDataToken);
+
+
 	STDMETHOD(InjectFieldToModule)(const ModuleID& ModuleId, const mdTypeDef& classTypeDef,
 		const std::wstring& fieldName);
 

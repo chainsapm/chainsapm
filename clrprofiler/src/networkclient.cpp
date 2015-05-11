@@ -73,15 +73,6 @@ void NetworkClient::Shutdown()
 	closesocket(m_SocketConnection);
 }
 
-// Send a single command to the buffer to be processed.
-HRESULT NetworkClient::SendRoutedCommand(std::shared_ptr<Commands::RouteCommand> packet)
-{
-	/*auto cshFQ = critsec_helper::critsec_helper(&FrontOutboundLock);
-	m_OutboundQueueFront.emplace(packet->Encode());
-	cshFQ.leave_early();*/
-	return S_OK;
-}
-
 
 // Receive a single command from the buffer to be processed.
 std::shared_ptr<Commands::ICommand> NetworkClient::ReceiveCommand()
@@ -91,7 +82,7 @@ std::shared_ptr<Commands::ICommand> NetworkClient::ReceiveCommand()
 		critsec_helper::critsec_helper(&FrontInboundLock);
 		auto itemtodecodeout = m_InboundQueueFront.front();
 		auto cmdnumber = itemtodecodeout->at(4);
-		itemout = m_CommandList[cmdnumber].Decode(itemtodecodeout);
+		itemout = m_CommandList[cmdnumber]->Decode(itemtodecodeout);
 		m_InboundQueueBack.pop();
 	}
 	return itemout;
@@ -117,7 +108,7 @@ std::vector<std::shared_ptr<Commands::ICommand>>& NetworkClient::ReceiveCommands
 		{
 			auto itemtodecodeout = m_InboundQueueFront.front();
 			auto cmdnumber = itemtodecodeout->at(4);
-			auto itemout = m_CommandList[cmdnumber].Decode(itemtodecodeout);
+			auto itemout = m_CommandList[cmdnumber]->Decode(itemtodecodeout);
 			cmdlist.emplace_back(itemout);
 			m_InboundQueueBack.pop();
 		}
@@ -136,7 +127,7 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 		std::queue<std::shared_ptr<std::vector<char>>> * m_Passable = new std::queue<std::shared_ptr<std::vector<char>>>();
 		netClient->insideSendLock = true;
 		WSABUF *bufs = NULL;
-		int bufscount = 0;
+		size_t bufscount = 0;
 		{
 			auto cshFQ = critsec_helper::critsec_helper(&netClient->FrontOutboundLock);
 			auto cshBQ = critsec_helper::critsec_helper(&netClient->BackOutboundLock);
@@ -146,15 +137,15 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 		}
 
 		auto cshBQ = critsec_helper::critsec_helper(&netClient->BackOutboundLock);
-		int buffersize = netClient->m_OutboundQueueBack.size() + 2;
+		size_t buffersize = netClient->m_OutboundQueueBack.size() + 2;
 		bufs = new WSABUF[buffersize];
 		int counter = 1;
-		int sizeCounter = 0;
+		size_t sizeCounter = 0;
 		while (!netClient->m_OutboundQueueBack.empty())
 		{
 			auto itemtodecodeout = netClient->m_OutboundQueueBack.front();
 			bufs[counter].buf = itemtodecodeout->data();
-#pragma warning(suppress : 4267) // I'm only sending max 4k of data in one command however, the size() prop is long long. This is valid.
+#pragma warning(suppress : 4267) // I'm only sending max 4k of data in one command however, the size() prop is __int64. This is valid.
 			bufs[counter].len = itemtodecodeout->size();
 			netClient->m_OutboundQueueBack.pop();
 			m_Passable->emplace(itemtodecodeout);
@@ -210,8 +201,6 @@ VOID CALLBACK NetworkClient::ReceiveTimerCallback(
 	if (!netClient->insideReceiveLock)
 	{
 		netClient->insideReceiveLock = true;
-
-
 		auto bigBufferChars = new char[10 * 1024];
 		LPWSABUF bigBuffer = new WSABUF;
 		bigBuffer->buf = bigBufferChars;
@@ -239,7 +228,8 @@ VOID CALLBACK NetworkClient::ReceiveTimerCallback(
 		{
 			CancelThreadpoolIo(NetworkClient::m_ptpIO);
 		}
-		WaitForThreadpoolIoCallbacks(NetworkClient::m_ptpIO, FALSE);
+		// If there is nothing here we need to continue
+		WaitForThreadpoolIoCallbacks(NetworkClient::m_ptpIO, TRUE);
 		netClient->insideReceiveLock = false;
 	}
 }
@@ -257,7 +247,7 @@ void CALLBACK NetworkClient::NewDataReceived(
 		auto buffOut = (LPWSABUF)lpOverlapped->hEvent;
 		auto charBuff = (char*)buffOut->buf;
 		auto iterBuff = (char*)buffOut->buf;
-		int totalBuffSize = *(int*)charBuff;
+		DWORD totalBuffSize = *(DWORD*)charBuff;
 		if (totalBuffSize == cbTransferred)
 		{
 			auto term = *(unsigned int*)charBuff[totalBuffSize - 4];
@@ -267,7 +257,7 @@ void CALLBACK NetworkClient::NewDataReceived(
 				while (iterBuff < iterBuff + (totalBuffSize - 4))
 		{
 					int localBufferSize = *(int*)iterBuff;
-					short term = *(short*)(iterBuff + localBufferSize - 2);
+					//short term = *(short*)(iterBuff + localBufferSize - 2);
 					iterBuff += localBufferSize;
 				}
 			}
@@ -317,4 +307,74 @@ VOID CALLBACK NetworkClient::IoCompletionCallback(
 void NetworkClient::SetPTPIO(PTP_IO ptpIO)
 {
 	NetworkClient::m_ptpIO = ptpIO;
+}
+
+HRESULT NetworkClient::SendNow()
+{
+	auto netClient = this;
+	if (!netClient->insideSendLock)
+	{
+		std::queue<std::shared_ptr<std::vector<char>>> * m_Passable = new std::queue<std::shared_ptr<std::vector<char>>>();
+		netClient->insideSendLock = true;
+		WSABUF *bufs = NULL;
+		int bufscount = 0;
+		{
+			auto cshFQ = critsec_helper::critsec_helper(&netClient->FrontOutboundLock);
+			auto cshBQ = critsec_helper::critsec_helper(&netClient->BackOutboundLock);
+			netClient->m_OutboundQueueBack.swap(netClient->m_OutboundQueueFront);
+			cshBQ.leave_early();
+			cshFQ.leave_early();
+		}
+
+		auto cshBQ = critsec_helper::critsec_helper(&netClient->BackOutboundLock);
+		size_t buffersize = netClient->m_OutboundQueueBack.size() + 2;
+		bufs = new WSABUF[buffersize];
+		int counter = 1;
+		size_t sizeCounter = 0;
+		while (!netClient->m_OutboundQueueBack.empty())
+		{
+			auto itemtodecodeout = netClient->m_OutboundQueueBack.front();
+			bufs[counter].buf = itemtodecodeout->data();
+#pragma warning(suppress : 4267) // I'm only sending max 4k of data in one command however, the size() prop is __int64. This is valid.
+			bufs[counter].len = itemtodecodeout->size();
+			netClient->m_OutboundQueueBack.pop();
+			m_Passable->emplace(itemtodecodeout);
+			++counter;
+			sizeCounter += itemtodecodeout->size();
+		}
+		cshBQ.leave_early();
+		sizeCounter += 8;
+		char *size = (char*)&sizeCounter;
+		char term[] = { 0xCC, 0xCC, 0xCC, 0xCC };
+		bufs[0].buf = size;
+		bufs[0].len = 4;
+		bufs[counter].buf = term;
+		bufs[counter].len = 4;
+
+		bufscount = buffersize;
+
+		if (bufscount > 2)
+		{
+			NetClietCallback *ncc = new NetClietCallback();
+			ncc->netclient = netClient;
+			ncc->sendqueue = m_Passable;
+			DWORD bytesSent = 0;
+			DWORD flags = 0;
+			auto result = WSASend(netClient->m_SocketConnection, bufs, bufscount, &bytesSent, flags, nullptr, nullptr);
+			if (!result)
+			{
+				result = WSA_IO_PENDING;
+			}
+			else
+			{
+				result = WSAGetLastError();
+			}
+			if (WSA_IO_PENDING != result)
+			{
+				CancelThreadpoolIo(NetworkClient::m_ptpIO);
+			}
+		}
+		netClient->insideSendLock = false;
+	}
+	return S_OK;
 }

@@ -4,8 +4,12 @@ namespace InformationClasses {
 #pragma pack(1)
 	struct AgentInfo
 	{
+		AgentInfo()
+		{
+			Code = 0X5;
+		}
 		int Length;
-		short Code = 5;
+		short Code;
 		enum class Capabilities
 		{
 			PROFILE = 0x1, // Can attach to CLR profiler
@@ -26,13 +30,16 @@ namespace InformationClasses {
 			RESERVED9 = 0x8000
 		} AgentCapabilities;
 
-		__int32 AgentNameLen;
-		__int32 AgentHash;
-		wchar_t AgentName[255];
+
 		__int8 AgentMajorVersion;
 		__int8 AgentMinorVersion;
 		__int8 AgentIncrementalVersion;
-
+		__int32 MachineNameLen;
+		__int32 MachineNameHash;
+		wchar_t MachineName[16];
+		__int32 AgentNameLen;
+		__int32 AgentHash;
+		wchar_t AgentName[0];
 	};
 
 }

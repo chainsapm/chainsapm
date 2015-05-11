@@ -1,5 +1,5 @@
 // wrapper for dlldata.c
-
+#pragma warning( disable : 4206 )
 #ifdef _MERGE_PROXYSTUB // merge proxy stub DLL
 
 #define REGISTER_PROXY_DLL //DllRegisterServer, etc.

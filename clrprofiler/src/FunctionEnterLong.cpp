@@ -3,7 +3,8 @@
 
 namespace Commands{
 
-	FunctionEnterLong::FunctionEnterLong(InformationClasses::FunctionInfo funcinfo) : m_data(funcinfo)
+	FunctionEnterLong::FunctionEnterLong(InformationClasses::FunctionInfo funcinfo) 
+		: m_data(funcinfo), code(0x0)
 	{
 	}
 
@@ -31,7 +32,7 @@ namespace Commands{
 	{
 		if (!hasEncoded)
 		{
-#pragma warning(suppress : 4267) // I'm only sending max 4k of data in one command however, the length() prop is long long. This is valid.
+#pragma warning(suppress : 4267) // I'm only sending max 4k of data in one command however, the length() prop is __int64. This is valid.
 			__int32 size = 4 + 1 + sizeof(FunctionID) + 2;
 
 			m_internalvector = std::vector<char>(size);
@@ -63,6 +64,7 @@ namespace Commands{
 
 	std::shared_ptr<ICommand> FunctionEnterLong::Decode(std::shared_ptr<std::vector<char>> &data)
 	{
-		return std::make_shared<ICommand>(ICommand());
+		
+		return std::make_shared<FunctionEnterLong>(FunctionEnterLong(InformationClasses::FunctionInfo()));
 	}
 }

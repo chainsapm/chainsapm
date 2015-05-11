@@ -1,13 +1,15 @@
 #pragma once
 #include "ICommand.h"
+
 namespace Commands
 {
-	class FunctionLeaveQuick :
+	class DefineModule :
 		public virtual ICommand
 	{
 	public:
-		FunctionLeaveQuick(FunctionID data, ThreadID threadid, __int64 timestamp);
-		~FunctionLeaveQuick();
+		DefineModule(std::wstring& data);
+		DefineModule(std::string& data);
+		~DefineModule();
 		virtual std::shared_ptr<std::vector<char>> Encode();
 		virtual std::shared_ptr<ICommand> Decode(std::shared_ptr<std::vector<char>> &data);
 		virtual std::wstring Name();
@@ -15,12 +17,12 @@ namespace Commands
 		virtual short Code() { return code; }
 
 	private:
-		__int64 function;
-		__int64 thread;
-		short code;
+		std::wstring m_wstring;
+		std::string m_string;
 		std::shared_ptr<std::vector<char>> m_internalvector;
 		bool hasEncoded;
-		__int64 timestamp;
+		bool wchar = false;
+		short code;
 	};
 
 }

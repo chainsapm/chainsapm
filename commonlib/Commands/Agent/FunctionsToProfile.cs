@@ -6,30 +6,25 @@ using System.Threading.Tasks;
 
 namespace ChainsAPM.Commands.Agent
 {
-    public class FunctionLeaveQuick : Interfaces.ICommand<byte>
+    class FunctionsToProfile: Interfaces.ICommand<byte>
     {
-        public long FunctionID { get; set; }
+        public List<string> Functions { get; set; }
         public long ThreadID { get; set; }
-
-        public DateTime TimeStamp { get; set; }
-
-        public FunctionLeaveQuick(long functionid, long threadid, long timestamp)
+        public FunctionsToProfile(List<string> functions)
         {
-            FunctionID = functionid;
-            ThreadID = threadid;
-            TimeStamp = DateTime.FromFileTimeUtc(timestamp);
+            Functions = functions;
         }
         public string Name
         {
-            get { return "Function Leave Quick"; }
+            get { return "Send a list of functions to profile."; }
         }
         public ushort Code
         {
-            get { return 0x0019; }
+            get { return 0x0006; }
         }
         public string Description
         {
-            get { return "Event that represents a quick function enter--meaning there were no paramters captured by the agent."; }
+            get { return "Event that sends a list of functions that we want the profiler to actively instrument."; }
         }
         public Type CommandType
         {
@@ -37,6 +32,7 @@ namespace ChainsAPM.Commands.Agent
         }
         public Interfaces.ICommand<byte> Decode(ArraySegment<byte> input)
         {
+
             if (input.Count != 0)
             {
                 Helpers.ArraySegmentStream segstream = new Helpers.ArraySegmentStream(input);
@@ -46,7 +42,6 @@ namespace ChainsAPM.Commands.Agent
                     short code = segstream.GetInt16();
                     if (code == Code)
                     {
-                        var timestamp = segstream.GetInt64();
                         var function = segstream.GetInt64();
                         var thread = segstream.GetInt64();
                         var term = segstream.GetInt16();
@@ -54,7 +49,7 @@ namespace ChainsAPM.Commands.Agent
                         {
                             throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
                         }
-                        return new FunctionLeaveQuick(function, thread, timestamp);
+                        return new FunctionsToProfile(new List<string>());
                     }
                     else
                     {
@@ -73,14 +68,26 @@ namespace ChainsAPM.Commands.Agent
         }
         public byte[] Encode()
         {
-            var buffer = new List<byte>(23);
-            buffer.AddRange(BitConverter.GetBytes(23)); // 4 bytes for size, 2 byte for code, 8 bytes for data, 8 bytes for data, 2 bytes for term
+            int bufferSize = 0;
+            foreach (var item in Functions)
+            {
+                bufferSize += System.Text.UnicodeEncoding.Unicode.GetByteCount(item);
+                bufferSize += 4; // Include the bytes needed for the bytes integer
+            }
+            bufferSize += 2; // Include Terminator
+            var buffer = new List<byte>(bufferSize);
+
+            buffer.AddRange(BitConverter.GetBytes(bufferSize)); // 4 bytes for size, 2 byte for code, 8 bytes for data, 8 bytes for data, 2 bytes for term
             buffer.AddRange(BitConverter.GetBytes(Code));
-            buffer.AddRange(BitConverter.GetBytes(FunctionID));
-            buffer.AddRange(BitConverter.GetBytes(ThreadID));// 4 bytes for size, 1 byte for code, 8 bytes for data, 2 bytes for term
+            buffer.AddRange(BitConverter.GetBytes(Functions.Count));
+            foreach (var item in Functions)
+            {
+                buffer.AddRange(BitConverter.GetBytes(System.Text.UnicodeEncoding.Unicode.GetByteCount(item)));
+                buffer.AddRange(System.Text.UnicodeEncoding.Unicode.GetBytes(item));
+            }
             buffer.AddRange(BitConverter.GetBytes((short)0));
             return buffer.ToArray();
-
+            
         }
     }
 }

@@ -11,15 +11,16 @@ namespace ChainsAPM.Commands.Common
     {
         private string m_string;
 
-        private Helpers.Fnv1a32 hashhelper;
+        private Helpers.Fnv1a64 hashhelper;
 
         private byte[] m_hash;
         public SendString(string data)
         {
             m_string = data;
-            hashhelper = new Helpers.Fnv1a32();
+            hashhelper = new Helpers.Fnv1a64();
         }
-        public SendString(string data, byte[] hash) : this(data)
+        public SendString(string data, byte[] hash)
+            : this(data)
         {
             m_hash = hash;
         }
@@ -29,7 +30,7 @@ namespace ChainsAPM.Commands.Common
         }
         public ushort Code
         {
-            get { return 0x0001; }
+            get { return 0x0011; }
         }
         public string Description
         {
@@ -43,28 +44,25 @@ namespace ChainsAPM.Commands.Common
         {
             if (input.Count != 0)
             {
-                int offsetStart = input.Offset;
-                int size = BitConverter.ToInt32(input.Array, offsetStart);
+                Helpers.ArraySegmentStream segstream = new Helpers.ArraySegmentStream(input);
+                int size = segstream.GetInt32();
                 if (input.Count == size)
                 {
-                    short code = BitConverter.ToInt16(input.Array, offsetStart + 4);
-                    if (code == 0x01 | code == 0x02)
+                    int code = segstream.GetInt16();
+                    if (code == Code | code == Code + 1)
                     {
-                        // 4 bytes for the len
-                        // 1 byte for the code
-                        // 4 bytes for the hash (or md token)
-                        // x bytes for the string
-                        // 2 bytes for the null
+                        var strlen = segstream.GetInt32();
+                        var hashcode = segstream.GetInt64();
                         string s = null;
-                        if (code == 0x03)
+                        if (code == Code + 1)
                         {
-                            s = System.Text.UnicodeEncoding.Unicode.GetString(input.Array, offsetStart + 9, size - 11);
+                            s = segstream.GetUnicode(strlen);
                         }
                         else
                         {
-                            s = System.Text.UnicodeEncoding.Default.GetString(input.Array, offsetStart + 9, size - 11);
+                            s = segstream.GetASCII(strlen);
                         }
-                        
+
                         return new SendString(s);
                     }
                 }
@@ -73,19 +71,20 @@ namespace ChainsAPM.Commands.Common
         }
         public byte[] Encode()
         {
-            byte[] sBuffer = System.Text.UnicodeEncoding.Default.GetBytes(m_string);
+            byte[] sBuffer = System.Text.UnicodeEncoding.Unicode.GetBytes(m_string);
             var buffer = new List<byte>();
-            buffer.AddRange(BitConverter.GetBytes(sBuffer.Length + 11)); // 4 bytes for size, 4 for hash, 1 byte for code, 2 bytes for term
-            buffer.AddRange(new byte[] { 0x01 });
+            buffer.AddRange(BitConverter.GetBytes((sBuffer.Length * 2) + 20)); // 4 bytes for size, 2 byte for code, 4 bytes for strlen, 8 bytes for hash, Xbytes for string 2 bytes for term
+            buffer.AddRange(BitConverter.GetBytes((short)3));
             if (m_hash == null)
             {
                 m_hash = hashhelper.ComputeHash(sBuffer);
-            } 
+            }
+            buffer.AddRange(BitConverter.GetBytes(m_string.Length));
             buffer.AddRange(m_hash);
             buffer.AddRange(sBuffer);
             buffer.AddRange(new byte[] { 0x00, 0x00 });
             return buffer.ToArray();
-            
+
         }
         public string StringData { get { return m_string; } }
     }

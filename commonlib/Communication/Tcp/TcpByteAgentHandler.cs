@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ChainsAPM.Interfaces;
 using ChainsAPM.Commands.Common;
+using ChainsAPM.Commands.Agent;
 using System.Runtime.Remoting.Messaging;
 
 
@@ -19,9 +20,23 @@ namespace ChainsAPM.Communication.Tcp
             ReceiveHeavy,
             Balanced
         }
+        public AgentInformation AgentInfo { get; set; }
+        public DateTime ConnectedTime { get; set; }
+        public DateTime DisconnectedTime { get; set; }
+
         private Dictionary<int, Interfaces.ICommand<byte>> CommandList;
         private object cmdListLock;
+
+        public Dictionary<long, string> StringList;
+        public Dictionary<long, string> FunctionList;
+
+        public Dictionary<long, long> ThreadDepth;
+
+        // Thread Id, sequence, threadid
+        public Dictionary<long, List<Tuple<long, long>>> ThreadEntryPoint;
+
         private ITransport<byte[]> m_PacketHandler;
+        
         private object lockingOutbound;
         private object lockingInbound;
         private Queue<byte[]> blockingOutboundQueue;
@@ -59,6 +74,14 @@ namespace ChainsAPM.Communication.Tcp
             int recvTimerInterval = 250;
             CommandList = CallContext.LogicalGetData("CommandProviders") as Dictionary<int, Interfaces.ICommand<byte>>;
             cmdListLock = new object();
+
+            StringList = new Dictionary<long, string>();
+            FunctionList = new Dictionary<long, string>();
+
+            ThreadDepth = new Dictionary<long, long>();
+
+            // Thread Id, sequence, threadid
+            ThreadEntryPoint = new Dictionary<long, List<Tuple<long, long>>>();
 
             switch (handType)
             {

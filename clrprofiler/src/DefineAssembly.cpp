@@ -1,33 +1,35 @@
 #pragma once
 #include "stdafx.h"
-#include "SendString.h"
+#include "DefineAssembly.h"
 
 
 namespace Commands
 {
-	SendString::SendString(std::wstring& data) : m_wstring(data), hasEncoded(false), wchar(true)
+	DefineAssembly::DefineAssembly(std::wstring& data) 
+		: m_wstring(data), hasEncoded(false), wchar(true), code(0x0)
 	{
 	}
 
-	SendString::SendString(std::string& data) : m_string(data), hasEncoded(false)
+	DefineAssembly::DefineAssembly(std::string& data) 
+		: m_string(data), hasEncoded(false), code(0x0)
 	{
 	}
 
-	SendString::~SendString()
+	DefineAssembly::~DefineAssembly()
 	{
 	}
 
-	std::wstring SendString::Name()
+	std::wstring DefineAssembly::Name()
 	{
 		return L"Send String";
 	}
 
-	std::wstring SendString::Description()
+	std::wstring DefineAssembly::Description()
 	{
 		return L"Sends over a hash and a string for the sever to store.";
 	}
 
-	std::shared_ptr<std::vector<char>> SendString::Encode()
+	std::shared_ptr<std::vector<char>> DefineAssembly::Encode()
 	{
 
 
@@ -110,8 +112,8 @@ namespace Commands
 		return m_internalvector;
 	}
 
-	std::shared_ptr<ICommand> SendString::Decode(std::shared_ptr<std::vector<char>> &data)
+	std::shared_ptr<ICommand> DefineAssembly::Decode(std::shared_ptr<std::vector<char>> &data)
 	{
-		return std::make_shared<SendString>(SendString(m_wstring));
+		return std::make_shared<DefineAssembly>(DefineAssembly(m_wstring));
 	}
 }

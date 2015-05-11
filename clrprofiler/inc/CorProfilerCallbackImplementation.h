@@ -168,8 +168,9 @@ public:
 
 	virtual HRESULT STDMETHODCALLTYPE ExceptionSearchCatcherFound(FunctionID functionId);
 
+	// Not implemented by the CLR profiling API
 	virtual HRESULT STDMETHODCALLTYPE ExceptionOSHandlerEnter(UINT_PTR __unused);
-
+	// Not implemented by the CLR profiling API
 	virtual HRESULT STDMETHODCALLTYPE ExceptionOSHandlerLeave(UINT_PTR __unused);
 
 	virtual HRESULT STDMETHODCALLTYPE ExceptionUnwindFunctionEnter(FunctionID functionId);
@@ -188,8 +189,10 @@ public:
 
 	virtual HRESULT STDMETHODCALLTYPE COMClassicVTableDestroyed(ClassID wrappedClassId, REFGUID implementedIID, void *pVTable);
 
+	// Obsolete Method
 	virtual HRESULT STDMETHODCALLTYPE ExceptionCLRCatcherFound(void);
 
+	// Obsolete Method
 	virtual HRESULT STDMETHODCALLTYPE ExceptionCLRCatcherExecute(void);
 
 protected:

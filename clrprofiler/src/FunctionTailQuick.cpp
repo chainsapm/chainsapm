@@ -1,31 +1,32 @@
-#pragma once
 #include "stdafx.h"
-#include "FunctionEnterQuick.h"
+#include "FunctionTailQuick.h"
+
 
 namespace Commands
 {
-
-	FunctionEnterQuick::FunctionEnterQuick(FunctionID data, ThreadID threadid, __int64 timestamp) 
-		: function((__int64)data), thread((__int64)threadid), code(0x18), hasEncoded(false), timestamp(timestamp)
+	FunctionTailQuick::FunctionTailQuick(FunctionID data, ThreadID threadid, __int64 timestamp) 
+		: function((__int64)data), thread((__int64)threadid), code(0x1A), hasEncoded(false), timestamp(timestamp)
 	{
 	}
 
-	FunctionEnterQuick::~FunctionEnterQuick()
+	FunctionTailQuick::~FunctionTailQuick()
 	{
 	}
 
-	std::wstring FunctionEnterQuick::Name()
+	std::wstring FunctionTailQuick::Name()
 	{
 		return L"Function Enter (Quick)";
 	}
 
-	std::wstring FunctionEnterQuick::Description()
+	std::wstring FunctionTailQuick::Description()
 	{
 		return L"Sends over an enter method, from the ELT calls.";
 	}
 
-	std::shared_ptr<std::vector<char>> FunctionEnterQuick::Encode()
+	std::shared_ptr<std::vector<char>> FunctionTailQuick::Encode()
 	{
+
+
 		if (!hasEncoded)
 		{
 			size_t size = sizeof(__int32)	// len
@@ -36,11 +37,10 @@ namespace Commands
 				+ sizeof(short);			// term
 
 			auto vector = new char[size];
-
 			short term = 0;
 			auto v2 = (char*)memcpy(vector, &size, sizeof(__int32));
 			v2 += sizeof(__int32);
-			memcpy(v2 , &code, sizeof(short));
+			memcpy(v2, &code, sizeof(short));
 			v2 += sizeof(short);
 			memcpy(v2, &timestamp, sizeof(__int64));
 			v2 += sizeof(__int64);
@@ -56,10 +56,12 @@ namespace Commands
 		}
 
 		return m_internalvector;
+
 	}
 
-	std::shared_ptr<ICommand> FunctionEnterQuick::Decode(std::shared_ptr<std::vector<char>> &data)
+	std::shared_ptr<ICommand> FunctionTailQuick::Decode(std::shared_ptr<std::vector<char>> &data)
 	{
-		return std::make_shared<FunctionEnterQuick>(FunctionEnterQuick(0,0,0));
+		return std::make_shared<FunctionTailQuick>(FunctionTailQuick(0,0,0));
 	}
+
 }

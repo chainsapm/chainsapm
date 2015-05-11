@@ -1,8 +1,11 @@
 #pragma once
-class ModuleInfo
-{
-public:
-	ModuleInfo();
-	~ModuleInfo();
-};
+#include "AssemblyInfo.h"
 
+namespace InformationClasses {
+	class ModuleInfo
+	{
+	public:
+		ModuleInfo();
+		~ModuleInfo();
+	};
+}

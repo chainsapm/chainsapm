@@ -43,7 +43,7 @@ private:
 	
 
 	// List of ICommand implementations by code
-	std::map<short, Commands::ICommand> m_CommandList;
+	std::map<short, std::shared_ptr<Commands::ICommand>> m_CommandList;
 
 	// Double buffered queues for reading and writing so we don't bog down the enter/exit methods
 	std::queue<std::shared_ptr<std::vector<char>>> m_OutboundQueueFront;
@@ -106,7 +106,7 @@ public:
 	void Start();
 	// Shutdown the socket and stop send and recv.
 	void Shutdown();
-	HRESULT SendRoutedCommand(std::shared_ptr<Commands::RouteCommand> packet);
+
 
 	// Send a single command to the buffer to be processed.
 	template<typename C>
@@ -117,9 +117,15 @@ public:
 		cshFQ.leave_early();
 		return S_OK;
 	}
+
+	HRESULT SendNow();
+
 	std::shared_ptr<Commands::ICommand> ReceiveCommand();
+
 	HRESULT SendCommands(std::vector<std::shared_ptr<Commands::ICommand>> &packet);
+
 	std::vector<std::shared_ptr<Commands::ICommand>>& ReceiveCommands();
+
 	static HANDLE SendRecvEvent;
 	static VOID CALLBACK IoCompletionCallback(
 		_Inout_     PTP_CALLBACK_INSTANCE Instance,

@@ -3,7 +3,7 @@
 namespace Commands
 {
 	class FunctionLeaveLong :
-		public ICommand
+		public virtual ICommand
 	{
 	public:
 		FunctionLeaveLong();

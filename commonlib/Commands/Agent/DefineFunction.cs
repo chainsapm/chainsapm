@@ -6,26 +6,26 @@ using System.Threading.Tasks;
 
 namespace ChainsAPM.Commands.Agent
 {
-    public class FunctionLeaveQuick : Interfaces.ICommand<byte>
+    public class DefineFunction : Interfaces.ICommand<byte>
     {
         public long FunctionID { get; set; }
-        public long ThreadID { get; set; }
-
+        public long ClassID { get; set; }
+        public string FunctionName { get; set; }
         public DateTime TimeStamp { get; set; }
-
-        public FunctionLeaveQuick(long functionid, long threadid, long timestamp)
+        public DefineFunction(long functionid, long classid, string functioname, long timestamp)
         {
             FunctionID = functionid;
-            ThreadID = threadid;
+            ClassID = classid;
+            FunctionName = functioname;
             TimeStamp = DateTime.FromFileTimeUtc(timestamp);
         }
         public string Name
         {
-            get { return "Function Leave Quick"; }
+            get { return "Function Enter Quick"; }
         }
         public ushort Code
         {
-            get { return 0x0019; }
+            get { return 0x001B; }
         }
         public string Description
         {
@@ -37,6 +37,7 @@ namespace ChainsAPM.Commands.Agent
         }
         public Interfaces.ICommand<byte> Decode(ArraySegment<byte> input)
         {
+
             if (input.Count != 0)
             {
                 Helpers.ArraySegmentStream segstream = new Helpers.ArraySegmentStream(input);
@@ -46,15 +47,19 @@ namespace ChainsAPM.Commands.Agent
                     short code = segstream.GetInt16();
                     if (code == Code)
                     {
+
                         var timestamp = segstream.GetInt64();
                         var function = segstream.GetInt64();
-                        var thread = segstream.GetInt64();
+                        var classname = segstream.GetInt64();
+                        var strlen = segstream.GetInt32();
+                        var functionname = segstream.GetUnicode(strlen);
                         var term = segstream.GetInt16();
+
                         if (term != 0)
                         {
                             throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
                         }
-                        return new FunctionLeaveQuick(function, thread, timestamp);
+                        return new DefineFunction(function, classname, functionname, timestamp);
                     }
                     else
                     {
@@ -73,14 +78,17 @@ namespace ChainsAPM.Commands.Agent
         }
         public byte[] Encode()
         {
-            var buffer = new List<byte>(23);
-            buffer.AddRange(BitConverter.GetBytes(23)); // 4 bytes for size, 2 byte for code, 8 bytes for data, 8 bytes for data, 2 bytes for term
+            var buffer = new List<byte>(31);
+            buffer.AddRange(BitConverter.GetBytes(31)); // 4 bytes for size, 2 byte for code, 8 bytes for timestamp, 8 bytes for data, 8 bytes for data, 2 bytes for term
             buffer.AddRange(BitConverter.GetBytes(Code));
+            buffer.AddRange(BitConverter.GetBytes(TimeStamp.ToFileTimeUtc()));
             buffer.AddRange(BitConverter.GetBytes(FunctionID));
-            buffer.AddRange(BitConverter.GetBytes(ThreadID));// 4 bytes for size, 1 byte for code, 8 bytes for data, 2 bytes for term
+            buffer.AddRange(BitConverter.GetBytes(ClassID));
+            buffer.AddRange(BitConverter.GetBytes(FunctionName.Length));
+            buffer.AddRange(System.Text.UnicodeEncoding.Unicode.GetBytes(FunctionName)); 
             buffer.AddRange(BitConverter.GetBytes((short)0));
             return buffer.ToArray();
-
+            
         }
     }
 }

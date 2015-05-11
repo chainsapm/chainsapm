@@ -22,6 +22,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "resource.h"
+#include <assert.h>
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlctl.h>
@@ -31,15 +32,13 @@
 // STL Libraries
 #include <map>
 #include <stack>
+#include <array>
 #include <string>
-#include <iostream>
 #include <sstream>
 #include <vector>
 #include <queue>
-#include <exception>
 #include <stdexcept>
 #include <unordered_set>
-#include <fstream> 
 #include <locale>
 #include <memory>
 #include <allocators>

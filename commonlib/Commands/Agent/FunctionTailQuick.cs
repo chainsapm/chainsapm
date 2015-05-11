@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace ChainsAPM.Commands.Agent
 {
-    public class FunctionLeaveQuick : Interfaces.ICommand<byte>
+    public class FunctionTailQuick : Interfaces.ICommand<byte>
     {
         public long FunctionID { get; set; }
         public long ThreadID { get; set; }
 
         public DateTime TimeStamp { get; set; }
 
-        public FunctionLeaveQuick(long functionid, long threadid, long timestamp)
+        public FunctionTailQuick(long functionid, long threadid, long timestamp)
         {
             FunctionID = functionid;
             ThreadID = threadid;
@@ -21,11 +21,11 @@ namespace ChainsAPM.Commands.Agent
         }
         public string Name
         {
-            get { return "Function Leave Quick"; }
+            get { return "Function Tail Quick"; }
         }
         public ushort Code
         {
-            get { return 0x0019; }
+            get { return 0x001A; }
         }
         public string Description
         {
@@ -54,7 +54,7 @@ namespace ChainsAPM.Commands.Agent
                         {
                             throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
                         }
-                        return new FunctionLeaveQuick(function, thread, timestamp);
+                        return new FunctionTailQuick(function, thread, timestamp);
                     }
                     else
                     {

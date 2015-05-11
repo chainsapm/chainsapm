@@ -148,17 +148,11 @@
     <ClCompile Include="src\FunctionLeaveLong.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
-    <ClCompile Include="src\FunctionLeaveQuick.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
     <ClCompile Include="src\AgentInfo.cpp">
       <Filter>Common Classes\Agent Info Classes</Filter>
     </ClCompile>
     <ClCompile Include="src\ProcessInfo.cpp">
       <Filter>Common Classes\Agent Info Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FunctionDefinition.cpp">
-      <Filter>Commands</Filter>
     </ClCompile>
     <ClCompile Include="src\AssemblyDefinition.cpp">
       <Filter>Commands</Filter>
@@ -177,9 +171,6 @@
     </ClCompile>
     <ClCompile Include="src\ICommand.cpp">
       <Filter>Commands\Interface</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ModuleDefinition.cpp">
-      <Filter>Commands</Filter>
     </ClCompile>
     <ClCompile Include="src\SetFunctionsToMonitor.cpp">
       <Filter>Commands</Filter>
@@ -201,6 +192,27 @@
     </ClCompile>
     <ClCompile Include="src\xdlldata.c">
       <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FunctionTailQuick.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FunctionLeaveQuick.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DefineAssembly.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DefineClass.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DefineFunction.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DefineModule.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ilrewriter.cpp">
+      <Filter>IL Rewriting</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -279,17 +291,11 @@
     <ClInclude Include="inc\FunctionLeaveLong.h">
       <Filter>Commands</Filter>
     </ClInclude>
-    <ClInclude Include="inc\FunctionLeaveQuick.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
     <ClInclude Include="inc\AgentInfo.h">
       <Filter>Common Classes\Agent Info Classes</Filter>
     </ClInclude>
     <ClInclude Include="inc\ProcessInfo.h">
       <Filter>Common Classes\Agent Info Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\FunctionDefinition.h">
-      <Filter>Commands</Filter>
     </ClInclude>
     <ClInclude Include="inc\AssemblyDefinition.h">
       <Filter>Commands</Filter>
@@ -309,9 +315,6 @@
     <ClInclude Include="inc\ICommand.h">
       <Filter>Commands\Interface</Filter>
     </ClInclude>
-    <ClInclude Include="inc\ModuleDefinition.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
     <ClInclude Include="inc\SetFunctionsToMonitor.h">
       <Filter>Commands</Filter>
     </ClInclude>
@@ -325,6 +328,24 @@
       <Filter>Common Classes\Info Classes</Filter>
     </ClInclude>
     <ClInclude Include="inc\SendPackedStructure.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\FunctionTailQuick.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\FunctionLeaveQuick.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\DefineAssembly.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\DefineClass.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\DefineFunction.h">
+      <Filter>Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\DefineModule.h">
       <Filter>Commands</Filter>
     </ClInclude>
   </ItemGroup>
@@ -345,6 +366,9 @@
     </None>
     <None Include="rsrc\profilermain.rgs">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="inc\sigparse.inl">
+      <Filter>IL Rewriting</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

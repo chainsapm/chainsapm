@@ -34,6 +34,12 @@ struct GC_REASON
 };
 
 
+struct WCharStringData
+{
+	__int32 StringLength;
+	__int64 StringHash;
+	wchar_t String[0];
+};
 
 
 #endif
