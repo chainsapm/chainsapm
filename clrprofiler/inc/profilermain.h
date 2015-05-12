@@ -122,10 +122,6 @@ public:
 		Size_type cElementsRemoved = m_map.erase(id);
 		if (cElementsRemoved != 1)
 		{
-			g_wLogFile.open(g_wszLogFilePath, std::ios::app);
-			g_wLogFile << L"\nIDToInfoMap: " << cElementsRemoved <<
-				L" elements removed, 1 expected.";
-			g_wLogFile.close();
 		}
 	}
 
@@ -173,6 +169,52 @@ struct ModuleInfo
 	MethodDefToLatestVersionMap *       m_pMethodDefToLatestVersionMap;
 };
 
+struct ModInfoFunctionMap
+{
+	ModuleID m_ModuleID;
+	mdToken m_ClassDef;
+	bool operator==(ModInfoFunctionMap left)
+	{
+		return (left.m_ModuleID == m_ModuleID) & (left.m_ClassDef == m_ClassDef);
+	}
+};
+
+namespace std{
+	template<>
+	struct less < ModInfoFunctionMap >
+	{
+		bool operator() (ModInfoFunctionMap left, ModInfoFunctionMap right)
+		{
+			return (left.m_ModuleID <= right.m_ModuleID) & (left.m_ClassDef <= right.m_ClassDef);
+		}
+	};
+}
+
+namespace std{
+	template<>
+	struct equal_to < ModInfoFunctionMap >
+	{
+		bool operator() (ModInfoFunctionMap left, ModInfoFunctionMap right)
+		{
+			return (left.m_ModuleID == right.m_ModuleID) & (left.m_ClassDef == right.m_ClassDef);
+		}
+	};
+}
+
+namespace std{
+	template<>
+	struct hash < ModInfoFunctionMap >
+	{
+		size_t operator() (ModInfoFunctionMap left)
+		{
+			std::hash<size_t> hasher;
+			return hasher(left.m_ClassDef + left.m_ModuleID);
+		}
+	};
+
+}
+typedef std::unordered_map<ModInfoFunctionMap, FunctionID> ModFuncMap;
+
 typedef IDToInfoMap<ModuleID, ModuleInfo> ModuleIDToInfoMap;
 
 template <class MetaInterface>
@@ -212,14 +254,6 @@ private:
 	MetaInterface* m_ptr;
 };
 
-// A single entry in the single-thread shadow stack
-struct ShadowStackFrameInfo
-{
-	ModuleID m_moduleID;
-	mdMethodDef m_methodDef;
-	int m_nVersion;
-	ULONGLONG m_ui64TickCountOnEntry;
-};
 
 using namespace ATL;
 
@@ -308,11 +342,20 @@ public:
 	STDMETHOD(RuntimeResumeStarted)(void);
 	STDMETHOD(RuntimeResumeFinished)(void);
 
+
+	void SetILFunctionBodyForManagedHelper(ModuleID moduleID, mdMethodDef methodDef);
+
 	STDMETHOD(JITCompilationStarted)(FunctionID functionId, BOOL fIsSafeToBlock);
 
-	UINT_PTR MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL *pbHookFunction);
+	STDMETHOD(ModuleUnloadStarted)(ModuleID moduleId);
 
-	STDMETHOD(DequeItems)(void);
+	STDMETHOD(ReJITCompilationStarted)(FunctionID functionId, ReJITID rejitId, BOOL fIsSafeToBlock);
+
+	STDMETHOD(GetReJITParameters)(ModuleID moduleId, mdMethodDef methodId, ICorProfilerFunctionControl *pFunctionControl);
+	
+	STDMETHOD(ReJITError)(ModuleID moduleId, mdMethodDef methodId, FunctionID functionId, HRESULT hrStatus);
+
+	UINT_PTR MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL *pbHookFunction);
 
 	STDMETHOD(Shutdown)(void);
 
@@ -409,7 +452,7 @@ private:
 	std::shared_ptr<ICorProfilerInfo4> m_pICorProfilerInfo4;
 
 
-
+	ModFuncMap m_ModFuncMap;
 	// container for IL allocation
 	std::shared_ptr<IMethodMalloc> m_pIMethodMalloc;
 	//std::map<FunctionID, FunctionInfo> m_FunctionInfoMap;

@@ -20,9 +20,9 @@ public:
 
 	STDMETHOD(GetCurrentThread)(ThreadID* threadId);
 	STDMETHOD(GetFunctionInformation)(FunctionID funcId, InformationClasses::FunctionInfo* funcInfo);
-	STDMETHOD(GetClassInformation)(ClassID classId, InformationClasses::ClassInfo* funcInfo);
-	STDMETHOD(GetModuleInformation)(ModuleID moduleId, InformationClasses::ModuleInfo* funcInfo);
-	STDMETHOD(GetAssemblyInformation)(AssemblyID assemblyId, InformationClasses::AssemblyInfo* funcInfo);
+	STDMETHOD(GetClassInformation)(mdTypeDef classMD, InformationClasses::ClassInfo* classInfo);
+	STDMETHOD(GetModuleInformation)(mdTypeDef moduleMD, InformationClasses::ModuleInfo* moduleInfo);
+	STDMETHOD(GetAssemblyInformation)(mdTypeDef assemblyMD, InformationClasses::AssemblyInfo* assemblyInfo);
 	STDMETHOD(GetArguments)(FunctionID funcId, mdToken MethodDataToken);
 
 

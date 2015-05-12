@@ -12,12 +12,12 @@ namespace InformationClasses {
 	{
 	}
 
-	InformationClasses::ClassInfo& FunctionInfo::ClassInformation()
+	InformationClasses::ClassInfo* FunctionInfo::ClassInformation()
 	{
 		return this->m_ClassInfo;
 	}
 
-	void FunctionInfo::ClassInformation(InformationClasses::ClassInfo& classInfo)
+	void FunctionInfo::ClassInformation(InformationClasses::ClassInfo* classInfo)
 	{
 		this->m_ClassInfo = classInfo;
 	}
@@ -48,7 +48,7 @@ namespace InformationClasses {
 		{
 			this->m_SignatureString.append(this->m_ReturnType);
 			this->m_SignatureString.append(TEXT(" "));
-			this->m_SignatureString.append(this->ClassInformation().ClassName());
+			this->m_SignatureString.append(this->ClassInformation()->ClassName());
 			this->m_SignatureString.append(TEXT("::"));
 			this->m_SignatureString.append(this->m_FunctionName);
 			this->m_SignatureString.append(TEXT("("));

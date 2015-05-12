@@ -31,6 +31,7 @@
 #include <corprof.h>
 // STL Libraries
 #include <map>
+#include <unordered_map>
 #include <stack>
 #include <array>
 #include <string>

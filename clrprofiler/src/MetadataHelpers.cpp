@@ -138,11 +138,15 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Informat
 {
 
 	mdMethodDef funcToken;
+	ModuleID modID;
+	ClassID classID;
 
 	std::unique_ptr<IMetaDataImport> _MetaDataImport;
 	std::unique_ptr<IMetaDataImport2> _MetaDataImport2;
 
 	this->GetMetaDataImportInterfaceFromFunction(funcId, &funcToken, _MetaDataImport, _MetaDataImport2);
+	
+	
 
 	if (_MetaDataImport == NULL)
 	{
@@ -193,36 +197,19 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Informat
 		funcInfo->FunctionName(copyString);
 		funcInfo->SignatureRaw(sigBlob); // Create a clone
 
-		/*
-			Get class and module of function
-		*/
-		ClassID funcClassID;
-		ModuleID funcModuleID;
-		mdToken funcmdToken;
-		m_pICorProfilerInfo->GetFunctionInfo(funcId, &funcClassID, &funcModuleID, &funcmdToken);
-		funcInfo->ClassInformation().ClassId(funcClassID);
 
-		/*
-		MSDN link for GetTypeDefProps
-		http://msdn.microsoft.com/en-us/library/ms230143(v=vs.110).aspx
+		m_pICorProfilerInfo->GetFunctionInfo(funcId, &modID, &classID, &funcToken);
 
-		Use this to get they type of an object. In this case we are getting the class
-		name.
-		*/
-		WCHAR szClassName[MAX_LENGTH];
-		DWORD flags;
-		ULONG typeDefPointer;
-		mdToken extends;
-		 
-		hr = _MetaDataImport->GetTypeDefProps(
-			classTypeDef,
-			szClassName,
-			2048,
-			&typeDefPointer,
-			&flags,
-			&extends);
+		auto classExists = m_ContainerClass->g_ClassSet->find(classID);
+		if (classExists == m_ContainerClass->g_ClassSet->end())
+		{
+			InformationClasses::ClassInfo * classInfo = nullptr; // Get a reference to the classInfo
+			GetClassInformation(classID, classInfo);
+			funcInfo->ClassInformation(classInfo);
+		}
 
-		funcInfo->ClassInformation().ClassName(std::wstring(szClassName));
+
+	
 
 		
 
@@ -346,17 +333,39 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Informat
 	_MetaDataImport2.release();
 	return E_FAIL;
 }
-STDMETHODIMP MetadataHelpers::GetClassInformation(ClassID classID, InformationClasses::ClassInfo* funcInfo)
+STDMETHODIMP MetadataHelpers::GetClassInformation(mdTypeDef ClassMD, InformationClasses::ClassInfo* classInfo)
 {
 	return S_OK;
+	///*
+	//MSDN link for GetTypeDefProps
+	//http://msdn.microsoft.com/en-us/library/ms230143(v=vs.110).aspx
+
+	//Use this to get they type of an object. In this case we are getting the class
+	//name.
+	//*/
+	//WCHAR szClassName[MAX_LENGTH];
+	//DWORD flags;
+	//ULONG typeDefPointer;
+	//mdToken extends;
+
+	//HRESULT hr = _MetaDataImport->GetTypeDefProps(
+	//	classTypeDef,
+	//	szClassName,
+	//	2048,
+	//	&typeDefPointer,
+	//	&flags,
+	//	&extends);
+
+	//funcInfo->ClassInformation()->ClassName(std::wstring(szClassName));
+	//return S_OK;
 	
 }
-STDMETHODIMP MetadataHelpers::GetModuleInformation(ModuleID classID, InformationClasses::ModuleInfo* funcInfo)
+STDMETHODIMP MetadataHelpers::GetModuleInformation(mdTypeDef moduleMD, InformationClasses::ModuleInfo* moduleInfo)
 {
 
 	return S_OK;
 }
-STDMETHODIMP MetadataHelpers::GetAssemblyInformation(AssemblyID funcId, InformationClasses::AssemblyInfo* funcInfo)
+STDMETHODIMP MetadataHelpers::GetAssemblyInformation(mdTypeDef assemblyMD, InformationClasses::AssemblyInfo* assemblyInfo)
 {
 
 	return S_OK;
@@ -590,38 +599,7 @@ PCCOR_SIGNATURE MetadataHelpers::ParseElementType(const std::unique_ptr<IMetaDat
 
 } // BASEHELPER::ParseElementType
 
-STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromFunction(FunctionID funcId, mdMethodDef* funcToken,
-	const std::unique_ptr<IMetaDataImport>& _MetaDataImport, const std::unique_ptr<IMetaDataImport2>& _MetaDataImport2)
-{
 
-	if (_MetaDataImport == nullptr)
-	{
-		HRESULT hr;
-		if (m_pICorProfilerInfo4 != nullptr)
-		{
-			hr = this->m_pICorProfilerInfo4->GetTokenAndMetaDataFromFunction(funcId, IID_IMetaDataImport2,
-				(IUnknown **)&_MetaDataImport2, funcToken);
-		}
-		else if (this->m_pICorProfilerInfo4 == nullptr && this->m_pICorProfilerInfo3 != nullptr)
-		{
-			hr = this->m_pICorProfilerInfo3->GetTokenAndMetaDataFromFunction(funcId, IID_IMetaDataImport2,
-				(IUnknown **)&_MetaDataImport2, funcToken);
-		}
-		else if (this->m_pICorProfilerInfo3 == nullptr && this->m_pICorProfilerInfo2 != nullptr)
-		{
-
-			hr = this->m_pICorProfilerInfo2->GetTokenAndMetaDataFromFunction(funcId, IID_IMetaDataImport2,
-				(IUnknown **)&_MetaDataImport2, funcToken);
-		}
-		else if (this->m_pICorProfilerInfo2 == nullptr && this->m_pICorProfilerInfo != nullptr)
-		{
-			this->m_pICorProfilerInfo->GetTokenAndMetaDataFromFunction(funcId, IID_IMetaDataImport,
-				(IUnknown **)&_MetaDataImport, funcToken);
-		}
-		return S_OK;
-	}
-	return E_FAIL;
-}
 
 STDMETHODIMP MetadataHelpers::GetCurrentThread(ThreadID* threadId)
 {
@@ -655,6 +633,8 @@ STDMETHODIMP MetadataHelpers::GetArguments(FunctionID funcId, mdToken MethodData
 	
 	return S_OK;
 }
+
+
 
 STDMETHODIMP MetadataHelpers::GetMetaDataEmitInterFaceFromModule(ModuleID ModuleId, 
 	const std::unique_ptr<IMetaDataEmit>& _MetaDataEmit, const std::unique_ptr<IMetaDataEmit2>& _MetaDataEmit2)
@@ -723,3 +703,35 @@ STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromModule(ModuleID Modu
 }
 
 
+STDMETHODIMP MetadataHelpers::GetMetaDataImportInterfaceFromFunction(FunctionID funcId, mdMethodDef* funcToken,
+	const std::unique_ptr<IMetaDataImport>& _MetaDataImport, const std::unique_ptr<IMetaDataImport2>& _MetaDataImport2)
+{
+
+	if (_MetaDataImport == nullptr)
+	{
+		HRESULT hr;
+		if (m_pICorProfilerInfo4 != nullptr)
+		{
+			hr = this->m_pICorProfilerInfo4->GetTokenAndMetaDataFromFunction(funcId, IID_IMetaDataImport2,
+				(IUnknown **)&_MetaDataImport2, funcToken);
+		}
+		else if (this->m_pICorProfilerInfo4 == nullptr && this->m_pICorProfilerInfo3 != nullptr)
+		{
+			hr = this->m_pICorProfilerInfo3->GetTokenAndMetaDataFromFunction(funcId, IID_IMetaDataImport2,
+				(IUnknown **)&_MetaDataImport2, funcToken);
+		}
+		else if (this->m_pICorProfilerInfo3 == nullptr && this->m_pICorProfilerInfo2 != nullptr)
+		{
+
+			hr = this->m_pICorProfilerInfo2->GetTokenAndMetaDataFromFunction(funcId, IID_IMetaDataImport2,
+				(IUnknown **)&_MetaDataImport2, funcToken);
+		}
+		else if (this->m_pICorProfilerInfo2 == nullptr && this->m_pICorProfilerInfo != nullptr)
+		{
+			this->m_pICorProfilerInfo->GetTokenAndMetaDataFromFunction(funcId, IID_IMetaDataImport,
+				(IUnknown **)&_MetaDataImport, funcToken);
+		}
+		return S_OK;
+	}
+	return E_FAIL;
+}

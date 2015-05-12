@@ -13,8 +13,8 @@ namespace InformationClasses {
 		~FunctionInfo();
 
 		// Getter and setter for class name
-		InformationClasses::ClassInfo& ClassInformation();
-		void ClassInformation(InformationClasses::ClassInfo& classinfo);
+		InformationClasses::ClassInfo * ClassInformation();
+		void ClassInformation(InformationClasses::ClassInfo * classinfo);
 
 		// Getter and setter for the function name
 		const std::wstring& FunctionName();
@@ -51,7 +51,7 @@ namespace InformationClasses {
 		void AlwaysCreateNewEntryPoint(BOOL);
 
 	private:
-		InformationClasses::ClassInfo m_ClassInfo;
+		InformationClasses::ClassInfo * m_ClassInfo;
 		std::wstring m_FunctionName;
 		FunctionID m_FunctionID;
 		PCCOR_SIGNATURE m_RawSignature;
