@@ -21,12 +21,12 @@ EXTERN_C void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 #pragma once
 #include "resource.h"       // main symbols
 
-#include "commonstructures.h"
+#include "../../metadatastaticlib/inc/commonstructures.h"
 #include "clrprofiler_i.h"
 #include <cor.h>
 #include <corprof.h>
-#include "MetadataHelpers.h"
-#include "FunctionInfo.h"
+#include "../../metadatastaticlib/inc/MetadataHelpers.h"
+#include "../../metadatastaticlib/inc/FunctionInfo.h"
 #include "stackitems.h"
 #include "CorProfilerCallbackImplementation.h"
 #include "Commands.h"
@@ -166,6 +166,8 @@ struct ModuleInfo
 	IMetaDataImport *                   m_pImport;
 	mdToken                             m_mdEnterProbeRef;
 	mdToken                             m_mdExitProbeRef;
+	mdToken                             m_mdEnterProbeRef2;
+	mdToken                             m_mdExitProbeRef2;
 	MethodDefToLatestVersionMap *       m_pMethodDefToLatestVersionMap;
 };
 
@@ -344,6 +346,8 @@ public:
 
 
 	void SetILFunctionBodyForManagedHelper(ModuleID moduleID, mdMethodDef methodDef);
+	void SetILFunctionBodyForManagedHelper2(ModuleID moduleID, mdMethodDef methodDef);
+	void SetILFunctionBodyForManagedHelperAdd(ModuleID moduleID, mdMethodDef methodDef);
 
 	STDMETHOD(JITCompilationStarted)(FunctionID functionId, BOOL fIsSafeToBlock);
 
@@ -374,8 +378,15 @@ public:
 		ModuleInfo * pModuleInfo);
 
 	HRESULT AddPInvoke(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdMethodDef * pmdPInvoke);
+	HRESULT AddPInvoke2(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdMethodDef * pmdPInvoke);
+	HRESULT AddPInvokeForSAMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdTypeDef tdSystemArray, mdMethodDef * pmdPInvoke);
+	HRESULT AddPInvokeAddNumbers(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdMethodDef * pmdPInvoke);
 	HRESULT GetSecuritySafeCriticalAttributeToken(IMetaDataImport * pImport, mdMethodDef * pmdSafeCritical);
+	HRESULT GetSystemArrayToken(IMetaDataImport * pImport, mdTypeDef * ptdSafeCritical);
 	HRESULT AddManagedHelperMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod);
+	HRESULT AddManagedHelperMethod2(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod);
+	HRESULT AddManagedHelperMethodAddNumbers(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod);
+	HRESULT AddManagedHelperSAMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdTypeDef tdSystemArray, mdMethodDef * pmdHelperMethod);
 	void AddHelperMethodDefs(IMetaDataImport * pImport, IMetaDataEmit * pEmit);
 	BOOL FindMscorlibReference(IMetaDataAssemblyImport * pAssemblyImport, mdAssemblyRef * rgAssemblyRefs, ULONG cAssemblyRefs, mdAssemblyRef * parMscorlib);
 
@@ -487,8 +498,12 @@ private:
 	mdMethodDef m_mdIntPtrExplicitCast;
 	mdMethodDef m_mdEnterPInvoke;
 	mdMethodDef m_mdExitPInvoke;
+	mdMethodDef m_mdEnterPInvoke2;
+	mdMethodDef m_mdExitPInvoke2;
 	mdMethodDef m_mdEnter;
 	mdMethodDef m_mdExit;
+	mdMethodDef m_mdEnter2;
+	mdMethodDef m_mdExit2;
 
 	volatile long m_refCount;
 	ModuleID m_modidMscorlib;
@@ -516,6 +531,8 @@ private:
 	template <class C>
 	static VOID CALLBACK SendEventCallBack(PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WORK Work)
 	{
+		UNREFERENCED_PARAMETER(Instance);
+		UNREFERENCED_PARAMETER(Work);
 		m_cprof->m_NetworkClient->SendCommand(std::make_shared<C>(*(C*)Parameter));
 	}
 

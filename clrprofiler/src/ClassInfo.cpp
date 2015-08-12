@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "ClassInfo.h"
+#include "../../metadatastaticlib/inc/ClassInfo.h"
 
 namespace InformationClasses {
 	ClassInfo::ClassInfo()

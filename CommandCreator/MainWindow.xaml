@@ -1,0 +1,182 @@
+﻿<Window x:Class="CommandCreator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:custom="clr-namespace:CommandCreator"
+        Title="MainWindow" Height="768" Width="1024">
+    <Window.Resources>
+    </Window.Resources>
+    <Window.DataContext>
+        <custom:NetworkCommandViewModel x:Name="CommandVM" />
+    </Window.DataContext>
+    <Window.CommandBindings>
+        <CommandBinding Command="custom:CustomCommands.Exit" CanExecute="CommandBinding_CanExecute" Executed="CommandBinding_Executed"/>
+        <CommandBinding Command="custom:CustomCommands.SaveTo" CanExecute="CommandBinding_CanExecute" Executed="SaveToCommand" />
+        <CommandBinding Command="ApplicationCommands.Open" CanExecute="CommandBinding_CanExecute" Executed="CommandBinding_Executed_1"/>
+        <CommandBinding Command="ApplicationCommands.Save" CanExecute="CommandBinding_CanExecute" Executed="SaveFileCommand" />
+        <CommandBinding Command="ApplicationCommands.New" CanExecute="CommandBinding_CanExecute" Executed="NewFileCommand" />
+    </Window.CommandBindings>
+    <Window.InputBindings>
+        <KeyBinding Key="O"
+                    Modifiers="Control"
+                    Command="ApplicationCommands.Open" />
+        <KeyBinding Key="S"
+                    Modifiers="Control"
+                    Command="ApplicationCommands.Save" />
+        <KeyBinding Key="W"
+                    Modifiers="Control"
+                    Command="ApplicationCommands.Close" />
+        <KeyBinding Key="X"
+                    Modifiers="Control"
+                    Command="ApplicationCommands.Cut" />
+        <KeyBinding Key="C"
+                    Modifiers="Control"
+                    Command="ApplicationCommands.Copy" />
+        <KeyBinding Key="V"
+                    Modifiers="Control"
+                    Command="ApplicationCommands.Paste" />
+        <KeyBinding Key="Z"
+                    Modifiers="Control"
+                    Command="ApplicationCommands.Undo" />
+        <KeyBinding Key="Y"
+                    Modifiers="Control"
+                    Command="ApplicationCommands.Redo" />
+        <KeyBinding Key="N"
+                    Modifiers="Control"
+                    Command="ApplicationCommands.New" />
+    </Window.InputBindings>
+
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Menu Height="25" VerticalAlignment="Top">
+            <Menu.Background>
+                <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
+                    <GradientStop Color="#FFF6F6F6" Offset="0.724"/>
+                    <GradientStop Color="#FFDCD9D9" Offset="0.906"/>
+                    <GradientStop Color="White" Offset="1"/>
+                </LinearGradientBrush>
+            </Menu.Background>
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" Height="25" Width="Auto" Command="ApplicationCommands.New" />
+                <MenuItem Header="_Open" Height="25" Width="Auto" Command="ApplicationCommands.Open" />
+                <MenuItem Header="_Close" Height="25" Width="Auto" Command="ApplicationCommands.Close" />
+                <MenuItem Header="_Save" Height="25" Width="Auto" Command="ApplicationCommands.Save" />
+                <MenuItem Header="_Save to..." Height="25" Width="Auto" Command="custom:CustomCommands.SaveTo" />
+                <Separator/>
+                <MenuItem Command="custom:CustomCommands.Exit"/>
+            </MenuItem>
+            <MenuItem Header="Edit">
+                <MenuItem Header="Cut" Height="25" Width="Auto" Command="ApplicationCommands.Cut" />
+                <MenuItem Header="Copy" Height="25" Width="Auto" Command="ApplicationCommands.Copy" />
+                <MenuItem Header="Paste" Height="25" Width="Auto" Command="ApplicationCommands.Paste" />
+                <Separator/>
+                <MenuItem Header="Undo" Height="25" Width="Auto" Command="ApplicationCommands.Undo" />
+                <MenuItem Header="Redo" Height="25" Width="Auto" Command="ApplicationCommands.Redo" />
+
+            </MenuItem>
+        </Menu>
+        <ScrollViewer Margin="10,30,0,10" HorizontalAlignment="Left" Width="600" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
+            <StackPanel Margin="10,10,10,10" HorizontalAlignment="Left" Width="565" >
+                <Expander Header="C# Type Mappings" ClipToBounds="True">
+                    <ListBox ItemsSource="{Binding CSharpTypeMapping}">
+                        <ListBox.Resources>
+                            <DataTemplate DataType="{x:Type custom:TypeMap}"  >
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ListBox.Resources>
+                    </ListBox>
+                </Expander>
+                <Expander Header="C++ Type Mappings" ClipToBounds="True">
+                    <ListBox ItemsSource="{Binding CppTypeMapping}">
+                        <ListBox.Resources>
+                            <DataTemplate DataType="{x:Type custom:TypeMap}"  >
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ListBox.Resources>
+                    </ListBox>
+                </Expander>
+                <Expander Header="Network Commands" ClipToBounds="True">
+                    <ListBox ItemsSource="{Binding NetworkCommands, UpdateSourceTrigger=PropertyChanged}" SelectionChanged="ListBox_SelectionChanged">
+                        <ListBox.Resources>
+                            <DataTemplate DataType="{x:Type custom:NetworkCommandTreeItemModel}">
+                                <TextBlock>
+                            <TextBlock Text="{Binding CommandName, UpdateSourceTrigger=PropertyChanged, BindsDirectlyToSource=True, Mode=TwoWay}"/>
+                            <TextBlock Text="{Binding NetworkCommand.Code, StringFormat='{}(0x{0:x4})'}" Foreground="Blue"/>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ListBox.Resources>
+                    </ListBox>
+                </Expander>
+            </StackPanel>
+        </ScrollViewer>
+        <Grid HorizontalAlignment="Right" Height="698" Margin="0,30,10,0" VerticalAlignment="Top" Width="391">
+            <TextBlock HorizontalAlignment="Left" Margin="10,43,0,0" TextWrapping="Wrap" VerticalAlignment="Top" 
+                      Text="Command Name"/>
+            <TextBox HorizontalAlignment="Left" Height="23" Margin="134,40,0,0" TextWrapping="Wrap" 
+                      Text="{Binding SelectedCommand.Name, Mode=TwoWay, BindsDirectlyToSource=True, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="247"/>
+            <TextBlock HorizontalAlignment="Left" Margin="10,71,0,0" TextWrapping="Wrap" Text="Command Description" VerticalAlignment="Top"/>
+            <TextBox HorizontalAlignment="Left" Height="82" Margin="134,68,0,0" TextWrapping="Wrap" 
+                     Text="{Binding SelectedCommand.Description, Mode=TwoWay, BindsDirectlyToSource=True, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="247" MaxLength="1024" MaxLines="2147483645"/>
+            <TextBlock HorizontalAlignment="Left" Margin="10,158,0,0" TextWrapping="Wrap" Text="Command Number" VerticalAlignment="Top"/>
+            <TextBox HorizontalAlignment="Left" Height="23" Margin="134,155,0,0" TextWrapping="Wrap" 
+                     Text="{Binding SelectedCommand.Code, Mode=TwoWay, BindsDirectlyToSource=True, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="247"/>
+            <TextBlock HorizontalAlignment="Left" Margin="10,467,0,0" TextWrapping="Wrap" Text="Enumeration Name" VerticalAlignment="Top" Width="119"/>
+            <TextBox HorizontalAlignment="Left" Height="22" Margin="134,464,0,0" TextWrapping="Wrap" 
+                     VerticalAlignment="Top" Width="171" x:Name="txtEnumName"/>
+            <ListBox HorizontalAlignment="Left" Height="100" Margin="10,242,0,0" VerticalAlignment="Top" Width="342" x:Name="listFields"
+                     ItemsSource="{Binding SelectedCommand.ClassProperties, Mode=TwoWay, BindsDirectlyToSource=True, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <Button Content="Add " HorizontalAlignment="Left" Margin="311,625,0,0" VerticalAlignment="Top" Width="69" Click="AddEnumerationItem_Click"/>
+            <TextBox HorizontalAlignment="Left" Height="22" Margin="117,625,0,0" 
+                     TextWrapping="Wrap" VerticalAlignment="Top" Width="188" x:Name="txtEnumItem"/>
+            <TextBlock HorizontalAlignment="Left" Margin="12,628,0,0" TextWrapping="Wrap" Text="Enumeration Item" VerticalAlignment="Top" Width="100"/>
+            <TextBlock HorizontalAlignment="Left" Margin="10,428,0,0" TextWrapping="Wrap" Text="Field Name" VerticalAlignment="Top" Width="92"/>
+            <TextBox HorizontalAlignment="Left" Height="22" Margin="85,425,0,0" TextWrapping="Wrap" 
+                     VerticalAlignment="Top" Width="220" x:Name="txtFeildName"/>
+            <TextBlock HorizontalAlignment="Left" Margin="11,401,0,0" TextWrapping="Wrap" Text="Field Type" VerticalAlignment="Top" Width="92"/>
+            <TextBox HorizontalAlignment="Left" Height="22" Margin="85,398,0,0" TextWrapping="Wrap"  
+                     Text="{Binding SelectedType, Mode=TwoWay, BindsDirectlyToSource=True, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="219" x:Name="txtFeildType"/>
+            <Button Content="Add " HorizontalAlignment="Left" Margin="310,398,0,0" VerticalAlignment="Top" Width="69" Height="49" Click="AddField_Click"/>
+            <RadioButton Content="{Binding TypeHelp.Int8}" HorizontalAlignment="Left" Margin="10,347,0,0" VerticalAlignment="Top" GroupName="FieldTypes" Checked="RadioButton_Checked" />
+            <RadioButton Content="{Binding TypeHelp.Int16}" HorizontalAlignment="Left" Margin="96,347,0,0" VerticalAlignment="Top" GroupName="FieldTypes" Checked="RadioButton_Checked" />
+            <RadioButton Content="{Binding TypeHelp.Int32}" HorizontalAlignment="Left" Margin="185,347,0,0" VerticalAlignment="Top" GroupName="FieldTypes" IsChecked="True" Checked="RadioButton_Checked" />
+            <RadioButton Content="{Binding TypeHelp.Int64}" HorizontalAlignment="Left" Margin="274,347,0,0" VerticalAlignment="Top" GroupName="FieldTypes" Checked="RadioButton_Checked" />
+            <RadioButton Content="{Binding TypeHelp.String}" HorizontalAlignment="Left" Margin="9,368,0,0" VerticalAlignment="Top" GroupName="FieldTypes" Checked="RadioButton_Checked" />
+            <RadioButton Content="{Binding TypeHelp.Double}" HorizontalAlignment="Left" Margin="102,368,0,0" VerticalAlignment="Top" GroupName="FieldTypes" Checked="RadioButton_Checked" />
+            <RadioButton Content="{Binding TypeHelp.Float}" HorizontalAlignment="Left" Margin="202,368,0,0" VerticalAlignment="Top" GroupName="FieldTypes" Checked="RadioButton_Checked" />
+
+            <Button Content="Process Single Command" HorizontalAlignment="Left" Margin="10,666,0,0" VerticalAlignment="Top" Width="157" Click="ProcessSingleCommand_click"/>
+            <Button Content="Process All Commands" HorizontalAlignment="Left" Margin="224,666,0,0" VerticalAlignment="Top" Width="157" Click="ProcessAllCommands_Click"/>
+            <Button Content="Add " HorizontalAlignment="Left" Margin="310,464,0,0" VerticalAlignment="Top" Width="69" Click="AddNewEnumeration_Click"/>
+
+            <ComboBox HorizontalAlignment="Left" Margin="134,491,0,0" VerticalAlignment="Top" Width="168" 
+                      ItemsSource="{Binding SelectedCommand.EnumerationList, Mode=TwoWay, BindsDirectlyToSource=True, UpdateSourceTrigger=PropertyChanged}" 
+                      SelectionChanged="ComboBox_SelectionChanged" SelectedIndex="0"/>
+            <ListView HorizontalAlignment="Left" Height="100" Margin="12,520,0,0" VerticalAlignment="Top" Width="368"
+                     ItemsSource="{Binding SelectedCommand.SelectedEnumeration.Items, Mode=TwoWay, 
+                BindsDirectlyToSource=True, UpdateSourceTrigger=PropertyChanged}" >
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Item Name" DisplayMemberBinding="{Binding Name}" Width="265" />
+                        <GridViewColumn Header="Item Value" DisplayMemberBinding="{Binding Value, StringFormat='{}0x{0:X}'}" Width="70"  />
+                    </GridView>
+                </ListView.View>
+            </ListView>
+            <Button Content="Add New Command" HorizontalAlignment="Left" Margin="134,10,0,0" VerticalAlignment="Top" Width="157" Click="AddNewCommand_Click"/>
+            <TextBlock HorizontalAlignment="Left" Margin="10,491,0,0" TextWrapping="Wrap" Text="Existing Enumeration" VerticalAlignment="Top" Width="119"/>
+            <Button Content="Up" HorizontalAlignment="Left" Margin="357,242,0,0" VerticalAlignment="Top" Width="24" Height="47" Click="MoveCommandUp_Click"/>
+            <Button Content="Dn" HorizontalAlignment="Left" Margin="357,295,0,0" VerticalAlignment="Top" Width="24" Height="47" Click="MoveCommandDown_Click"/>
+            <CheckBox Content="Flags" HorizontalAlignment="Left" Margin="311,497,0,0" VerticalAlignment="Top"
+                      IsChecked="{Binding SelectedCommand.SelectedEnumeration.Flags, Mode=TwoWay, 
+                BindsDirectlyToSource=True, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock HorizontalAlignment="Left" Margin="10,186,0,0" TextWrapping="Wrap" VerticalAlignment="Top" 
+            	Text="Namespace"/>
+            <TextBox HorizontalAlignment="Left" Height="23" Margin="134,183,0,0" TextWrapping="Wrap" 
+            	Text="{Binding SelectedCommand.Namespace, BindsDirectlyToSource=True, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="247"/>
+            <TextBlock HorizontalAlignment="Left" Margin="10,214,0,0" TextWrapping="Wrap" VerticalAlignment="Top" 
+            	Text="Class Name"/>
+            <TextBox HorizontalAlignment="Left" Height="23" Margin="134,211,0,0" TextWrapping="Wrap" 
+            	Text="{Binding SelectedCommand.ClassName, BindsDirectlyToSource=True, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="247"/>
+        </Grid>
+
+
+    </Grid>
+</Window>

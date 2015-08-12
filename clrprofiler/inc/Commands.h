@@ -13,3 +13,4 @@
 #include "GarbageCollectionFinished.h"
 #include "SendString.h"
 #include "SendPackedStructure.h"
+#include "NewCommand2.h"

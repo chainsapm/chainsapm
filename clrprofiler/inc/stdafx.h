@@ -48,8 +48,10 @@
 //#include <boost/date_time.hpp>
 //#include <boost/format.hpp>
 
+
 #pragma comment(lib, "corguids.lib")
 #pragma comment(lib, "Ws2_32.lib")
+#pragma comment(lib, "metadatastaticlib.lib")
 
 
 //#include <boost/thread.hpp>

@@ -1,6 +1,6 @@
 #pragma once
 #include "stdafx.h"
-#include "ParameterInfo.h"
+#include "../../metadatastaticlib/inc/ParameterInfo.h"
 
 namespace InformationClasses {
 	ParameterInfo::ParameterInfo()

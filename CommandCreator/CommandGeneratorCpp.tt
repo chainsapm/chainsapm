@@ -1,0 +1,121 @@
+﻿<#@ template language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+/*
+ *
+ * This code was generated from the Command Creator.
+ *
+ */
+
+#pragma once
+#include "stdafx.h"
+#include "<#= this.ClassName #>.h"
+
+
+namespace Commands
+{
+	<#= this.ClassName #>::<#= this.ClassName #>(__int64 timestamp, <# foreach (var cpItem in this.ClassProperties) { if (TypeMapping.ContainsKey(cpItem.TypeName)) { #><#=TypeMapping[cpItem.TypeName].ToString() #><# } else { #><#= cpItem.TypeName.ToString()#><#}#> <#= cpItem.Name #><#  if (this.ClassProperties.Last().Name != cpItem.Name) { #>, <# } else { } } #>)
+		: m_timestamp(timestamp), <# foreach (var cpItem in this.ClassProperties) { #> m_<#= cpItem.Name #>(<#= cpItem.Name #>) <#  if (this.ClassProperties.Last().Name != cpItem.Name) { #>, <# } else { } } #>
+	{
+	}
+
+	<#= this.ClassName #>::~<#= this.ClassName #>()
+	{
+	}
+
+	std::wstring <#= this.ClassName #>::Name()
+	{
+		return L"<#= this.Name #>";
+	}
+
+	std::wstring <#= this.ClassName #>::Description()
+	{
+		return L"<#= this.Description #>";
+	}
+
+	std::shared_ptr<std::vector<char>> <#= this.ClassName #>::Encode()
+	{
+		if (!hasEncoded)
+		{
+			// The following items will be resued 
+			auto hash = std::hash<std::wstring>();
+			size_t hashout = 0;		// Temp var for string hashes
+			size_t strlen = 0;		// Temp var for string length
+			size_t strbytes = 0;	// Temp var for string bytes
+
+			size_t size = sizeof(__int32)	// len
+				+ sizeof(short)				// code
+				+ sizeof(__int64);			// timestamp
+<# foreach (var cpItem in this.ClassProperties)
+{ 
+string typeName = "";
+if (TypeMapping.ContainsKey(cpItem.TypeName)) { typeName = TypeMapping[cpItem.TypeName].ToString(); } else { typeName =cpItem.TypeName.ToString(); }
+if (typeName.ToLower() == "std::wstring")
+{#> 
+			size_t strlen_<#= cpItem.Name #> = (m_<#= cpItem.Name #>.length());
+			size_t strbytes_<#= cpItem.Name #> = strlen_<#= cpItem.Name #> * sizeof(wchar_t) + sizeof(wchar_t);
+			size += sizeof(__int32);
+			size += sizeof(size_t);
+			size += strbytes_<#= cpItem.Name #>;
+
+<# } else { #>
+			size += sizeof(<#= typeName #>); // Size of <#= cpItem.Name #>
+<# } #>
+<# } #>
+			size += sizeof(short);	//Terminator
+			
+
+			auto vector = new char[size];
+			short term = 0;
+
+			// 
+			auto v2 = (char*)memcpy(vector, &size, sizeof(__int32));
+			v2 += sizeof(__int32);
+			memcpy(v2, &code, sizeof(short));
+			v2 += sizeof(short);
+			memcpy(v2, &m_timestamp, sizeof(__int64));
+			v2 += sizeof(__int64);
+
+<# foreach (var cpItem in this.ClassProperties)
+{ 
+string typeName = "";
+if (TypeMapping.ContainsKey(cpItem.TypeName)) { typeName = TypeMapping[cpItem.TypeName].ToString(); } else { typeName = cpItem.TypeName.ToString(); } 
+if (typeName.ToLower() == "std::wstring")
+{#> 
+			// Regenerate the string information
+			hashout = hash(m_<#= cpItem.Name #>);
+
+			memcpy(v2, &strlen_<#= cpItem.Name #>, sizeof(__int32));
+			v2 += sizeof(__int32);
+			memcpy(v2, &hashout, sizeof(size_t));
+			v2 += sizeof(__int64);
+			memcpy(v2, m_<#= cpItem.Name #>.data(), strbytes_<#= cpItem.Name #>);
+			v2 += strbytes_<#= cpItem.Name #>;
+
+<# } else { #>
+			memcpy(v2, &m_<#= cpItem.Name #>, sizeof(<#= typeName #>));
+			v2 += sizeof(<#= typeName #>);
+
+<# } #>
+<# } #>
+			// Terminator
+			memcpy(v2, &term, sizeof(short));
+			v2 += sizeof(short);
+
+			hasEncoded = true;
+			std::vector<char> v(size);
+			v.assign(vector, v2);
+
+			m_internalvector = std::make_shared<std::vector<char>>(v);
+		}
+		return m_internalvector;
+	}
+
+	std::shared_ptr<ICommand> <#= this.ClassName #>::Decode(std::shared_ptr<std::vector<char>> &data)
+	{
+		return std::make_shared<<#= this.ClassName #>>(<#= this.ClassName #>(m_timestamp, <# foreach (var cpItem in this.ClassProperties) { #> m_<#= cpItem.Name #> <#  if (this.ClassProperties.Last().Name != cpItem.Name) { #>, <# } else { } } #>));
+	}
+}
+

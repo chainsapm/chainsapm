@@ -3,6 +3,7 @@
 #include "commonstructures.h"
 #include "ClassInfo.h"
 #include "ParameterInfo.h"
+#include <vector>
 
 namespace InformationClasses {
 

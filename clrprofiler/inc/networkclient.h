@@ -119,6 +119,7 @@ public:
 	}
 
 	HRESULT SendNow();
+	HRESULT RecvNow();
 
 	std::shared_ptr<Commands::ICommand> ReceiveCommand();
 

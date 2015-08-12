@@ -176,7 +176,7 @@ public:
 // a new profiler.  This container simplifies the process of mapping the proper profiler to the static method
 //class Cprofilermain;
 #pragma once
-#include "FunctionInfo.h"
+#include "../../metadatastaticlib/inc/FunctionInfo.h"
 
 class StackItemBase;
 class MetadataHelpers;

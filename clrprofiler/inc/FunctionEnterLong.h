@@ -1,7 +1,7 @@
 #pragma once
 #include "ICommand.h"
 #pragma once
-#include "FunctionInfo.h"
+#include "../../metadatastaticlib/inc/FunctionInfo.h"
 namespace Commands
 {
 	class FunctionEnterLong :

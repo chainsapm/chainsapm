@@ -1,21 +1,20 @@
 #ifndef METADATAHELPERS_H
 #define METADATAHELPERS_H
+#include <memory>
 #include "FunctionInfo.h"
 
 
 #define MAX_LENGTH 2048
 
-struct ContainerClass;
 
 class MetadataHelpers
 {
 public:
 	MetadataHelpers();
-	MetadataHelpers(ContainerClass *cClass);
-	MetadataHelpers(std::shared_ptr<ICorProfilerInfo> profilerInfo, ContainerClass *cClass);
-	MetadataHelpers(std::shared_ptr<ICorProfilerInfo2> profilerInfo, ContainerClass *cClass);
-	MetadataHelpers(std::shared_ptr<ICorProfilerInfo3> profilerInfo, ContainerClass *cClass);
-	MetadataHelpers(std::shared_ptr<ICorProfilerInfo4> profilerInfo, ContainerClass *cClass);
+	MetadataHelpers(std::shared_ptr<ICorProfilerInfo> profilerInfo, ModuleID moduleId);
+	MetadataHelpers(std::shared_ptr<ICorProfilerInfo2> profilerInfo, ModuleID moduleId);
+	MetadataHelpers(std::shared_ptr<ICorProfilerInfo3> profilerInfo, ModuleID moduleId);
+	MetadataHelpers(std::shared_ptr<ICorProfilerInfo4> profilerInfo, ModuleID moduleId);
 	~MetadataHelpers();
 
 	STDMETHOD(GetCurrentThread)(ThreadID* threadId);
@@ -53,7 +52,6 @@ private:
 	//boost::mutex m_ThreadIdMutex;
 	CRITICAL_SECTION m_ThreadCS;
 	// Saving reference to the containers in order to provide specific function lookups, eg. Is this method an entry point
-	ContainerClass * m_ContainerClass;
 
 };
 

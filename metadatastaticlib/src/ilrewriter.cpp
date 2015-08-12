@@ -14,10 +14,32 @@
 // ILRewriter class can be used
 // 
 
-#include "stdafx.h"
-#include "sigparse.inl"
+
 //#include "profilermain.h"
 #include <corhlpr.cpp>
+#include <cor.h>
+#include <corprof.h>
+
+#include "sigparse.inl"
+
+#include <assert.h>
+
+#include <map>
+#include <unordered_map>
+#include <stack>
+#include <array>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <queue>
+#include <stdexcept>
+#include <unordered_set>
+#include <locale>
+#include <memory>
+#include <allocators>
+
+
+
 
 // ILRewriter::Export intentionally does a comparison by casting a variable (delta) down
 // to an INT8, with data loss being expected and handled. This pragma is required because
@@ -907,6 +929,143 @@ again:
 		return cOrigLocals;
 	}
 
+	UINT AddNewObjectArrayLocal()
+	{
+		HRESULT hr;
+
+		// Here's a buffer into which we will write out the modified signature.  This sample
+		// code just bails out if it hits signatures that are too big.  Just one of many reasons
+		// why you use this code AT YOUR OWN RISK!
+		COR_SIGNATURE rgbNewSig[4096];
+
+		// Use the signature token to look up the actual signature
+		PCCOR_SIGNATURE rgbOrigSig = NULL;
+		ULONG cbOrigSig;
+		if (m_tkLocalVarSig == mdTokenNil)
+		{
+			// Function has no locals to begin with
+			rgbOrigSig = NULL;
+			cbOrigSig = 0;
+		}
+		else
+		{
+			hr = m_pMetaDataImport->GetSigFromToken(m_tkLocalVarSig, &rgbOrigSig, &cbOrigSig);
+			if (FAILED(hr))
+			{
+				return 0;
+			}
+		}
+
+		// These are our running indices in the original and new signature, respectively
+		UINT iOrigSig = 0;
+		UINT iNewSig = 0;
+
+		if (cbOrigSig > 0)
+		{
+			// First byte of signature must identify that it's a locals signature!
+			assert(rgbOrigSig[iOrigSig] == SIG_LOCAL_SIG);
+			iOrigSig++;
+		}
+
+		// Copy SIG_LOCAL_SIG
+		if (iNewSig + 1 > sizeof(rgbNewSig))
+		{
+			// We'll write one byte below but no room!
+			return 0;
+		}
+		rgbNewSig[iNewSig++] = SIG_LOCAL_SIG;
+
+		// Get original count of locals...
+		ULONG cOrigLocals;
+		if (cbOrigSig == 0)
+		{
+			// No locals to begin with
+			cOrigLocals = 0;
+		}
+		else
+		{
+			ULONG cbOrigLocals;
+			hr = CorSigUncompressData(&rgbOrigSig[iOrigSig],
+				4,                    // [IN] length of the signature
+				&cOrigLocals,         // [OUT] the expanded data
+				&cbOrigLocals);       // [OUT] length of the expanded data    
+			if (FAILED(hr))
+			{
+				return 0;
+			}
+			iOrigSig += cbOrigLocals;
+		}
+
+		// ...and write new count of locals (cOrigLocals+1)
+		if (iNewSig + 4 > sizeof(rgbNewSig))
+		{
+			// CorSigCompressData will write up to 4 bytes but no room!
+			return 0;
+		}
+		ULONG cbNewLocals;
+		cbNewLocals = CorSigCompressData(cOrigLocals + 1,         // [IN] given uncompressed data 
+			&rgbNewSig[iNewSig]);  // [OUT] buffer where iLen will be compressed and stored.   
+		iNewSig += cbNewLocals;
+
+		if (cbOrigSig > 0)
+		{
+			// Copy the rest
+			if (iNewSig + cbOrigSig - iOrigSig > sizeof(rgbNewSig))
+			{
+				// We'll copy cbOrigSig - iOrigSig bytes, but no room!
+				return 0;
+			}
+			memcpy(&rgbNewSig[iNewSig], &rgbOrigSig[iOrigSig], cbOrigSig - iOrigSig);
+			iNewSig += cbOrigSig - iOrigSig;
+		}
+
+		// Manually append final local
+
+		if (iNewSig + 5 > sizeof(rgbNewSig))
+		{
+			// We'll write up to 5 bytes below but no room!
+			return 0;
+		}
+
+		rgbNewSig[iNewSig++] = ELEMENT_TYPE_ARRAY;
+		mdToken tdSystemArray;
+		hr = m_pMetaDataImport->FindTypeDefByName(
+			L"System.Array",
+			mdTokenNil,
+			&tdSystemArray);
+
+		unsigned char pDataDout[4] {0};
+		unsigned char tk;
+		ULONG SigTok = CorSigCompressToken(tdSystemArray, &pDataDout);
+
+		rgbNewSig[iNewSig++] = pDataDout[0];
+
+		// We're done building up the new signature blob.  We now need to add it to
+		// the metadata for this module, so we can get a token back for it.
+		assert(iNewSig <= sizeof(rgbNewSig));
+		hr = m_pMetaDataEmit->GetTokenFromSig(&rgbNewSig[0],      // [IN] Signature to define.    
+			iNewSig,            // [IN] Size of signature data. 
+			&m_tkLocalVarSig);  // [OUT] returned signature token.  
+		if (FAILED(hr))
+		{
+			return 0;
+		}
+
+		// 0-based index of new local = 0-based index of original last local + 1
+		//                            = count of original locals
+		return cOrigLocals;
+	}
+
+	UINT AddNewString()
+	{
+		HRESULT hr;
+		auto localstring = L"Test Input String!";
+		auto localsize = lstrlenW(localstring);
+		mdToken stringToken;
+		hr = m_pMetaDataEmit->DefineUserString(localstring, localsize, &stringToken);
+		return stringToken;
+	}
+
 	WCHAR* GetNameFromToken(mdToken tk)
 	{
 		mdTypeDef tkClass;
@@ -1035,6 +1194,228 @@ HRESULT AddProbe(
 	pNewInstr->m_Arg16 = (INT16) iLocalVersion;
 	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
 
+
+	//     call MgdEnteredFunction32/64 (may be via memberRef or methodDef)
+	pNewInstr = pilr->NewILInstr();
+	pNewInstr->m_opcode = CEE_CALL;
+	pNewInstr->m_Arg32 = mdProbeRef;
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+	return S_OK;
+}
+
+HRESULT AddProbeSA(
+	ILRewriter * pilr,
+	ModuleID moduleID,
+	mdMethodDef methodDef,
+	int nVersion,
+	UINT iLocalVersion,
+	mdToken mdProbeRef,
+	mdToken mdSARef,
+	ILInstr * pInsertProbeBeforeThisInstr)
+{
+	// Add a call before the instruction stream:
+	// 
+	// Replace
+	// 
+	//     ...
+	//     pInsertProbeBeforeThisInstr
+	//     ...
+	// 
+	// with
+	// 
+	//     ...
+	// #ifdef _X86_
+	//     ldc.i4 moduleID
+	// #else
+	//     ldc.i8 moduleID
+	// #endif
+	//     ldc.i4 mdMethodDefCur
+	//     ldc.i4 VersionNumberCur
+	//     stloc LocalVarUsedForVersion
+	//     ldloc LocalVarUsedForVersion
+	//     call MgdEnteredFunction32/64
+	//     pInsertProbeBeforeThisInstr
+	//     ...
+
+	ILInstr * pNewInstr = NULL;
+
+	//     ldc.i4/8 moduleID
+	pNewInstr = pilr->NewILInstr();
+#ifdef _WIN64
+	pNewInstr->m_opcode = CEE_LDC_I8;
+	pNewInstr->m_Arg64 = moduleID;
+#else
+	pNewInstr->m_opcode = CEE_LDC_I4;
+	pNewInstr->m_Arg32 = moduleID;
+#endif
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+	//     ldc.i4 mdMethodDefCur
+	pNewInstr = pilr->NewILInstr();
+	pNewInstr->m_opcode = CEE_LDC_I4;
+	pNewInstr->m_Arg32 = methodDef;
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+	//     ldc.i4 VersionNumberCur
+	pNewInstr = pilr->NewILInstr();
+	pNewInstr->m_opcode = CEE_LDC_I4;
+	pNewInstr->m_Arg32 = 5;
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+	//     stloc LocalVarUsedForVersion
+	pNewInstr = pilr->NewILInstr();
+	pNewInstr->m_opcode = CEE_NEWARR;
+	pNewInstr->m_Arg16 = (INT16)iLocalVersion;
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+	//     ldloc LocalVarUsedForVersion
+	pNewInstr = pilr->NewILInstr();
+	pNewInstr->m_opcode = CEE_LDLOC;
+	pNewInstr->m_Arg16 = (INT16)iLocalVersion;
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+
+	//     call MgdEnteredFunction32/64 (may be via memberRef or methodDef)
+	pNewInstr = pilr->NewILInstr();
+	pNewInstr->m_opcode = CEE_CALL;
+	pNewInstr->m_Arg32 = mdProbeRef;
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+	return S_OK;
+}
+
+
+
+HRESULT AddProbe2(
+	ILRewriter * pilr,
+	ModuleID moduleID,
+	mdMethodDef methodDef,
+	mdToken sString,
+	mdToken mdProbeRef,
+	ILInstr * pInsertProbeBeforeThisInstr)
+{
+	// Add a call before the instruction stream:
+	// 
+	// Replace
+	// 
+	//     ...
+	//     pInsertProbeBeforeThisInstr
+	//     ...
+	// 
+	// with
+	// 
+	//     ...
+	// #ifdef _X86_
+	//     ldc.i4 moduleID
+	// #else
+	//     ldc.i8 moduleID
+	// #endif
+	//     ldc.i4 mdMethodDefCur
+	//     ldc.i4 VersionNumberCur
+	//     stloc LocalVarUsedForVersion
+	//     ldloc LocalVarUsedForVersion
+	//     call MgdEnteredFunction32/64
+	//     pInsertProbeBeforeThisInstr
+	//     ...
+
+	ILInstr * pNewInstr = NULL;
+
+	//     ldc.i4/8 moduleID
+	pNewInstr = pilr->NewILInstr();
+#ifdef _WIN64
+	pNewInstr->m_opcode = CEE_LDC_I8;
+	pNewInstr->m_Arg64 = moduleID;
+#else
+	pNewInstr->m_opcode = CEE_LDC_I4;
+	pNewInstr->m_Arg32 = moduleID;
+#endif
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+	//     ldc.i4 mdMethodDefCur
+	pNewInstr = pilr->NewILInstr();
+	pNewInstr->m_opcode = CEE_LDC_I4;
+	pNewInstr->m_Arg32 = methodDef;
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+	
+	//     ldc.i4 mdMethodDefCur
+	pNewInstr = pilr->NewILInstr();
+	pNewInstr->m_opcode = CEE_LDSTR;
+	pNewInstr->m_Arg32 = sString;
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+	//     call MgdEnteredFunction32/64 (may be via memberRef or methodDef)
+	pNewInstr = pilr->NewILInstr();
+	pNewInstr->m_opcode = CEE_CALL;
+	pNewInstr->m_Arg32 = mdProbeRef;
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+	return S_OK;
+}
+
+HRESULT AddProbeAddFunctions(
+	ILRewriter * pilr,
+	ModuleID moduleID,
+	mdMethodDef methodDef,
+	mdToken sString,
+	mdToken mdProbeRef,
+	ILInstr * pInsertProbeBeforeThisInstr)
+{
+	// Add a call before the instruction stream:
+	// 
+	// Replace
+	// 
+	//     ...
+	//     pInsertProbeBeforeThisInstr
+	//     ...
+	// 
+	// with
+	// 
+	//     ...
+	// #ifdef _X86_
+	//     ldc.i4 moduleID
+	// #else
+	//     ldc.i8 moduleID
+	// #endif
+	//     ldc.i4 mdMethodDefCur
+	//     ldc.i4 VersionNumberCur
+	//     ldarg_0
+	//     ldarg_1
+	//     call MgdEnteredFunction32/64
+	//     pInsertProbeBeforeThisInstr
+	//     ...
+
+	ILInstr * pNewInstr = NULL;
+
+	//     ldc.i4/8 moduleID
+	pNewInstr = pilr->NewILInstr();
+#ifdef _WIN64
+	pNewInstr->m_opcode = CEE_LDC_I8;
+	pNewInstr->m_Arg64 = moduleID;
+#else
+	pNewInstr->m_opcode = CEE_LDC_I4;
+	pNewInstr->m_Arg32 = moduleID;
+#endif
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+	//     ldc.i4 mdMethodDefCur
+	pNewInstr = pilr->NewILInstr();
+	pNewInstr->m_opcode = CEE_LDC_I4;
+	pNewInstr->m_Arg32 = methodDef;
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+
+	//     ldc.i4 mdMethodDefCur
+	pNewInstr = pilr->NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_0;
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
+	//     ldc.i4 mdMethodDefCur
+	pNewInstr = pilr->NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_1;
+	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
+
 	//     call MgdEnteredFunction32/64 (may be via memberRef or methodDef)
 	pNewInstr = pilr->NewILInstr();
 	pNewInstr->m_opcode = CEE_CALL;
@@ -1113,6 +1494,73 @@ HRESULT AddExitProbe(
 	return S_OK;
 }
 
+HRESULT AddEnterProbe2(
+	ILRewriter * pilr,
+	ModuleID moduleID,
+	mdMethodDef methodDef,
+	mdToken sString,
+	mdToken mdEnterProbeRef)
+{
+	ILInstr * pFirstOriginalInstr = pilr->GetILList()->m_pNext;
+
+	return AddProbeAddFunctions(pilr, moduleID, methodDef, sString, mdEnterProbeRef, pFirstOriginalInstr);
+}
+
+
+HRESULT AddExitProbe2(
+	ILRewriter * pilr,
+	ModuleID moduleID,
+	mdMethodDef methodDef,
+	mdToken sString,
+	mdToken mdExitProbeRef)
+{
+	HRESULT hr;
+	BOOL fAtLeastOneProbeAdded = FALSE;
+
+	// Find all RETs, and insert a call to the exit probe before each one.
+	for (ILInstr * pInstr = pilr->GetILList()->m_pNext; pInstr != pilr->GetILList(); pInstr = pInstr->m_pNext)
+	{
+		switch (pInstr->m_opcode)
+		{
+		case CEE_RET:
+		{
+			// We want any branches or leaves that targeted the RET instruction to
+			// actually target the epilog instructions we're adding. So turn the "RET"
+			// into ["NOP", "RET"], and THEN add the epilog between the NOP & RET. That
+			// ensures that any branches that went to the RET will now go to the NOP and
+			// then execute our epilog.
+
+			// RET->NOP
+			pInstr->m_opcode = CEE_NOP;
+
+			// Add the new RET after
+			ILInstr * pNewRet = pilr->NewILInstr();
+			pNewRet->m_opcode = CEE_RET;
+			pilr->InsertAfter(pInstr, pNewRet);
+
+			// Add now insert the epilog before the new RET
+			hr = AddProbe2(pilr, moduleID, methodDef, sString, mdExitProbeRef, pNewRet);
+			if (FAILED(hr))
+				return hr;
+			fAtLeastOneProbeAdded = TRUE;
+
+			// Advance pInstr after all this gunk so the for loop continues properly
+			pInstr = pNewRet;
+			break;
+		}
+
+		default:
+			break;
+		}
+	}
+
+	if (!fAtLeastOneProbeAdded)
+		return E_FAIL;
+
+	return S_OK;
+}
+
+
 
 // Uses the general-purpose ILRewriter class to import original
 // IL, rewrite it, and send the result to the CLR
@@ -1135,6 +1583,7 @@ HRESULT RewriteIL(
 		assert(mdEnterProbeRef != mdTokenNil);
 		assert(mdExitProbeRef != mdTokenNil);
 		UINT iLocalVersion = rewriter.AddNewInt32Local();
+		UINT stringToken = rewriter.AddNewString();
 		IfFailRet(AddEnterProbe(&rewriter, moduleID, methodDef, nVersion, iLocalVersion, mdEnterProbeRef));
 		IfFailRet(AddExitProbe(&rewriter, moduleID, methodDef, nVersion, iLocalVersion, mdExitProbeRef));
 	}
@@ -1142,6 +1591,36 @@ HRESULT RewriteIL(
 
 	return S_OK;
 }
+
+// Uses the general-purpose ILRewriter class to import original
+// IL, rewrite it, and send the result to the CLR
+HRESULT RewriteIL2(
+	ICorProfilerInfo * pICorProfilerInfo,
+	ICorProfilerFunctionControl * pICorProfilerFunctionControl,
+	ModuleID moduleID,
+	mdMethodDef methodDef,
+	int nVersion,
+	mdToken mdEnterProbeRef,
+	mdToken mdExitProbeRef)
+{
+	ILRewriter rewriter(pICorProfilerInfo, pICorProfilerFunctionControl, moduleID, methodDef);
+
+	IfFailRet(rewriter.Initialize());
+	IfFailRet(rewriter.Import());
+	if (nVersion != 0)
+	{
+		// Adds enter/exit probes
+		assert(mdEnterProbeRef != mdTokenNil);
+		assert(mdExitProbeRef != mdTokenNil);
+		UINT stringToken = rewriter.AddNewString();
+		IfFailRet(AddEnterProbe2(&rewriter, moduleID, methodDef, stringToken, mdEnterProbeRef));
+		IfFailRet(AddExitProbe2(&rewriter, moduleID, methodDef, stringToken, mdExitProbeRef));
+	}
+	IfFailRet(rewriter.Export());
+
+	return S_OK;
+}
+
 
 // Uses the general-purpose ILRewriter class to create IL for
 // helper probes from scratch.  This is used when the profiler is
@@ -1194,6 +1673,252 @@ HRESULT SetILForManagedHelper(
 	// ldarg.2 (int32 rejitted version number of function being entered/exited)
 	pNewInstr = rewriter.NewILInstr();
 	pNewInstr->m_opcode = CEE_LDARG_2;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// call the PInvoke, which will target the profiler's NtvEnter/ExitFunction
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CALL;
+	pNewInstr->m_Arg32 = mdPInvokeToCall;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// nop
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_NOP;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ret
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_RET;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	IfFailRet(rewriter.Export());
+
+	return S_OK;
+}
+
+// Uses the general-purpose ILRewriter class to create IL for
+// helper probes from scratch.  This is used when the profiler is
+// run in the mode to pump helper methods directly into mscorlib,
+// rather than using static definitions of them in ProfilerHelper.dll
+HRESULT SetILForManagedHelper2(
+	ICorProfilerInfo * pICorProfilerInfo,
+	ModuleID moduleID,
+	mdMethodDef mdHelperToAdd,
+	mdMethodDef mdIntPtrExplicitCast,
+	mdMethodDef mdPInvokeToCall)
+{
+	ILRewriter rewriter(
+		pICorProfilerInfo,
+		NULL, // no ICorProfilerFunctionControl for classic-style on-first-JIT instrumentation
+		moduleID,
+		mdHelperToAdd);
+
+	rewriter.InitializeTiny();
+
+	ILInstr * pFirstOriginalInstr = rewriter.GetILList()->m_pNext;
+	ILInstr * pNewInstr = NULL;
+
+	// nop
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_NOP;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.0 (uint32/uint64 ModuleIDCur)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_0;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// conv.u8 (cast ModuleIDCur to a managed U8)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CONV_U8;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// call System.IntPtr::op_Explicit(int64) (convert ModuleIDCur to native int)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CALL;
+	pNewInstr->m_Arg32 = mdIntPtrExplicitCast;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.1 (uint32 methodDef of function being entered/exited)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_1;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.2 (int32 rejitted version number of function being entered/exited)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_2;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// call the PInvoke, which will target the profiler's NtvEnter/ExitFunction
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CALL;
+	pNewInstr->m_Arg32 = mdPInvokeToCall;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// nop
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_NOP;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ret
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_RET;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	IfFailRet(rewriter.Export());
+
+	return S_OK;
+}
+
+HRESULT SetILForManagedHelperAddNumbers(
+	ICorProfilerInfo * pICorProfilerInfo,
+	ModuleID moduleID,
+	mdMethodDef mdHelperToAdd,
+	mdMethodDef mdIntPtrExplicitCast,
+	mdMethodDef mdPInvokeToCall)
+{
+	ILRewriter rewriter(
+		pICorProfilerInfo,
+		NULL, // no ICorProfilerFunctionControl for classic-style on-first-JIT instrumentation
+		moduleID,
+		mdHelperToAdd);
+
+	rewriter.InitializeTiny();
+
+	ILInstr * pFirstOriginalInstr = rewriter.GetILList()->m_pNext;
+	ILInstr * pNewInstr = NULL;
+
+	// nop
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_NOP;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.0 (uint32/uint64 ModuleIDCur)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_0;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// conv.u8 (cast ModuleIDCur to a managed U8)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CONV_U8;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// call System.IntPtr::op_Explicit(int64) (convert ModuleIDCur to native int)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CALL;
+	pNewInstr->m_Arg32 = mdIntPtrExplicitCast;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.1 (uint32 methodDef of function being entered/exited)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_1;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.2 (int32 rejitted version number of function being entered/exited)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_2;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.1 (uint32 methodDef of function being entered/exited)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_3;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// call the PInvoke, which will target the profiler's NtvEnter/ExitFunction
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CALL;
+	pNewInstr->m_Arg32 = mdPInvokeToCall;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// nop
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_NOP;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ret
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_RET;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	IfFailRet(rewriter.Export());
+
+	return S_OK;
+}
+
+
+HRESULT SetILForManagedHelperSA(
+	ICorProfilerInfo * pICorProfilerInfo,
+	ModuleID moduleID,
+	mdMethodDef mdHelperToAdd,
+	mdMethodDef mdIntPtrExplicitCast,
+	mdMethodDef mdPInvokeToCall,
+	mdTypeRef mdObject)
+{
+	ILRewriter rewriter(
+		pICorProfilerInfo,
+		NULL, // no ICorProfilerFunctionControl for classic-style on-first-JIT instrumentation
+		moduleID,
+		mdHelperToAdd);
+
+	rewriter.InitializeTiny();
+
+	ILInstr * pFirstOriginalInstr = rewriter.GetILList()->m_pNext;
+	ILInstr * pNewInstr = NULL;
+
+	// nop
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_NOP;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.0 (uint32/uint64 ModuleIDCur)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_0;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// conv.u8 (cast ModuleIDCur to a managed U8)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CONV_U8;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// call System.IntPtr::op_Explicit(int64) (convert ModuleIDCur to native int)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CALL;
+	pNewInstr->m_Arg32 = mdIntPtrExplicitCast;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.1 (uint32 methodDef of function being entered/exited)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_1;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.1 (uint32 methodDef of function being entered / exited)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDC_I4;
+	pNewInstr->m_Arg32 = 1;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.2 (int32 rejitted version number of function being entered/exited)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_NEWARR;
+	pNewInstr->m_Arg32 = mdObject;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.1 (uint32 methodDef of function being entered / exited)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDC_I4;
+	pNewInstr->m_Arg32 = 1;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+
+	// ldarg.1 (uint32 methodDef of function being entered / exited)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDC_I4;
+	pNewInstr->m_Arg32 = 0xFFFF;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.1 (uint32 methodDef of function being entered/exited)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_STELEM_REF;
 	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
 
 	// call the PInvoke, which will target the profiler's NtvEnter/ExitFunction

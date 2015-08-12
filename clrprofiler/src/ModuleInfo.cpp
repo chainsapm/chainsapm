@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "ModuleInfo.h"
+#include "../../metadatastaticlib/inc/ModuleInfo.h"
 
 namespace InformationClasses {
 	ModuleInfo::ModuleInfo()

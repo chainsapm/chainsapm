@@ -1,0 +1,37 @@
+﻿<#@ template language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+
+
+#pragma once
+#include "ICommand.h"
+
+namespace Commands
+{
+    class <#= this.ClassName #> :
+        public virtual ICommand
+    {
+    public:
+        <#= this.ClassName #>(__int64 timestamp, <# foreach (var cpItem in this.ClassProperties) { if (TypeMapping.ContainsKey(cpItem.TypeName)) { #><#=TypeMapping[cpItem.TypeName].ToString() #><# } else { #><#= cpItem.TypeName.ToString()#><#}#> <#= cpItem.Name.ToLower() #><#  if (this.ClassProperties.Last().Name != cpItem.Name) { #>, <# } else { } } #>);
+        ~<#= this.ClassName #>();
+        virtual std::shared_ptr<std::vector<char>> Encode();
+        virtual std::shared_ptr<ICommand> Decode(std::shared_ptr<std::vector<char>> &data);
+        virtual std::wstring Name();
+        virtual std::wstring Description();
+        virtual short Code() { return code; }
+
+    private:
+
+<# foreach (var cpItem in this.ClassProperties)
+{ #>
+        <# if (TypeMapping.ContainsKey(cpItem.TypeName)) { #><#=TypeMapping[cpItem.TypeName].ToString() #><# } else { #><#= cpItem.TypeName.ToString()#><#}#> m_<#= cpItem.Name #>;
+<# } #>
+        __int64 m_timestamp; // Always use a 64bit so the message doesn't change
+        std::shared_ptr<std::vector<char>> m_internalvector;
+        bool hasEncoded;
+        short code;
+    };
+
+}

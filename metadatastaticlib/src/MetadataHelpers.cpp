@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "MetadataHelpers.h"
-#include "ContainerClass.h"
 
 
 // CRITICAL 1 Research thread safety around metadata functions.
@@ -10,30 +9,26 @@ MetadataHelpers::MetadataHelpers()
 	InitializeCriticalSection(&m_ThreadCS);
 }
 
-MetadataHelpers::MetadataHelpers(ContainerClass *cClass) : MetadataHelpers()
-{
-	this->m_ContainerClass = cClass;
-}
 
-MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo> profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
+MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo> profilerInfo, ModuleID moduleId) : MetadataHelpers()
 {
 	m_pICorProfilerInfo = profilerInfo;
 }
 
-MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo2> profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
+MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo2> profilerInfo, ModuleID moduleId) : MetadataHelpers()
 {
 	m_pICorProfilerInfo = profilerInfo;
 	m_pICorProfilerInfo2 = profilerInfo;
 }
 
-MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo3> profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
+MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo3> profilerInfo, ModuleID moduleId) :MetadataHelpers()
 {
 	m_pICorProfilerInfo = profilerInfo;
 	m_pICorProfilerInfo2 = profilerInfo;
 	m_pICorProfilerInfo3 = profilerInfo;
 }
 
-MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo4> profilerInfo, ContainerClass *cClass) : MetadataHelpers(cClass)
+MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo4> profilerInfo, ModuleID moduleId) : MetadataHelpers()
 {
 	m_pICorProfilerInfo = profilerInfo;
 	m_pICorProfilerInfo2 = profilerInfo;
@@ -200,13 +195,13 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Informat
 
 		m_pICorProfilerInfo->GetFunctionInfo(funcId, &modID, &classID, &funcToken);
 
-		auto classExists = m_ContainerClass->g_ClassSet->find(classID);
-		if (classExists == m_ContainerClass->g_ClassSet->end())
-		{
-			InformationClasses::ClassInfo * classInfo = nullptr; // Get a reference to the classInfo
-			GetClassInformation(classID, classInfo);
-			funcInfo->ClassInformation(classInfo);
-		}
+		//auto classExists = m_ContainerClass->g_ClassSet->find(classID);
+		//if (classExists == m_ContainerClass->g_ClassSet->end())
+		//{
+		//	InformationClasses::ClassInfo * classInfo = nullptr; // Get a reference to the classInfo
+		//	GetClassInformation(classID, classInfo);
+		//	funcInfo->ClassInformation(classInfo);
+		//}
 
 
 	
@@ -315,12 +310,12 @@ STDMETHODIMP MetadataHelpers::GetFunctionInformation(FunctionID funcId, Informat
 					
 					paramInfo.ParameterName(szParamName);
 					funcInfo->AddParameters(paramInfo);
-					auto foundEntrypoint = this->m_ContainerClass->g_FunctionSet->find(funcId);
+					/*auto foundEntrypoint = this->m_ContainerClass->g_FunctionSet->find(funcId);
 					auto endOfSet = this->m_ContainerClass->g_FunctionSet->end();
 					if (foundEntrypoint != endOfSet)
 					{
 						funcInfo->IsEntryPoint(TRUE);
-					}
+					}*/
 
 				}
 			}

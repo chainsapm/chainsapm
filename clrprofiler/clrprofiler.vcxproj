@@ -122,53 +122,55 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir).output\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(ProjectDir)inc;$(IncludePath)</IncludePath>
-    <SourcePath>$(ProjectDir)inc;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
+    <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(SolutionDir).output\$(Configuration)\$(Platform)\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'">
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir).output\Debug\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\Debug\</IntDir>
-    <IncludePath>$(ProjectDir)inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
-    <SourcePath>$(ProjectDir)inc;$(SourcePath)</SourcePath>
+    <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir).output\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(ProjectDir)inc;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath);$(SolutionDir).output\$(Configuration)\$(Platform)\</LibraryPath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <SourcePath>$(ProjectDir)inc;$(SourcePath)</SourcePath>
+    <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugMVC|x64'">
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir).output\Debug\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\Debug\</IntDir>
-    <IncludePath>$(ProjectDir)inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
-    <SourcePath>$(ProjectDir)inc;$(SourcePath)</SourcePath>
+    <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\.output\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)\.build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(ProjectDir)inc;$(IncludePath)</IncludePath>
-    <SourcePath>$(ProjectDir)inc;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
+    <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(SolutionDir).output\$(Configuration)\$(Platform)\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)inc;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath);$(SolutionDir).output\$(Configuration)\$(Platform)\</LibraryPath>
     <OutDir>$(SolutionDir).output\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <SourcePath>$(ProjectDir)inc;$(SourcePath)</SourcePath>
+    <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -201,7 +203,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <ModuleDefinitionFile>.\clrprofiler.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>.\defs\clrprofiler.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RegisterOutput>true</RegisterOutput>
     </Link>
@@ -238,7 +240,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <ModuleDefinitionFile>.\clrprofiler.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>.\defs\clrprofiler.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RegisterOutput>true</RegisterOutput>
     </Link>
@@ -277,7 +279,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <ModuleDefinitionFile>defs\clrprofiler.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>.\defs\clrprofiler.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RegisterOutput>true</RegisterOutput>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
@@ -318,7 +320,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <ModuleDefinitionFile>.\clrprofiler.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>.\defs\clrprofiler.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RegisterOutput>true</RegisterOutput>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
@@ -358,7 +360,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <ModuleDefinitionFile>.\clrprofiler.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>.\defs\clrprofiler.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
@@ -395,7 +397,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <ModuleDefinitionFile>defs\clrprofiler.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>.\defs\clrprofiler.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
@@ -404,13 +406,14 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\..\Logfiles\NewCommand2.cpp" />
+    <ClCompile Include="src\bit_converter.cpp" />
     <ClCompile Include="src\DefineAssembly.cpp" />
     <ClCompile Include="src\DefineClass.cpp" />
     <ClCompile Include="src\DefineFunction.cpp" />
     <ClCompile Include="src\DefineModule.cpp" />
     <ClCompile Include="src\FunctionLeaveQuick.cpp" />
     <ClCompile Include="src\FunctionTailQuick.cpp" />
-    <ClCompile Include="src\ilrewriter.cpp" />
     <ClCompile Include="src\SendPackedStructure.cpp" />
     <ClCompile Include="src\AgentInfo.cpp" />
     <ClCompile Include="src\AssemblyDefinition.cpp" />
@@ -471,8 +474,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClCompile Include="src\GarbageCollectionStarted.cpp" />
     <ClCompile Include="src\GetString.cpp" />
     <ClCompile Include="src\ICommand.cpp" />
-    <ClCompile Include="src\ILFactory.cpp" />
-    <ClCompile Include="src\MetadataHelpers.cpp" />
     <ClCompile Include="src\ModuleInfo.cpp" />
     <ClCompile Include="src\networkclient.cpp" />
     <ClCompile Include="src\ParameterInfo.cpp" />
@@ -483,7 +484,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClCompile Include="src\SetFunctionsToMonitor.cpp" />
     <ClCompile Include="src\srw_helper.cpp" />
     <ClCompile Include="src\StackItemBase.cpp" />
-    <ClCompile Include="src\static_il_bodies.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'">Create</PrecompiledHeader>
@@ -493,7 +493,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\ThreadStackItem.cpp" />
-    <ClCompile Include="src\webengine4helper.cpp" />
     <ClCompile Include="src\xdlldata.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'">false</CompileAsManaged>
@@ -516,9 +515,11 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\..\Logfiles\NewCommand2.h" />
     <ClInclude Include="inc\AgentInfo.h" />
     <ClInclude Include="inc\AssemblyDefinition.h" />
     <ClInclude Include="inc\AssemblyInfo.h" />
+    <ClInclude Include="inc\bit_converter.h" />
     <ClInclude Include="inc\ClassDefinition.h" />
     <ClInclude Include="inc\ClassInfo.h" />
     <ClInclude Include="inc\clrprofiler_i.h" />
@@ -542,8 +543,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="inc\GarbageCollectionStarted.h" />
     <ClInclude Include="inc\GetString.h" />
     <ClInclude Include="inc\ICommand.h" />
-    <ClInclude Include="inc\ILFactory.h" />
-    <ClInclude Include="inc\MetadataHelpers.h" />
     <ClInclude Include="inc\ModuleInfo.h" />
     <ClInclude Include="inc\networkclient.h" />
     <ClInclude Include="inc\ParameterInfo.h" />
@@ -553,11 +552,9 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="inc\SendString.h" />
     <ClInclude Include="inc\SetFunctionsToMonitor.h" />
     <ClInclude Include="inc\srw_helper.h" />
-    <ClInclude Include="inc\static_il_bodies.h" />
     <ClInclude Include="inc\stdafx.h" />
     <ClInclude Include="inc\targetver.h" />
     <ClInclude Include="inc\stackitems.h" />
-    <ClInclude Include="inc\webengine4helper.h" />
     <ClInclude Include="inc\xdlldata.h" />
     <ClInclude Include="inc\SendPackedStructure.h" />
   </ItemGroup>
@@ -566,7 +563,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   </ItemGroup>
   <ItemGroup>
     <None Include="defs\clrprofiler.def" />
-    <None Include="inc\sigparse.inl" />
     <None Include="rsrc\clrprofiler.rgs" />
     <MASM Include="src\etl_enter_x64.asm">
       <FileType>MASM</FileType>

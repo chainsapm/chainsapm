@@ -26,9 +26,6 @@
     <Filter Include="Helpers">
       <UniqueIdentifier>{1206c891-4454-4a53-bdf5-3d5bcd9dfe7c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="IL Rewriting">
-      <UniqueIdentifier>{a1739379-5a12-4104-8abe-eecf507a5687}</UniqueIdentifier>
-    </Filter>
     <Filter Include="DLLMain">
       <UniqueIdentifier>{312be530-08bb-474f-9f3b-9f5b3e2e1971}</UniqueIdentifier>
     </Filter>
@@ -38,17 +35,8 @@
     <Filter Include="Common Classes">
       <UniqueIdentifier>{ace1e0a3-8308-4007-954d-6176de8ee9f2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="IL Rewriting\IL Body Helpers">
-      <UniqueIdentifier>{f275989c-f8b3-413b-b1e9-1082ec8392ac}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="IL Rewriting\Factory Class">
-      <UniqueIdentifier>{93825141-6d0f-4774-b6b2-cd34e988a1f7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="CorProfilerCallback">
       <UniqueIdentifier>{b780124e-f465-4063-af4e-87fa6d554549}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="WebengineHelpers">
-      <UniqueIdentifier>{4d5af967-5f37-4c07-b387-1b2d73f60b2a}</UniqueIdentifier>
     </Filter>
     <Filter Include="Network">
       <UniqueIdentifier>{a4e23f61-673d-4da0-8588-c259badd8510}</UniqueIdentifier>
@@ -76,12 +64,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\MetadataHelpers.cpp">
-      <Filter>Helpers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\static_il_bodies.cpp">
-      <Filter>IL Rewriting\IL Body Helpers</Filter>
-    </ClCompile>
     <ClCompile Include="src\stdafx.cpp">
       <Filter>DLLMain</Filter>
     </ClCompile>
@@ -94,9 +76,6 @@
     <ClCompile Include="src\profilermain.cpp">
       <Filter>CProfilerClass</Filter>
     </ClCompile>
-    <ClCompile Include="src\ILFactory.cpp">
-      <Filter>IL Rewriting\Factory Class</Filter>
-    </ClCompile>
     <ClCompile Include="src\critsec_helper.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
@@ -105,9 +84,6 @@
     </ClCompile>
     <ClCompile Include="src\CorProfilerCallbackImplementation.cpp">
       <Filter>CorProfilerCallback</Filter>
-    </ClCompile>
-    <ClCompile Include="src\webengine4helper.cpp">
-      <Filter>WebengineHelpers</Filter>
     </ClCompile>
     <ClCompile Include="src\networkclient.cpp">
       <Filter>Network</Filter>
@@ -211,22 +187,19 @@
     <ClCompile Include="src\DefineModule.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
-    <ClCompile Include="src\ilrewriter.cpp">
-      <Filter>IL Rewriting</Filter>
+    <ClCompile Include="..\..\..\..\..\..\Logfiles\NewCommand2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bit_converter.cpp">
+      <Filter>Helpers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\clrprofiler_i.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\MetadataHelpers.h">
-      <Filter>Helpers</Filter>
-    </ClInclude>
     <ClInclude Include="inc\commonstructures.h">
       <Filter>Common Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\static_il_bodies.h">
-      <Filter>IL Rewriting\IL Body Helpers</Filter>
     </ClInclude>
     <ClInclude Include="inc\dllmain.h">
       <Filter>DLLMain</Filter>
@@ -246,9 +219,6 @@
     <ClInclude Include="inc\profilermain.h">
       <Filter>CProfilerClass</Filter>
     </ClInclude>
-    <ClInclude Include="inc\ILFactory.h">
-      <Filter>IL Rewriting\Factory Class</Filter>
-    </ClInclude>
     <ClInclude Include="inc\critsec_helper.h">
       <Filter>Helpers</Filter>
     </ClInclude>
@@ -257,9 +227,6 @@
     </ClInclude>
     <ClInclude Include="inc\CorProfilerCallbackImplementation.h">
       <Filter>CorProfilerCallback</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\webengine4helper.h">
-      <Filter>WebengineHelpers</Filter>
     </ClInclude>
     <ClInclude Include="inc\networkclient.h">
       <Filter>Network</Filter>
@@ -348,6 +315,12 @@
     <ClInclude Include="inc\DefineModule.h">
       <Filter>Commands</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\Logfiles\NewCommand2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\bit_converter.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="rsrc\clrprofiler.rc">
@@ -366,9 +339,6 @@
     </None>
     <None Include="rsrc\profilermain.rgs">
       <Filter>Resource Files</Filter>
-    </None>
-    <None Include="inc\sigparse.inl">
-      <Filter>IL Rewriting</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

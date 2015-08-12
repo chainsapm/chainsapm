@@ -34,7 +34,7 @@ NetworkClient::NetworkClient(std::wstring hostName, std::wstring port)
 	t.tv_sec = 2;
 	// Just connect to the 
 	WSAConnectByName(NetworkClient::m_SocketConnection, (LPWSTR)m_HostName.c_str(), (LPWSTR)m_HostPort.c_str(), NULL, NULL, NULL, NULL, &t, NULL);
-	
+
 }
 
 
@@ -91,10 +91,10 @@ std::shared_ptr<Commands::ICommand> NetworkClient::ReceiveCommand()
 HRESULT NetworkClient::SendCommands(std::vector<std::shared_ptr<Commands::ICommand>> &packet)
 {
 	auto csh = critsec_helper::critsec_helper(&FrontOutboundLock);
-		for (auto &x : packet)
-		{
-			m_OutboundQueueFront.emplace(x->Encode());
-		}
+	for (auto &x : packet)
+	{
+		m_OutboundQueueFront.emplace(x->Encode());
+	}
 	csh.leave_early();
 	return S_OK;
 }
@@ -160,7 +160,7 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 		bufs[0].len = 4;
 		bufs[counter].buf = term;
 		bufs[counter].len = 4;
-		
+
 		bufscount = buffersize;
 
 		if (bufscount > 2)
@@ -177,15 +177,15 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 			if (!result)
 			{
 				result = WSA_IO_PENDING;
-		}
+			}
 			else
 			{
 				result = WSAGetLastError();
-	}
+			}
 			if (WSA_IO_PENDING != result)
 			{
 				CancelThreadpoolIo(NetworkClient::m_ptpIO);
-}
+			}
 		}
 		WaitForThreadpoolIoCallbacks(NetworkClient::m_ptpIO, FALSE);
 		netClient->insideSendLock = false;
@@ -219,7 +219,7 @@ VOID CALLBACK NetworkClient::ReceiveTimerCallback(
 		if (!result)
 		{
 			result = WSA_IO_PENDING;
-}
+		}
 		else
 		{
 			result = WSAGetLastError();
@@ -255,7 +255,7 @@ void CALLBACK NetworkClient::NewDataReceived(
 			{
 				iterBuff += 4;
 				while (iterBuff < iterBuff + (totalBuffSize - 4))
-		{
+				{
 					int localBufferSize = *(int*)iterBuff;
 					//short term = *(short*)(iterBuff + localBufferSize - 2);
 					iterBuff += localBufferSize;
@@ -273,13 +273,13 @@ void CALLBACK NetworkClient::DataSent(
 	IN DWORD dwFlags
 	)
 {
-		if (lpOverlapped->hEvent != NULL )
-		{
-			NetClietCallback *ncc = (NetClietCallback*)lpOverlapped->hEvent;
-			ncc->netclient->insideSendLock = false;
-			ncc->netclient = NULL;
-			delete lpOverlapped->hEvent;
-		}
+	if (lpOverlapped->hEvent != NULL)
+	{
+		NetClietCallback *ncc = (NetClietCallback*)lpOverlapped->hEvent;
+		ncc->netclient->insideSendLock = false;
+		ncc->netclient = NULL;
+		delete lpOverlapped->hEvent;
+	}
 }
 
 
@@ -290,7 +290,7 @@ VOID CALLBACK NetworkClient::SendRecvData(
 {
 	Sleep(5000);
 	ResetEvent(NetworkClient::SendRecvEvent);
-	}
+}
 
 VOID CALLBACK NetworkClient::IoCompletionCallback(
 	_Inout_     PTP_CALLBACK_INSTANCE Instance,
@@ -375,6 +375,62 @@ HRESULT NetworkClient::SendNow()
 			}
 		}
 		netClient->insideSendLock = false;
+	}
+	return S_OK;
+}
+
+HRESULT NetworkClient::RecvNow()
+{
+	auto netClient = static_cast<NetworkClient*>(this);
+	if (!netClient->insideReceiveLock)
+	{
+		netClient->insideReceiveLock = true;
+		auto bigBufferChars = new char[10 * 1024];
+		LPWSABUF bigBuffer = new WSABUF;
+		bigBuffer->buf = bigBufferChars;
+		bigBuffer->len = 10 * 1024;
+		SecureZeroMemory(bigBufferChars, 10 * 1024);
+		DWORD bytesRecvd = 0;
+		DWORD flags = 0;
+		WSAOVERLAPPED overlapped;
+		SecureZeroMemory(&overlapped, sizeof(WSAOVERLAPPED));
+
+		StartThreadpoolIo(NetworkClient::m_ptpIO);
+		auto result = WSARecv(netClient->m_SocketConnection, bigBuffer, 1, &bytesRecvd, &flags, nullptr, nullptr);
+		if (!result)
+		{
+			result = WSA_IO_PENDING;
+		}
+		else
+		{
+			result = WSAGetLastError();
+		}
+
+		// If there is nothing here we need to continue
+		netClient->insideReceiveLock = false;
+
+		if (bytesRecvd > 0)
+		{
+			auto buffOut = (LPWSABUF)bigBuffer;
+			auto charBuff = (char*)buffOut->buf;
+			auto iterBuff = (char*)buffOut->buf;
+			DWORD totalBuffSize = *(DWORD*)charBuff;
+			if (totalBuffSize == bytesRecvd)
+			{
+				auto term = *(unsigned int*)charBuff[totalBuffSize - 4];
+				if (term == 0xCCCCCCCC)
+				{
+					iterBuff += 4;
+					while (iterBuff < iterBuff + (totalBuffSize - 4))
+					{
+						int localBufferSize = *(int*)iterBuff;
+						//short term = *(short*)(iterBuff + localBufferSize - 2);
+						iterBuff += localBufferSize;
+					}
+				}
+			}
+
+		}
 	}
 	return S_OK;
 }

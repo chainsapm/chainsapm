@@ -1,0 +1,174 @@
+﻿<#@ template language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+/*
+ *
+ * This code was generated from the Command Creator.
+ *
+ *
+ */
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ChainsAPM.Commands.<#= this.Namespace #>
+{
+    public class <#= this.ClassName #> : Interfaces.ICommand<byte>
+    {
+
+         public DateTime TimeStamp { get; set; }
+<# foreach (var enumn in this.EnumerationList)
+{ #>
+        public enum <#= enumn.EnumerationName #>
+        {
+<# foreach (var enumItem in enumn.Items)
+{ #>
+<# if (enumn.Items.Last().Name != enumItem.Name)
+{ #>
+            <#= enumItem.Name #> = <#= enumItem.Value #>,
+<#
+} else { #>
+            <#= enumItem.Name #> = <#= enumItem.Value #>
+<# } #>
+<# } #>
+        }
+<# } #>
+
+<# foreach (var cpItem in this.ClassProperties)
+{ #>
+        public <# if (TypeMapping.ContainsKey(cpItem.TypeName)) { #><#=TypeMapping[cpItem.TypeName].ToString() #><# } else { #><#= cpItem.TypeName.ToString()#><#}#> <#= cpItem.Name #> { get; set; }
+<# } #>
+
+        public <#= this.ClassName #>()
+        {
+
+        }
+
+        public <#= this.ClassName #>(System.Int64 timeStamp, <# foreach (var cpItem in this.ClassProperties) { if (TypeMapping.ContainsKey(cpItem.TypeName)) { #><#=TypeMapping[cpItem.TypeName].ToString() #><# } else { #><#= cpItem.TypeName.ToString()#><#}#>  <#= cpItem.Name.ToLower() #><#  if (this.ClassProperties.Last().Name != cpItem.Name) { #>, <# } else { } } #>)
+        {
+            TimeStamp = DateTime.FromFileTimeUtc(timestamp);
+<# foreach (var cpItem in this.ClassProperties)
+{ #>
+            <#= cpItem.Name #> = <#= cpItem.Name.ToLower() #>;
+<# } #>
+        }
+
+        public string Name
+        {
+            get { return "<#= this.Name #>"; }
+        }
+        public ushort Code
+        {
+            get { return 0x<#= this.Code.ToString("x4") #>; }
+        }
+        public string Description
+        {
+            get { return "<#= this.Description #>"; }
+        }
+        public Type CommandType
+        {
+            get { return typeof(<#= this.CommandType.ToString() #>); }
+        }
+        public Interfaces.ICommand<byte> Decode(ArraySegment<byte> input)
+        {
+
+            if (input.Count != 0)
+            {
+                Helpers.ArraySegmentStream segstream = new Helpers.ArraySegmentStream(input);
+                int size = segstream.GetInt32();
+                if (input.Count == size)
+                {
+                    short code = segstream.GetInt16();
+                    if (code == Code)
+                    {
+                    var timestamp = segstream.GetInt64();
+<# foreach (var cpItem in this.ClassProperties) { 
+string typeName = "";
+if (TypeMapping.ContainsKey(cpItem.TypeName)) { typeName = TypeMapping[cpItem.TypeName].ToString(); } else { typeName = cpItem.TypeName.ToString(); }
+if (typeName == typeof(string).FullName) { #>
+                        var stringlen<#= cpItem.Name #> = segstream.GetInt32();
+                        var decode<#= cpItem.Name #>Hash = segstream.GetInt32();
+                        var decode<#= cpItem.Name #> = segstream.GetUnicode(stringlen<#= cpItem.Name #>);
+
+<# } else if (typeName == typeof(Int32).FullName) { #>
+                        var decode<#= cpItem.Name #> = segstream.GetInt32();
+
+<# } else if (typeName == typeof(Int16).FullName) { #>
+                        var decode<#= cpItem.Name #> = segstream.GetInt16();
+
+<# } else if (typeName == typeof(Int64).FullName) { #>
+                        var decode<#= cpItem.Name #> = segstream.GetInt64();
+
+<# } else if (typeName == typeof(byte).FullName) { #>
+                        var decode<#= cpItem.Name #> = segstream.GetByte();
+
+<# } else { #>
+                        var decode<#= cpItem.Name #> = (<#= typeName #>)segstream.GetInt32();
+
+<# } #>
+<# } #>                       
+                        var term = segstream.GetInt16();
+
+                        if (term != 0)
+                        {
+                            throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
+                        }
+                        return new <#= this.ClassName #>(timestamp, <# foreach (var cpItem in this.ClassProperties) { #>decode<#= cpItem.Name #><# if (this.ClassProperties.Last().Name != cpItem.Name) { #>, <# } else { } } #>);
+                    }
+                    else
+                    {
+                        throw new System.Runtime.Serialization.SerializationException("Invalid command code detected. Please check the incoming byte stream for possible errors.");
+                    }
+                }
+                else
+                {
+                    throw new System.Runtime.Serialization.SerializationException("Size of message does not match size of byte stream. Please check the incoming byte stream for possible errors.");
+                }
+            }
+            else
+            {
+                throw new System.Runtime.Serialization.SerializationException("Size of message is zero. Please check the incoming byte stream for possible errors. ");
+            }
+        }
+        public byte[] Encode()
+        {
+            int byteSize 4;
+<# foreach (var cpItem in this.ClassProperties) { 
+string typeName = "";			 
+if (TypeMapping.ContainsKey(cpItem.TypeName)) { typeName = TypeMapping[cpItem.TypeName].ToString(); } else { typeName = cpItem.TypeName.ToString(); }
+if (typeName == typeof(string).FullName) { #>
+            byteSize += 4; // Length Bytes
+            byteSize += 4; // Hash Bytes
+            byteSize += <#= cpItem.Name #>.Length; // Hash Bytes
+<# } else if (typeName == typeof(Int32).FullName) { #>
+            byteSize += sizeof(<#= typeName #>);
+<# } else if (typeName == typeof(Int16).FullName) { #>
+            byteSize += sizeof(<#= typeName #>);
+<# } else if (typeName == typeof(Int64).FullName) { #>
+            byteSize += sizeof(<#= typeName #>);
+<# } else if (typeName == typeof(byte).FullName) { #>
+            byteSize += sizeof(<#= typeName #>);
+<# } else { #>
+            byteSize += sizeof(Int32);
+<# } #>
+<# } #>
+            var buffer = new List<byte>(byteSize);
+            buffer.AddRange(BitConverter.GetBytes(byteSize)); // 4 bytes for size, 2 byte for code, 8 bytes for data, 8 bytes for data, 8 bytes for TS, 2 bytes for term
+            buffer.AddRange(BitConverter.GetBytes(Code));
+            buffer.AddRange(BitConverter.GetBytes(TimeStamp.ToFileTimeUtc()));
+<# foreach (var cpItem in this.ClassProperties) { #>
+            buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>)); 
+<# } #>
+            buffer.AddRange(BitConverter.GetBytes((short)0));
+            return buffer.ToArray();
+            return null;
+        }
+    }
+
+}
+
