@@ -13,6 +13,10 @@ namespace Commands
 	{
 	}
 
+	SendString::SendString(std::wstring &&data) : hasEncoded(false)
+	{
+		m_wstring.swap(data);
+	}
 	SendString::~SendString()
 	{
 	}
@@ -112,6 +116,7 @@ namespace Commands
 
 	std::shared_ptr<ICommand> SendString::Decode(std::shared_ptr<std::vector<char>> &data)
 	{
+		UNREFERENCED_PARAMETER(data);
 		return std::make_shared<SendString>(SendString(m_wstring));
 	}
 }

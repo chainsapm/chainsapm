@@ -34,7 +34,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
@@ -44,7 +44,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
@@ -54,7 +54,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
@@ -66,7 +66,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugMVC|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
@@ -77,7 +77,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
@@ -87,7 +87,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <LocalDebuggerCommand>$(SolutionDir).output\$(Configuration)\$(Platform)\HelloWorldTestHarness.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
@@ -406,7 +406,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\Logfiles\NewCommand2.cpp" />
     <ClCompile Include="src\bit_converter.cpp" />
     <ClCompile Include="src\DefineAssembly.cpp" />
     <ClCompile Include="src\DefineClass.cpp" />
@@ -515,7 +514,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\..\Logfiles\NewCommand2.h" />
     <ClInclude Include="inc\AgentInfo.h" />
     <ClInclude Include="inc\AssemblyDefinition.h" />
     <ClInclude Include="inc\AssemblyInfo.h" />

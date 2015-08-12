@@ -155,7 +155,9 @@ BOOL ContainsAtEnd(LPCWSTR wszContainer, LPCWSTR wszProspectiveEnding);
 
 
 
-std::map<UINT_PTR, Cprofilermain*> * Cprofilermain::g_StaticContainerClass = new std::map<UINT_PTR, Cprofilermain*>();
+std::map<UINT_PTR, Cprofilermain*> * Cprofilermain::g_StaticContainerClass = 
+new std::map<UINT_PTR, Cprofilermain*>();
+
 CRITICAL_SECTION Cprofilermain::g_StaticContainerClassCritSec;
 
 //---------------------------------------------------------------------------------------
@@ -179,6 +181,7 @@ EXTERN_C void STDAPICALLTYPE NtvEnteredFunctionArraySA(
 	mdMethodDef mdCur,
 	SAFEARRAY* ar)
 {
+	UNREFERENCED_PARAMETER(ar);
 	Cprofilermain * pContainerClass = nullptr;
 	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
 	pContainerClass->NtvEnteredFunction(moduleIDCur, mdCur, 0);
@@ -199,6 +202,7 @@ EXTERN_C void STDAPICALLTYPE NtvEnteredFunction2(
 	mdMethodDef mdCur,
 	LPTSTR string)
 {
+	UNREFERENCED_PARAMETER(string);
 	Cprofilermain * pContainerClass = nullptr;
 	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
 	pContainerClass->NtvEnteredFunction(moduleIDCur, mdCur, 1);
@@ -209,6 +213,7 @@ EXTERN_C void STDAPICALLTYPE NtvExitedFunction2(
 	mdMethodDef mdCur,
 	LPTSTR string)
 {
+	UNREFERENCED_PARAMETER(string);
 	Cprofilermain * pContainerClass = nullptr;
 	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
 	pContainerClass->NtvExitedFunction(moduleIDCur, mdCur, 1);
@@ -221,6 +226,8 @@ EXTERN_C void STDAPICALLTYPE NtvEnteredFunctionAdd(
 	long val1,
 	long val2)
 {
+	UNREFERENCED_PARAMETER(val1);
+	UNREFERENCED_PARAMETER(val2);
 	Cprofilermain * pContainerClass = nullptr;
 	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
 	pContainerClass->NtvEnteredFunction(moduleIDCur, mdCur, 1);
@@ -232,6 +239,8 @@ EXTERN_C void STDAPICALLTYPE NtvExitedFunctionAdd(
 	long val1,
 	long val2)
 {
+	UNREFERENCED_PARAMETER(val1);
+	UNREFERENCED_PARAMETER(val2);
 	Cprofilermain * pContainerClass = nullptr;
 	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
 	pContainerClass->NtvExitedFunction(moduleIDCur, mdCur, 1);
@@ -254,9 +263,8 @@ protected:
 // Global methods for specific profiler callbacks. Namely the Mapper and Enter/Leave/Tail
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 // Enter hook function for creating shadow stacks
-void FunctionEnter2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
+ EXTERN_C inline void FunctionEnter2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
 {
 	Cprofilermain * pContainerClass = (Cprofilermain*)clientData;
@@ -270,7 +278,7 @@ void FunctionEnter2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 }
 
 // Leave hook function for creating shadow stacks
-void FunctionLeave2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
+ EXTERN_C inline void FunctionLeave2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentRange)
 {
 	Cprofilermain * pContainerClass = (Cprofilermain*)clientData;
@@ -283,7 +291,7 @@ void FunctionLeave2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 }
 
 // Tail hook function for creating shadow stacks
-void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
+ EXTERN_C inline void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func)
 {
 
@@ -298,12 +306,11 @@ void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 
 
 
-
 #if X64
 #else
-
+#pragma warning( disable : 4102 )
 // @@TODO: Change the declaration to match the function you're implementing
-void __declspec(naked) __stdcall FunctionLeave2_x86(FunctionID id, UINT_PTR clientData, COR_PRF_FRAME_INFO frame, COR_PRF_FUNCTION_ARGUMENT_RANGE* retvalRange)
+__declspec(naked) void FunctionLeave2_x86(FunctionID id, UINT_PTR clientData, COR_PRF_FRAME_INFO frame, COR_PRF_FUNCTION_ARGUMENT_RANGE * retvalRange)
 {
 	__asm
 	{
@@ -311,7 +318,7 @@ void __declspec(naked) __stdcall FunctionLeave2_x86(FunctionID id, UINT_PTR clie
 		// Set up EBP Frame (easy debugging)
 		// Turned off in release mode to save cycles
 		push ebp
-			mov ebp, esp
+		mov ebp, esp
 #endif
 
 			// Make space for locals.
@@ -348,11 +355,11 @@ void __declspec(naked) __stdcall FunctionLeave2_x86(FunctionID id, UINT_PTR clie
 			jnz     SaveFPReg
 			push    0				// otherwise, mark that there is no float value
 			jmp     NoSaveFPReg
-		SaveFPReg :
+			SaveFPReg :
 		sub     esp, 8			// Make room for the FP value
 			fstp    qword ptr[esp] // Copy the FP value to the buffer as a double
 			push    1				// mark that a float value is present
-		NoSaveFPReg :
+			NoSaveFPReg :
 	}
 
 	::FunctionLeave2_CPP_STUB(id, clientData, frame, retvalRange);
@@ -365,36 +372,35 @@ void __declspec(naked) __stdcall FunctionLeave2_x86(FunctionID id, UINT_PTR clie
 		// Of course that may change in future releases, so use this code for all of your
 		// enter/leave function hooks if you want to avoid breaking.
 		cmp[esp], 0			// Check the flag
-			jz      NoRestoreFPRegs		// If zero, no FP regs
-		RestoreFPRegs :
+		jz      NoRestoreFPRegs		// If zero, no FP regs
+			RestoreFPRegs :
 		fld     qword ptr[esp + 4]	// Restore FP regs
 			add    esp, 12				// Move ESP past the storage space
 			jmp   RestoreFPRegsDone
-		NoRestoreFPRegs :
+			NoRestoreFPRegs :
 		add     esp, 4				// Move ESP past the flag
-		RestoreFPRegsDone :
+			RestoreFPRegsDone :
 
-						  // Restore other registers
-						  popad
+			// Restore other registers
+			popad
 
-						  // Pop off locals
-						  add esp, __LOCAL_SIZE
+			// Pop off locals
+			add esp, __LOCAL_SIZE
 
 #ifdef DEBUG
-						  // Restore EBP
-						  // Turned off in release mode to save cycles
-						  pop ebp
+			// Restore EBP
+			// Turned off in release mode to save cycles
+			pop ebp
 #endif
 
-						  // stdcall: Callee cleans up args from stack on return
-						  // @@TODO: Change this line to match the parameters to your function!
-						  ret SIZE id + SIZE clientData + SIZE frame + SIZE retvalRange
+			// stdcall: Callee cleans up args from stack on return
+			// @@TODO: Change this line to match the parameters to your function!
+			ret SIZE id + SIZE clientData + SIZE frame + SIZE retvalRange
 	}
 }
 
 // @@TODO: Change the declaration to match the function you're implementing
-void __declspec(naked) __stdcall FunctionEnter2_x86(FunctionID funcId, UINT_PTR clientData,
-	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
+__declspec(naked) void FunctionEnter2_x86(FunctionID funcId, UINT_PTR clientData, COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO * argumentInfo)
 {
 	__asm
 	{
@@ -402,7 +408,7 @@ void __declspec(naked) __stdcall FunctionEnter2_x86(FunctionID funcId, UINT_PTR 
 		// Set up EBP Frame (easy debugging)
 		// Turned off in release mode to save cycles
 		push ebp
-			mov ebp, esp
+		mov ebp, esp
 #endif
 
 			// Make space for locals.
@@ -439,11 +445,11 @@ void __declspec(naked) __stdcall FunctionEnter2_x86(FunctionID funcId, UINT_PTR 
 			jnz     SaveFPReg
 			push    0				// otherwise, mark that there is no float value
 			jmp     NoSaveFPReg
-		SaveFPReg :
+			SaveFPReg :
 		sub     esp, 8			// Make room for the FP value
 			fstp    qword ptr[esp] // Copy the FP value to the buffer as a double
 			push    1				// mark that a float value is present
-		NoSaveFPReg :
+			NoSaveFPReg :
 	}
 
 	FunctionEnter2_CPP_STUB(funcId, clientData, func, argumentInfo);
@@ -456,37 +462,35 @@ void __declspec(naked) __stdcall FunctionEnter2_x86(FunctionID funcId, UINT_PTR 
 		// Of course that may change in future releases, so use this code for all of your
 		// enter/leave function hooks if you want to avoid breaking.
 		cmp[esp], 0			// Check the flag
-			jz      NoRestoreFPRegs		// If zero, no FP regs
-		RestoreFPRegs :
+		jz      NoRestoreFPRegs		// If zero, no FP regs
+			RestoreFPRegs :
 		fld     qword ptr[esp + 4]	// Restore FP regs
 			add    esp, 12				// Move ESP past the storage space
 			jmp   RestoreFPRegsDone
-		NoRestoreFPRegs :
+			NoRestoreFPRegs :
 		add     esp, 4				// Move ESP past the flag
-		RestoreFPRegsDone :
+			RestoreFPRegsDone :
 
-						  // Restore other registers
-						  popad
+			// Restore other registers
+			popad
 
-						  // Pop off locals
-						  add esp, __LOCAL_SIZE
+			// Pop off locals
+			add esp, __LOCAL_SIZE
 
 #ifdef DEBUG
-						  // Restore EBP
-						  // Turned off in release mode to save cycles
-						  pop ebp
+			// Restore EBP
+			// Turned off in release mode to save cycles
+			pop ebp
 #endif
 
-						  // stdcall: Callee cleans up args from stack on return
-						  // @@TODO: Change this line to match the parameters to your function!
-						  ret SIZE funcId + SIZE clientData + SIZE func + SIZE argumentInfo
+			// stdcall: Callee cleans up args from stack on return
+			// @@TODO: Change this line to match the parameters to your function!
+			ret SIZE funcId + SIZE clientData + SIZE func + SIZE argumentInfo
 	}
 }
 
-
 // @@TODO: Change the declaration to match the function you're implementing
-void __declspec(naked) __stdcall FunctionTail2_x86(FunctionID funcId, UINT_PTR clientData,
-	COR_PRF_FRAME_INFO func)
+__declspec(naked)  void FunctionTail2_x86(FunctionID funcId, UINT_PTR clientData, COR_PRF_FRAME_INFO func)
 {
 	__asm
 	{
@@ -494,7 +498,7 @@ void __declspec(naked) __stdcall FunctionTail2_x86(FunctionID funcId, UINT_PTR c
 		// Set up EBP Frame (easy debugging)
 		// Turned off in release mode to save cycles
 		push ebp
-			mov ebp, esp
+		mov ebp, esp
 #endif
 
 			// Make space for locals.
@@ -531,11 +535,11 @@ void __declspec(naked) __stdcall FunctionTail2_x86(FunctionID funcId, UINT_PTR c
 			jnz     SaveFPReg
 			push    0				// otherwise, mark that there is no float value
 			jmp     NoSaveFPReg
-		SaveFPReg :
+			SaveFPReg :
 		sub     esp, 8			// Make room for the FP value
 			fstp    qword ptr[esp] // Copy the FP value to the buffer as a double
 			push    1				// mark that a float value is present
-		NoSaveFPReg :
+			NoSaveFPReg :
 	}
 
 	FunctionTail2_CPP_STUB(funcId, clientData, func);
@@ -548,32 +552,35 @@ void __declspec(naked) __stdcall FunctionTail2_x86(FunctionID funcId, UINT_PTR c
 		// Of course that may change in future releases, so use this code for all of your
 		// enter/leave function hooks if you want to avoid breaking.
 		cmp[esp], 0			// Check the flag
-			jz      NoRestoreFPRegs		// If zero, no FP regs
-		RestoreFPRegs :
+		jz      NoRestoreFPRegs		// If zero, no FP regs
+			RestoreFPRegs :
 		fld     qword ptr[esp + 4]	// Restore FP regs
 			add    esp, 12				// Move ESP past the storage space
 			jmp   RestoreFPRegsDone
-		NoRestoreFPRegs :
+			NoRestoreFPRegs :
 		add     esp, 4				// Move ESP past the flag
-		RestoreFPRegsDone :
+			RestoreFPRegsDone :
 
-						  // Restore other registers
-						  popad
+			// Restore other registers
+			popad
 
-						  // Pop off locals
-						  add esp, __LOCAL_SIZE
+			// Pop off locals
+			add esp, __LOCAL_SIZE
 
 #ifdef DEBUG
-						  // Restore EBP
-						  // Turned off in release mode to save cycles
-						  pop ebp
+			// Restore EBP
+			// Turned off in release mode to save cycles
+			pop ebp
 #endif
 
-						  // stdcall: Callee cleans up args from stack on return
-						  // @@TODO: Change this line to match the parameters to your function!
-						  ret SIZE funcId + SIZE clientData + SIZE func
+			// stdcall: Callee cleans up args from stack on return
+			// @@TODO: Change this line to match the parameters to your function!
+			ret SIZE funcId + SIZE clientData + SIZE func
 	}
 }
+
+
+#pragma warning( default : 4102 )
 #endif
 
 
@@ -607,45 +614,52 @@ m_dwShadowStackTlsIndex(0)
 	this->SetProcessName();
 	if (this->DoWeProfile() == S_OK) // No reason to execute this code if the process is not what we're looking for.
 	{
-		this->m_Container = new ContainerClass();
-		InitializeCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
-
-		m_NetworkClient = new NetworkClient(this->m_ServerName, this->m_ServerPort);
-
-
-
-		size_t wcharSize(this->m_AgentName.length() - 1); // string
-		size_t ainfoSize(sizeof(InformationClasses::AgentInfo) + (wcharSize * sizeof(wchar_t)) + sizeof(short)); // struct + string + plus terminator
-		InformationClasses::AgentInfo * ainfo = (InformationClasses::AgentInfo*)malloc(ainfoSize);
-		SecureZeroMemory(ainfo, ainfoSize);
-
-		ainfo->AgentCapabilities = InformationClasses::AgentInfo::Capabilities::PROFILE;
-		auto strhasher = std::hash<std::wstring>();
-		ainfo->AgentHash = strhasher(this->m_AgentName);
-		this->m_AgentName._Copy_s(ainfo->AgentName, this->m_AgentName.length() - 1, this->m_AgentName.length() - 1, 0);
-		ainfo->AgentMajorVersion = 0;
-		ainfo->AgentMinorVersion = 1;
-		ainfo->AgentIncrementalVersion = 0;
-		ainfo->AgentNameLen = this->m_AgentName.length() - 1;
-		ainfo->Length = ainfoSize;
-		ainfo->MachineNameLen = 16;
-		this->m_ComputerName._Copy_s(ainfo->MachineName, this->m_ComputerName.length(), this->m_ComputerName.length(), 0);
-		ainfo->MachineNameHash = strhasher(this->m_ComputerName);
-		ainfo->Code = 5;
-		m_NetworkClient->SendCommand<Commands::SendPackedStructure>(std::make_shared<Commands::SendPackedStructure>(Commands::SendPackedStructure(ainfo)));
-		/*auto hr = m_NetworkClient->SendNow();*/
-		auto cmd = m_NetworkClient->ReceiveCommand();
-		this->AddCommonFunctions();
-
-		tp = new tp_helper(this, 1, 1);
-		tp->CreateNetworkIoThreadPool(m_NetworkClient);
-
-
-		m_NetworkClient->Start(); // Ready for normal unblocked operation
+		SetUpAgent();
 	}
+}
 
-	DWORD tID = 0;
+void Cprofilermain::SetUpAgent()
+{
+	this->m_Container = new ContainerClass();
+	InitializeCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
+	m_NetworkClient = new NetworkClient(this->m_ServerName, this->m_ServerPort);
 
+	SendAgentInformation();
+
+	AddCommonFunctions();
+
+
+
+	tp = new tp_helper(this, 1, 1);
+	tp->CreateNetworkIoThreadPool(m_NetworkClient);
+	m_NetworkClient->Start(); // Ready for normal unblocked operation
+}
+
+void Cprofilermain::SendAgentInformation()
+{
+	size_t wcharSize(this->m_AgentName.length() - 1); // string
+	size_t ainfoSize(sizeof(InformationClasses::AgentInfo) + (wcharSize * sizeof(wchar_t)) + sizeof(short)); // struct + string + plus terminator
+	InformationClasses::AgentInfo * ainfo = (InformationClasses::AgentInfo*)malloc(ainfoSize);
+	SecureZeroMemory(ainfo, ainfoSize);
+
+	ainfo->AgentCapabilities = InformationClasses::AgentInfo::Capabilities::PROFILE;
+	auto strhasher = std::hash<std::wstring>();
+	ainfo->AgentHash = strhasher(this->m_AgentName);
+	this->m_AgentName._Copy_s(ainfo->AgentName, this->m_AgentName.length() - 1, this->m_AgentName.length() - 1, 0);
+	ainfo->AgentMajorVersion = 0;
+	ainfo->AgentMinorVersion = 1;
+	ainfo->AgentIncrementalVersion = 0;
+	ainfo->AgentNameLen = this->m_AgentName.length() - 1;
+	ainfo->Length = ainfoSize;
+	ainfo->MachineNameLen = 16;
+	this->m_ComputerName._Copy_s(ainfo->MachineName, this->m_ComputerName.length(), this->m_ComputerName.length(), 0);
+	ainfo->MachineNameHash = strhasher(this->m_ComputerName);
+	ainfo->Code = 5;
+	m_NetworkClient->SendCommand<Commands::SendPackedStructure>(
+		std::make_shared<Commands::SendPackedStructure>(
+			Commands::SendPackedStructure(ainfo)));
+
+	auto cmd = m_NetworkClient->ReceiveCommand();
 }
 
 Cprofilermain::~Cprofilermain()
@@ -682,12 +696,8 @@ Cprofilermain::~Cprofilermain()
 
 void Cprofilermain::AddCommonFunctions()
 {
-	// TODO: Create a more dynamic way to add classes and functions to the list of things to be mapped.
-	/*g_ClassNameSet->insert(TEXT("System.Threading.Thread"));
-   g_ClassNameSet->insert(TEXT("System.Threading.ThreadStart"));
-   g_ClassNameSet->insert(TEXT("System.Threading.ThreadHelper"));*/
-
-	//this->m_Container->g_FunctionNameSet->insert(TEXT("ProcessRequest"));
+	
+	// TODO Ask network client to give me data
 
 	auto newMapping2 = ItemMapping();
 	//ItemMapping *newMapping3 = new ItemMapping();
@@ -894,7 +904,6 @@ STDMETHODIMP Cprofilermain::GetFuncArgs(FunctionID functionID, COR_PRF_FRAME_INF
 {
 	// CRITICAL 8 Move this to the metadata helpers class.
 	HRESULT hr = S_OK;
-	mdToken funcToken = 0;
 	ClassID classID;
 	ModuleID modId;
 	mdToken token;
@@ -955,7 +964,7 @@ STDMETHODIMP Cprofilermain::DoWeProfile()
 	HRESULT result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\ChainsAPM\\Agents", NULL, KEY_READ, &openKey);
 	if (result != S_OK)
 	{
-		int lastErr = GetLastError();
+		//int lastErr = GetLastError();
 	}
 	wchar_t* lpStr = new wchar_t[255];
 	unsigned long lpDw = 255;
@@ -970,7 +979,7 @@ STDMETHODIMP Cprofilermain::DoWeProfile()
 	unsigned long	BufferSize = 255;
 	unsigned long	BufferForDWORD = 4;
 	unsigned long	Port = 0;
-	unsigned long	PortType = 0;
+	//unsigned long	PortType = 0;
 	bool IsAMatch = false;
 	int counter = 0;
 	while (key == ERROR_SUCCESS && !IsAMatch)
@@ -980,7 +989,7 @@ STDMETHODIMP Cprofilermain::DoWeProfile()
 		currentKey.append(lpStr);
 
 		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"Enabled", RRF_RT_ANY | RRF_ZEROONFAILURE, NULL, &Enabled, &BufferForDWORD);
-		if (gotValue != S_OK | Enabled == 0)
+		if ((gotValue != S_OK) | (Enabled == 0))
 		{
 			currentKey.assign(nullptr);
 			continue;
@@ -1034,7 +1043,7 @@ STDMETHODIMP Cprofilermain::DoWeProfile()
 		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"Server", RRF_RT_ANY | RRF_ZEROONFAILURE, nullptr, BufferForStrings, &BufferSize);
 		if (gotValue == S_OK)
 		{
-			if (BufferForStrings == NULL || BufferForStrings == L"")
+			if (BufferForStrings == NULL)
 			{
 				IsAMatch = true;
 				m_ServerName.insert(0, BufferForStrings, (BufferSize / 2));
@@ -1046,7 +1055,7 @@ STDMETHODIMP Cprofilermain::DoWeProfile()
 		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"Port", RRF_RT_ANY | RRF_ZEROONFAILURE, NULL, &Port, &BufferForDWORD);
 		if (gotValue == S_OK)
 		{
-			if (Port < 0 | Port > 0xFFFF)
+			if ((Port < 0) | (Port > 0xFFFF))
 			{
 				IsAMatch = false;
 			}
@@ -1189,32 +1198,38 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 
 STDMETHODIMP Cprofilermain::AppDomainCreationStarted(AppDomainID appDomainId)
 {
+	UNREFERENCED_PARAMETER(appDomainId);
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
 {
+	UNREFERENCED_PARAMETER(threadId);
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::ThreadDestroyed(ThreadID threadId)
 {
-
+	UNREFERENCED_PARAMETER(threadId);
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::ThreadNameChanged(ThreadID threadId, ULONG cchName, _In_reads_opt_(cchName) WCHAR name[])
 {
+	UNREFERENCED_PARAMETER(threadId);
+	UNREFERENCED_PARAMETER(cchName);
+	UNREFERENCED_PARAMETER(name);
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::AssemblyLoadFinished(AssemblyID assemblyId, HRESULT hrStatus)
 {
-	LPCBYTE baseAddress = new byte;
+	UNREFERENCED_PARAMETER(hrStatus);
+	//LPCBYTE baseAddress = new byte;
 	wchar_t *stringName = NULL;
 	ULONG cNameSize = 0;
 	ULONG pcchNameSize = 0;
-	AssemblyID asemId = {};
+	//AssemblyID asemId = {};
 	AppDomainID appDomainId;
 	ModuleID moduleId;
 	this->m_pICorProfilerInfo2->GetAssemblyInfo(assemblyId, cNameSize, &pcchNameSize, stringName, &appDomainId, &moduleId);
@@ -1232,11 +1247,13 @@ STDMETHODIMP Cprofilermain::AssemblyLoadFinished(AssemblyID assemblyId, HRESULT 
 
 STDMETHODIMP Cprofilermain::ModuleLoadStarted(ModuleID moduleId)
 {
+	UNREFERENCED_PARAMETER(moduleId);
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::ClassLoadFinished(ClassID classId, HRESULT hrStatus)
 {
+	UNREFERENCED_PARAMETER(hrStatus);
 	ModuleID classModuleId;
 	mdTypeDef classTypeDef;
 	this->m_pICorProfilerInfo2->GetClassIDInfo(classId, &classModuleId, &classTypeDef);
@@ -1246,16 +1263,20 @@ STDMETHODIMP Cprofilermain::ClassLoadFinished(ClassID classId, HRESULT hrStatus)
 
 STDMETHODIMP Cprofilermain::RuntimeThreadSuspended(ThreadID threadId)
 {
+	UNREFERENCED_PARAMETER(threadId);
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::RuntimeThreadResumed(ThreadID threadId)
 {
+	UNREFERENCED_PARAMETER(threadId);
 	return S_OK;
 }
 
 STDMETHODIMP Cprofilermain::GarbageCollectionStarted(int cGenerations, BOOL generationCollected[], COR_PRF_GC_REASON reason)
 {
+	UNREFERENCED_PARAMETER(cGenerations);
+	UNREFERENCED_PARAMETER(generationCollected);
 	m_CurrentGCReason = reason;
 	return S_OK;
 }
@@ -1296,7 +1317,9 @@ STDMETHODIMP Cprofilermain::RuntimeResumeFinished(void)
 
 STDMETHODIMP Cprofilermain::Shutdown(void)
 {
-	m_NetworkClient->SendCommand<Commands::SendString>(std::make_shared<Commands::SendString>(Commands::SendString(std::wstring(L"Done!"))));
+	m_NetworkClient->SendCommand<Commands::SendString>(
+		std::make_shared<Commands::SendString>(
+			Commands::SendString(std::wstring(L"Done!"))));
 	m_NetworkClient->SendNow();
 	Sleep(3000);
 	return S_OK;
@@ -1310,6 +1333,10 @@ STDMETHODIMP Cprofilermain::Shutdown(void)
 void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
 {
+	UNREFERENCED_PARAMETER(func);
+	UNREFERENCED_PARAMETER(clientData);
+	UNREFERENCED_PARAMETER(argumentInfo);
+
 
 	/*
 	MSDN Article that describes the ELT methods and what COR flags need to be set.
@@ -1355,6 +1382,9 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentRange)
 {
+	UNREFERENCED_PARAMETER(clientData);
+	UNREFERENCED_PARAMETER(func);
+	UNREFERENCED_PARAMETER(argumentRange);
 	ThreadID threadId = 0;
 	{
 		//critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
@@ -1373,6 +1403,8 @@ void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func)
 {
+	UNREFERENCED_PARAMETER(clientData);
+	UNREFERENCED_PARAMETER(func);
 	ThreadID threadId = 0;
 	{
 		//critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
@@ -1542,6 +1574,7 @@ void Cprofilermain::SetILFunctionBodyForManagedHelperAdd(ModuleID moduleID, mdMe
 //          submitted a ReJIT request for the prior copy of the module
 STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStatus)
 {
+	UNREFERENCED_PARAMETER(hrStatus);
 	LPCBYTE pbBaseLoadAddr;
 	WCHAR wszName[300];
 	ULONG cchNameIn = _countof(wszName);
@@ -1582,7 +1615,7 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 	WCHAR wszAppDomainName[200];
 	ULONG cchAppDomainName;
 	ProcessID pProcID;
-	BOOL fShared = FALSE;
+	//BOOL fShared = FALSE;
 
 	hr = m_pICorProfilerInfo->GetAppDomainInfo(
 		appDomainID,
@@ -1805,6 +1838,7 @@ STDMETHODIMP Cprofilermain::ModuleUnloadStarted(ModuleID moduleID)
 // dynamically added to mscorlib.  If so, this function provides the IL for the probe.
 STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fIsSafeToBlock)
 {
+	UNREFERENCED_PARAMETER(fIsSafeToBlock);
 	HRESULT hr;
 	mdToken methodDef;
 	ClassID classID;
@@ -1849,7 +1883,6 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 	else {
 		ModuleInfo moduleInfo = m_moduleIDToInfoMap.Lookup(moduleID);
 
-		int nVersion;
 		moduleInfo.m_pMethodDefToLatestVersionMap->LookupIfExists(methodDef, &nVersion);
 
 		GetClassAndFunctionNamesFromMethodDef(
@@ -1912,6 +1945,8 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 // method.  Here, we just do some light validation and logging.
 STDMETHODIMP Cprofilermain::ReJITCompilationStarted(FunctionID functionID, ReJITID rejitId, BOOL fIsSafeToBlock)
 {
+	UNREFERENCED_PARAMETER(fIsSafeToBlock);
+	UNREFERENCED_PARAMETER(rejitId);
 	LOG_APPEND(L"ReJITScript::ReJITCompilationStarted for FunctionID '" << HEX(functionID) <<
 		L"' - RejitID '" << HEX(rejitId) << L"' called");
 
@@ -1943,6 +1978,11 @@ STDMETHODIMP Cprofilermain::ReJITCompilationStarted(FunctionID functionID, ReJIT
 // [public] Logs any errors encountered during ReJIT.
 STDMETHODIMP Cprofilermain::ReJITError(ModuleID moduleId, mdMethodDef methodId, FunctionID functionId, HRESULT hrStatus)
 {
+	UNREFERENCED_PARAMETER(functionId);
+	UNREFERENCED_PARAMETER(methodId);
+	UNREFERENCED_PARAMETER(moduleId);
+	UNREFERENCED_PARAMETER(hrStatus);
+
 	LOG_IFFAILEDRET(hrStatus, L"ReJITError called.  ModuleID = " << HEX(moduleId) <<
 		L", methodDef = " << HEX(methodId) << L", FunctionID = " << HEX(functionId));
 
@@ -1983,7 +2023,7 @@ void Cprofilermain::AddMemberRefs(IMetaDataAssemblyImport * pAssemblyImport, IMe
 
 	LOG_APPEND(L"Adding memberRefs in this module to point to the helper managed methods");
 
-	IMetaDataImport * pImport = pModuleInfo->m_pImport;
+	//IMetaDataImport * pImport = pModuleInfo->m_pImport;
 
 	HRESULT hr;
 
@@ -2499,6 +2539,7 @@ HRESULT Cprofilermain::AddPInvoke2(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR 
 
 HRESULT Cprofilermain::AddPInvokeForSAMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdTypeDef tdSystemArray, mdMethodDef * pmdPInvoke)
 {
+	UNREFERENCED_PARAMETER(tdSystemArray);
 	HRESULT hr;
 
 	//COR_SIGNATURE representation
@@ -2522,7 +2563,7 @@ HRESULT Cprofilermain::AddPInvokeForSAMethod(IMetaDataEmit * pEmit, mdTypeDef td
 		ELEMENT_TYPE_END,
 	};
 
-	ULONG SigTok = CorSigCompressToken(tdSystemArray, &newMethodSignature[6]);
+	//ULONG SigTok = CorSigCompressToken(tdSystemArray, &newMethodSignature[6]);
 
 	hr = pEmit->DefineMethod(
 		td,
@@ -2641,6 +2682,7 @@ HRESULT Cprofilermain::GetSystemArrayToken(IMetaDataImport * pImport, mdTypeDef 
 // [private] Adds the managed helper methods to mscorlib.
 HRESULT Cprofilermain::AddManagedHelperMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod)
 {
+	UNREFERENCED_PARAMETER(mdTargetPInvoke);
 	HRESULT hr;
 
 	COR_SIGNATURE newMethodSignature[] = {
@@ -2686,6 +2728,7 @@ HRESULT Cprofilermain::AddManagedHelperMethod(IMetaDataEmit * pEmit, mdTypeDef t
 
 HRESULT Cprofilermain::AddManagedHelperMethod2(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod)
 {
+	UNREFERENCED_PARAMETER(mdTargetPInvoke);
 	HRESULT hr;
 
 	COR_SIGNATURE newMethodSignature[] = {
@@ -2731,6 +2774,7 @@ HRESULT Cprofilermain::AddManagedHelperMethod2(IMetaDataEmit * pEmit, mdTypeDef 
 
 HRESULT Cprofilermain::AddManagedHelperMethodAddNumbers(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod)
 {
+	UNREFERENCED_PARAMETER(mdTargetPInvoke);
 	HRESULT hr;
 
 	COR_SIGNATURE newMethodSignature[] = {
@@ -2777,6 +2821,8 @@ HRESULT Cprofilermain::AddManagedHelperMethodAddNumbers(IMetaDataEmit * pEmit, m
 
 HRESULT Cprofilermain::AddManagedHelperSAMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdTypeDef tdSystemArray, mdMethodDef * pmdHelperMethod)
 {
+	UNREFERENCED_PARAMETER(mdTargetPInvoke);
+	UNREFERENCED_PARAMETER(tdSystemArray);
 	HRESULT hr;
 
 	COR_SIGNATURE newMethodSignature[] = {
@@ -2799,7 +2845,7 @@ HRESULT Cprofilermain::AddManagedHelperSAMethod(IMetaDataEmit * pEmit, mdTypeDef
 		ELEMENT_TYPE_END,
 	};
 
-	ULONG SigTok = CorSigCompressToken(tdSystemArray, &newMethodSignature[6]);
+	//ULONG SigTok = CorSigCompressToken(tdSystemArray, &newMethodSignature[6]);
 
 	hr = pEmit->DefineMethod(
 		td,
@@ -2830,6 +2876,7 @@ HRESULT Cprofilermain::AddManagedHelperSAMethod(IMetaDataEmit * pEmit, mdTypeDef
 // [private] Gets the text names from a method def.
 void Cprofilermain::GetClassAndFunctionNamesFromMethodDef(IMetaDataImport * pImport, ModuleID moduleID, mdMethodDef methodDef, LPWSTR wszTypeDefName, ULONG cchTypeDefName, LPWSTR wszMethodDefName, ULONG cchMethodDefName)
 {
+	UNREFERENCED_PARAMETER(moduleID);
 	HRESULT hr;
 	mdTypeDef typeDef;
 	ULONG cchMethodDefActual;
@@ -2876,6 +2923,7 @@ void Cprofilermain::GetClassAndFunctionNamesFromMethodDef(IMetaDataImport * pImp
 // to do the work of maintaining the shadow stack and function timings.
 void Cprofilermain::NtvEnteredFunction(ModuleID moduleIDCur, mdMethodDef mdCur, int nVersionCur)
 {
+	UNREFERENCED_PARAMETER(nVersionCur);
 	ModuleInfo moduleInfo = m_moduleIDToInfoMap.Lookup(moduleIDCur);
 	WCHAR wszTypeDefName[512];
 	WCHAR wszMethodDefName[512];
@@ -2921,6 +2969,7 @@ void Cprofilermain::NtvEnteredFunction(ModuleID moduleIDCur, mdMethodDef mdCur, 
 // to do the work of maintaining the shadow stack and function timings.
 void Cprofilermain::NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, int nVersionCur)
 {
+	UNREFERENCED_PARAMETER(nVersionCur);
 	ModuleInfo moduleInfo = m_moduleIDToInfoMap.Lookup(moduleIDCur);
 	WCHAR wszTypeDefName[512];
 	WCHAR wszMethodDefName[512];
@@ -2944,7 +2993,7 @@ void Cprofilermain::NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, i
 	GetSystemTimeAsFileTime(&HighPrecisionFileTime);
 	__int64 timestamp = (((__int64)HighPrecisionFileTime.dwHighDateTime) << 32) + HighPrecisionFileTime.dwLowDateTime;
 
-	FunctionID funcId;
+	//FunctionID funcId;
 
 	ModInfoFunctionMap mifm;
 	mifm.m_ClassDef = mdCur;
@@ -2986,6 +3035,7 @@ HRESULT Cprofilermain::CallRequestRevert(UINT cFunctionsToRejit, ModuleID * rgMo
 
 void Cprofilermain::LaunchLogListener(LPCWSTR wszPathCommandFile)
 {
+	UNREFERENCED_PARAMETER(wszPathCommandFile);
 	// NO LOG LISTENER
 }
 

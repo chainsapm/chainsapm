@@ -3,20 +3,6 @@
 #define PROFILERMAIN_H
 
 
-EXTERN_C void FunctionEnter2_Wrapper_x64(FunctionID funcId, UINT_PTR clientData, COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentInfo);
-
-EXTERN_C void FunctionLeave2_Wrapper_x64(FunctionID funcId, UINT_PTR clientData, COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentInfo);
-
-EXTERN_C void FunctionTail2_Wrapper_x64(FunctionID funcId, UINT_PTR clientData, COR_PRF_FRAME_INFO func);
-
-EXTERN_C void FunctionEnter2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
-	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo);
-
-EXTERN_C void FunctionLeave2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
-	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentRange);
-
-EXTERN_C void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
-	COR_PRF_FRAME_INFO func);
 
 #pragma once
 #include "resource.h"       // main symbols
@@ -31,9 +17,6 @@ EXTERN_C void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 #include "CorProfilerCallbackImplementation.h"
 #include "Commands.h"
 #include "networkclient.h"
-
-
-
 
 
 struct ContainerClass;
@@ -175,7 +158,7 @@ struct ModInfoFunctionMap
 {
 	ModuleID m_ModuleID;
 	mdToken m_ClassDef;
-	bool operator==(ModInfoFunctionMap left)
+	bool operator==(const ModInfoFunctionMap left) const 
 	{
 		return (left.m_ModuleID == m_ModuleID) & (left.m_ClassDef == m_ClassDef);
 	}
@@ -185,7 +168,7 @@ namespace std{
 	template<>
 	struct less < ModInfoFunctionMap >
 	{
-		bool operator() (ModInfoFunctionMap left, ModInfoFunctionMap right)
+		bool operator() (const ModInfoFunctionMap left, const ModInfoFunctionMap right) const
 		{
 			return (left.m_ModuleID <= right.m_ModuleID) & (left.m_ClassDef <= right.m_ClassDef);
 		}
@@ -196,7 +179,7 @@ namespace std{
 	template<>
 	struct equal_to < ModInfoFunctionMap >
 	{
-		bool operator() (ModInfoFunctionMap left, ModInfoFunctionMap right)
+		bool operator() (const ModInfoFunctionMap left, const ModInfoFunctionMap right) const
 		{
 			return (left.m_ModuleID == right.m_ModuleID) & (left.m_ClassDef == right.m_ClassDef);
 		}
@@ -207,7 +190,7 @@ namespace std{
 	template<>
 	struct hash < ModInfoFunctionMap >
 	{
-		size_t operator() (ModInfoFunctionMap left)
+		size_t operator() (const ModInfoFunctionMap left) const
 		{
 			std::hash<size_t> hasher;
 			return hasher(left.m_ClassDef + left.m_ModuleID);
@@ -215,6 +198,7 @@ namespace std{
 	};
 
 }
+
 typedef std::unordered_map<ModInfoFunctionMap, FunctionID> ModFuncMap;
 
 typedef IDToInfoMap<ModuleID, ModuleInfo> ModuleIDToInfoMap;
@@ -270,6 +254,8 @@ class ATL_NO_VTABLE Cprofilermain :
 public:
 
 	Cprofilermain();
+	void SetUpAgent();
+	void SendAgentInformation();
 	~Cprofilermain();
 
 
@@ -589,5 +575,13 @@ tp_helper::~tp_helper()
 {
 }
 
+EXTERN_C void FunctionEnter2_Wrapper_x64(FunctionID funcId, UINT_PTR clientData, COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentInfo);
+
+EXTERN_C void FunctionLeave2_Wrapper_x64(FunctionID funcId, UINT_PTR clientData, COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentInfo);
+
+EXTERN_C void FunctionTail2_Wrapper_x64(FunctionID funcId, UINT_PTR clientData, COR_PRF_FRAME_INFO func);
+
+
 
 #endif
+

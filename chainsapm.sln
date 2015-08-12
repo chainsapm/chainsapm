@@ -1,9 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clrprofiler", "clrprofiler\clrprofiler.vcxproj", "{5195A31F-EAD5-4BCF-9F41-706BB0D89D18}"
+	ProjectSection(ProjectDependencies) = postProject
+		{78B92955-1DB4-4DAB-98C2-2D6747D5F274} = {78B92955-1DB4-4DAB-98C2-2D6747D5F274}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "webapplication", "webapplication\webapplication.csproj", "{ED6B27F3-7324-4CB7-9178-15F34A520E85}"
 EndProject

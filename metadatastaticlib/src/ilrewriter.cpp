@@ -16,10 +16,11 @@
 
 
 //#include "profilermain.h"
+#pragma warning( disable : 4091 )
 #include <corhlpr.cpp>
 #include <cor.h>
 #include <corprof.h>
-
+#pragma warning( default : 4091 )
 #include "sigparse.inl"
 
 #include <assert.h>
@@ -1035,7 +1036,7 @@ again:
 			&tdSystemArray);
 
 		unsigned char pDataDout[4] {0};
-		unsigned char tk;
+		//unsigned char tk;
 		ULONG SigTok = CorSigCompressToken(tdSystemArray, &pDataDout);
 
 		rgbNewSig[iNewSig++] = pDataDout[0];

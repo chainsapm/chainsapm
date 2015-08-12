@@ -187,9 +187,6 @@
     <ClCompile Include="src\DefineModule.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\Logfiles\NewCommand2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\bit_converter.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
@@ -314,9 +311,6 @@
     </ClInclude>
     <ClInclude Include="inc\DefineModule.h">
       <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\Logfiles\NewCommand2.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inc\bit_converter.h">
       <Filter>Helpers</Filter>

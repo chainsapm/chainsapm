@@ -8,6 +8,7 @@ namespace Commands
 	{
 	public:
 		SendString(std::wstring& data);
+		SendString(std::wstring&& data);
 		SendString(std::string& data);
 		~SendString();
 		virtual std::shared_ptr<std::vector<char>> Encode();

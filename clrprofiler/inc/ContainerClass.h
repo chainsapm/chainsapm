@@ -1,6 +1,3 @@
-
-
-
 struct ItemMapping
 {
 	enum class MatchType
@@ -41,119 +38,6 @@ struct ItemMapping
 	bool IgnoreSetters;
 };
 
-class EqualFn
-{
-public:
-	bool operator() (ItemMapping * t1, ItemMapping * t2) const
-	{
-		switch (t1->Match)
-		{
-		case ItemMapping::MatchType::AllInAssembly:
-			return t1->AssemblyName == t2->AssemblyName;
-			break;
-		case ItemMapping::MatchType::AllInClass:
-			return t1->ClassName == t2->ModuleName;
-			break;
-		case ItemMapping::MatchType::AllInModule:
-			return t1->ModuleName == t2->ClassName;
-			break;
-		case ItemMapping::MatchType::DerivesFrom:
-			return t1->DerivesFrom == t2->DerivesFrom;
-			break;
-		case ItemMapping::MatchType::FullyQualified:
-			return (t1->ClassName == t2->ClassName) && (t1->FunctionName == t2->FunctionName) && (t1->Signature == t2->Signature);
-			break;
-		case ItemMapping::MatchType::FullyQualifiedDerivesFrom:
-			return (t1->DerivesFrom == t2->DerivesFrom) && (t1->ClassName == t2->ClassName) && (t1->FunctionName == t2->FunctionName) && (t1->Signature == t2->Signature);
-			break;
-		case ItemMapping::MatchType::FunctionAndClass:
-			return (t1->ClassName == t2->ClassName) && (t1->FunctionName == t2->FunctionName);
-			break;
-		case ItemMapping::MatchType::FunctionAndSignature:
-			return (t1->FunctionName == t2->FunctionName) && (t1->Signature == t2->Signature);
-			break;
-		case ItemMapping::MatchType::FunctionOnly:
-			return t1->FunctionName == t2->FunctionName;
-			break;
-		default:
-			break;
-		}
-	}
-};
-
-class Hasher
-{
-public:
-	size_t operator() (ItemMapping *key) const
-	{
-		switch (key->Match)
-		{
-		case ItemMapping::MatchType::AllInAssembly:
-			if (!key->HashString.length() > 0)
-			{
-				key->HashString = key->AssemblyName;
-			}
-			break;
-		case ItemMapping::MatchType::AllInClass:
-			if (!key->HashString.length() > 0)
-			{
-				key->HashString = key->ClassName;
-			}
-			break;
-		case ItemMapping::MatchType::AllInModule:
-			if (!key->HashString.length() > 0)
-			{
-				key->HashString = key->ModuleName;
-			}
-			break;
-		case ItemMapping::MatchType::DerivesFrom:
-			if (!key->HashString.length() > 0)
-			{
-				key->HashString = key->DerivesFrom;
-			}
-			break;
-		case ItemMapping::MatchType::FullyQualified:
-			if (!key->HashString.length() > 0)
-			{
-				key->HashString.insert(0, key->DerivesFrom);
-				key->HashString.insert(key->DerivesFrom.length(), key->FunctionName);
-			}
-			break;
-		case ItemMapping::MatchType::FullyQualifiedDerivesFrom:
-			if (!key->HashString.length() > 0)
-			{
-				key->HashString.insert(0, key->DerivesFrom);
-				key->HashString.insert(key->DerivesFrom.length(), key->FunctionName);
-				key->HashString.insert(key->DerivesFrom.length() + key->FunctionName.length(), key->Signature);
-			}
-			break;
-		case ItemMapping::MatchType::FunctionAndClass:
-			if (!key->HashString.length() > 0)
-			{
-				key->HashString.insert(0, key->ClassName);
-				key->HashString.insert(key->ClassName.length(), key->FunctionName);
-			}
-			break;
-		case ItemMapping::MatchType::FunctionAndSignature:
-			if (!key->HashString.length() > 0)
-			{
-				key->HashString.insert(0, key->FunctionName);
-				key->HashString.insert(key->FunctionName.length(), key->Signature);
-			}
-			break;
-		case ItemMapping::MatchType::FunctionOnly:
-			if (!key->HashString.length() > 0)
-			{
-				key->HashString = key->FunctionName;
-			}
-			break;
-		default:
-			break;
-		}
-		return std::hash<std::wstring>()(key->HashString);
-	}
-};
-
 class LessFunctionIDFn
 {
 public:
@@ -168,7 +52,6 @@ public:
 #include <set>
 #include <memory>
 #include <allocators>
-
 
 //std::list<int, alloc<int> > _List1;
 
@@ -185,19 +68,58 @@ _ALLOCATOR_DECL(CACHE_FREELIST(stdext::allocators::max_fixed_size<50000>), stdex
 
 
 
-namespace std{
+namespace std {
 	template<>
 	class hash < ItemMapping >
 	{
 	public:
-		size_t operator() (const ItemMapping& key)
+		size_t operator() (const ItemMapping &key) const
 		{
-			return std::hash<std::wstring>()(key.FunctionName);
+			std::wstring str;
+
+			switch (key.Match)
+			{
+			case ItemMapping::MatchType::AllInAssembly:
+				str.assign(key.AssemblyName);
+				break;
+			case ItemMapping::MatchType::AllInClass:
+				str.assign(key.ClassName);
+				break;
+			case ItemMapping::MatchType::AllInModule:
+				str.assign(key.ModuleName);
+				break;
+			case ItemMapping::MatchType::DerivesFrom:
+				str.assign(key.DerivesFrom);
+				break;
+			case ItemMapping::MatchType::FullyQualified:
+				str.insert(0, key.DerivesFrom);
+				str.insert(key.DerivesFrom.length(), key.FunctionName);
+				break;
+			case ItemMapping::MatchType::FullyQualifiedDerivesFrom:
+				str.insert(0, key.DerivesFrom);
+				str.insert(key.DerivesFrom.length(), key.FunctionName);
+				str.insert(key.DerivesFrom.length() + key.FunctionName.length(), key.Signature);
+				break;
+			case ItemMapping::MatchType::FunctionAndClass:
+				str.insert(0, key.ClassName);
+				str.insert(key.ClassName.length(), key.FunctionName);
+				break;
+			case ItemMapping::MatchType::FunctionAndSignature:
+				str.insert(0, key.FunctionName);
+				str.insert(key.FunctionName.length(), key.Signature);
+				break;
+			case ItemMapping::MatchType::FunctionOnly:
+				str.assign(key.FunctionName);
+				break;
+			default:
+				break;
+			}
+			return std::hash<std::wstring>()(str);
 		}
 	};
 }
 
-namespace std{
+namespace std {
 	template<>
 	class equal_to < ItemMapping >
 	{
@@ -236,11 +158,12 @@ namespace std{
 			default:
 				break;
 			}
+			return false;
 		}
 	};
 }
 
-namespace std{
+namespace std {
 	template<>
 	class less < ItemMapping >
 	{
