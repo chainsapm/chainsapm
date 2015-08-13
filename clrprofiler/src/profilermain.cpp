@@ -264,7 +264,7 @@ protected:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Enter hook function for creating shadow stacks
- EXTERN_C inline void FunctionEnter2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
+ EXTERN_C void FunctionEnter2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
 {
 	Cprofilermain * pContainerClass = (Cprofilermain*)clientData;
@@ -278,7 +278,7 @@ protected:
 }
 
 // Leave hook function for creating shadow stacks
- EXTERN_C inline void FunctionLeave2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
+ EXTERN_C void FunctionLeave2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentRange)
 {
 	Cprofilermain * pContainerClass = (Cprofilermain*)clientData;
@@ -291,7 +291,7 @@ protected:
 }
 
 // Tail hook function for creating shadow stacks
- EXTERN_C inline void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
+ EXTERN_C void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func)
 {
 
