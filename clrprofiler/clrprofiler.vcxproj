@@ -406,20 +406,20 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\bit_converter.cpp" />
-    <ClCompile Include="src\DefineAssembly.cpp" />
-    <ClCompile Include="src\DefineClass.cpp" />
-    <ClCompile Include="src\DefineFunction.cpp" />
-    <ClCompile Include="src\DefineModule.cpp" />
-    <ClCompile Include="src\FunctionLeaveQuick.cpp" />
-    <ClCompile Include="src\FunctionTailQuick.cpp" />
-    <ClCompile Include="src\SendPackedStructure.cpp" />
-    <ClCompile Include="src\AgentInfo.cpp" />
-    <ClCompile Include="src\AssemblyDefinition.cpp" />
-    <ClCompile Include="src\AssemblyInfo.cpp" />
-    <ClCompile Include="src\ClassDefinition.cpp" />
-    <ClCompile Include="src\ClassInfo.cpp" />
-    <ClCompile Include="src\clrprofiler.cpp" />
+    <ClCompile Include="src\helpers\bit_converter.cpp" />
+    <ClCompile Include="src\commands\DefineAssembly.cpp" />
+    <ClCompile Include="src\commands\DefineClass.cpp" />
+    <ClCompile Include="src\commands\DefineFunction.cpp" />
+    <ClCompile Include="src\commands\DefineModule.cpp" />
+    <ClCompile Include="src\commands\FunctionLeaveQuick.cpp" />
+    <ClCompile Include="src\commands\FunctionTailQuick.cpp" />
+    <ClCompile Include="src\commands\SendPackedStructure.cpp" />
+    <ClCompile Include="src\infoclasses\AgentInfo.cpp" />
+    <ClCompile Include="src\commands\AssemblyDefinition.cpp" />
+    <ClCompile Include="src\infoclasses\AssemblyInfo.cpp" />
+    <ClCompile Include="src\commands\ClassDefinition.cpp" />
+    <ClCompile Include="src\infoclasses\ClassInfo.cpp" />
+    <ClCompile Include="src\dllmain\clrprofiler.cpp" />
     <ClCompile Include="src\clrprofiler_i.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'">false</CompileAsManaged>
@@ -440,10 +440,10 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\ContainerClass.cpp" />
-    <ClCompile Include="src\CorProfilerCallbackImplementation.cpp" />
-    <ClCompile Include="src\critsec_helper.cpp" />
-    <ClCompile Include="src\dllmain.cpp">
+    <ClCompile Include="src\common\ContainerClass.cpp" />
+    <ClCompile Include="src\profiler\CorProfilerCallbackImplementation.cpp" />
+    <ClCompile Include="src\helpers\critsec_helper.cpp" />
+    <ClCompile Include="src\dllmain\dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
@@ -463,26 +463,26 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\FunctionEnterLong.cpp" />
-    <ClCompile Include="src\FunctionEnterQuick.cpp" />
-    <ClCompile Include="src\FunctionInfo.cpp" />
-    <ClCompile Include="src\FunctionLeaveLong.cpp" />
-    <ClCompile Include="src\FunctionStackItem.cpp" />
-    <ClCompile Include="src\GarbageCollectionFinished.cpp" />
-    <ClCompile Include="src\GarbageCollectionStackItem.cpp" />
-    <ClCompile Include="src\GarbageCollectionStarted.cpp" />
-    <ClCompile Include="src\GetString.cpp" />
-    <ClCompile Include="src\ICommand.cpp" />
-    <ClCompile Include="src\ModuleInfo.cpp" />
-    <ClCompile Include="src\networkclient.cpp" />
-    <ClCompile Include="src\ParameterInfo.cpp" />
-    <ClCompile Include="src\ProcessInfo.cpp" />
-    <ClCompile Include="src\profilermain.cpp" />
-    <ClCompile Include="src\RuntimeSuspensionStackItem.cpp" />
-    <ClCompile Include="src\SendString.cpp" />
-    <ClCompile Include="src\SetFunctionsToMonitor.cpp" />
-    <ClCompile Include="src\srw_helper.cpp" />
-    <ClCompile Include="src\StackItemBase.cpp" />
+    <ClCompile Include="src\commands\FunctionEnterLong.cpp" />
+    <ClCompile Include="src\commands\FunctionEnterQuick.cpp" />
+    <ClCompile Include="src\commands\FunctionInfo.cpp" />
+    <ClCompile Include="src\commands\FunctionLeaveLong.cpp" />
+    <ClCompile Include="src\commands\FunctionStackItem.cpp" />
+    <ClCompile Include="src\commands\GarbageCollectionFinished.cpp" />
+    <ClCompile Include="src\common\GarbageCollectionStackItem.cpp" />
+    <ClCompile Include="src\commands\GarbageCollectionStarted.cpp" />
+    <ClCompile Include="src\commands\GetString.cpp" />
+    <ClCompile Include="src\commands\ICommand.cpp" />
+    <ClCompile Include="src\infoclasses\ModuleInfo.cpp" />
+    <ClCompile Include="src\network\networkclient.cpp" />
+    <ClCompile Include="src\infoclasses\ParameterInfo.cpp" />
+    <ClCompile Include="src\infoclasses\ProcessInfo.cpp" />
+    <ClCompile Include="src\profiler\profilermain.cpp" />
+    <ClCompile Include="src\common\RuntimeSuspensionStackItem.cpp" />
+    <ClCompile Include="src\commands\SendString.cpp" />
+    <ClCompile Include="src\commands\SetFunctionsToMonitor.cpp" />
+    <ClCompile Include="src\helpers\srw_helper.cpp" />
+    <ClCompile Include="src\common\StackItemBase.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'">Create</PrecompiledHeader>
@@ -491,7 +491,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\ThreadStackItem.cpp" />
+    <ClCompile Include="src\common\ThreadStackItem.cpp" />
     <ClCompile Include="src\xdlldata.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'">false</CompileAsManaged>
@@ -562,23 +562,26 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <ItemGroup>
     <None Include="defs\clrprofiler.def" />
     <None Include="rsrc\clrprofiler.rgs" />
-    <MASM Include="src\etl_enter_x64.asm">
+    <MASM Include="src\asm\etl_enter_x64.asm">
       <FileType>MASM</FileType>
     </MASM>
-    <MASM Include="src\etl_leave_x64.asm">
+    <MASM Include="src\asm\etl_leave_x64.asm">
       <FileType>Document</FileType>
     </MASM>
-    <MASM Include="src\etl_tail_x64.asm">
+    <MASM Include="src\asm\etl_tail_x64.asm">
       <FileType>Document</FileType>
     </MASM>
     <None Include="rsrc\profilermain.rgs" />
     <None Include="README.md" />
+    <None Include="src\asm\etl_leave_x86.inc" />
+    <None Include="src\asm\etl_tail_x86.inc" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="defs\clrprofiler.idl" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="docs\CommandPacketLayout.md" />
+    <Text Include="src\asm\etl_enter_x86.inc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

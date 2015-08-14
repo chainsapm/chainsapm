@@ -67,128 +67,128 @@
     <ClCompile Include="src\stdafx.cpp">
       <Filter>DLLMain</Filter>
     </ClCompile>
-    <ClCompile Include="src\dllmain.cpp">
-      <Filter>DLLMain</Filter>
-    </ClCompile>
-    <ClCompile Include="src\clrprofiler.cpp">
-      <Filter>DLLMain</Filter>
-    </ClCompile>
-    <ClCompile Include="src\profilermain.cpp">
-      <Filter>CProfilerClass</Filter>
-    </ClCompile>
-    <ClCompile Include="src\critsec_helper.cpp">
-      <Filter>Helpers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\srw_helper.cpp">
-      <Filter>Helpers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\CorProfilerCallbackImplementation.cpp">
-      <Filter>CorProfilerCallback</Filter>
-    </ClCompile>
-    <ClCompile Include="src\networkclient.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="src\StackItemBase.cpp">
-      <Filter>Common Classes\Stack Items</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ThreadStackItem.cpp">
-      <Filter>Common Classes\Stack Items</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FunctionStackItem.cpp">
-      <Filter>Common Classes\Stack Items</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FunctionInfo.cpp">
-      <Filter>Common Classes\Info Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ParameterInfo.cpp">
-      <Filter>Common Classes\Info Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ContainerClass.cpp">
-      <Filter>Common Classes\Main Container</Filter>
-    </ClCompile>
-    <ClCompile Include="src\RuntimeSuspensionStackItem.cpp">
-      <Filter>Common Classes\Stack Items</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GarbageCollectionStackItem.cpp">
-      <Filter>Common Classes\Stack Items</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SendString.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FunctionEnterQuick.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FunctionEnterLong.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FunctionLeaveLong.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AgentInfo.cpp">
-      <Filter>Common Classes\Agent Info Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ProcessInfo.cpp">
-      <Filter>Common Classes\Agent Info Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AssemblyDefinition.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ClassDefinition.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GarbageCollectionFinished.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GarbageCollectionStarted.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GetString.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ICommand.cpp">
-      <Filter>Commands\Interface</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SetFunctionsToMonitor.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AssemblyInfo.cpp">
-      <Filter>Common Classes\Info Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ModuleInfo.cpp">
-      <Filter>Common Classes\Info Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ClassInfo.cpp">
-      <Filter>Common Classes\Info Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SendPackedStructure.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
     <ClCompile Include="src\clrprofiler_i.c">
       <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="src\xdlldata.c">
       <Filter>Generated Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\FunctionTailQuick.cpp">
+    <ClCompile Include="src\commands\FunctionEnterLong.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
-    <ClCompile Include="src\FunctionLeaveQuick.cpp">
+    <ClCompile Include="src\commands\FunctionEnterQuick.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
-    <ClCompile Include="src\DefineAssembly.cpp">
+    <ClCompile Include="src\commands\FunctionInfo.cpp">
+      <Filter>Common Classes\Info Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\FunctionLeaveLong.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
-    <ClCompile Include="src\DefineClass.cpp">
+    <ClCompile Include="src\commands\FunctionLeaveQuick.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
-    <ClCompile Include="src\DefineFunction.cpp">
+    <ClCompile Include="src\commands\FunctionStackItem.cpp">
+      <Filter>Common Classes\Stack Items</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\FunctionTailQuick.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
-    <ClCompile Include="src\DefineModule.cpp">
+    <ClCompile Include="src\commands\AssemblyDefinition.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
-    <ClCompile Include="src\bit_converter.cpp">
+    <ClCompile Include="src\commands\ClassDefinition.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\AgentInfo.cpp">
+      <Filter>Common Classes\Agent Info Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\AssemblyInfo.cpp">
+      <Filter>Common Classes\Info Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\helpers\bit_converter.cpp">
       <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\ClassInfo.cpp">
+      <Filter>Common Classes\Info Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\helpers\critsec_helper.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\DefineAssembly.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\DefineClass.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\DefineFunction.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\DefineModule.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\GarbageCollectionFinished.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\GarbageCollectionStarted.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\GetString.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\ICommand.cpp">
+      <Filter>Commands\Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\ParameterInfo.cpp">
+      <Filter>Common Classes\Info Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\ModuleInfo.cpp">
+      <Filter>Common Classes\Info Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\ProcessInfo.cpp">
+      <Filter>Common Classes\Agent Info Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\SendPackedStructure.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\SendString.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\SetFunctionsToMonitor.cpp">
+      <Filter>Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dllmain\clrprofiler.cpp">
+      <Filter>DLLMain</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dllmain\dllmain.cpp">
+      <Filter>DLLMain</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\ContainerClass.cpp">
+      <Filter>Common Classes\Main Container</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\GarbageCollectionStackItem.cpp">
+      <Filter>Common Classes\Stack Items</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\RuntimeSuspensionStackItem.cpp">
+      <Filter>Common Classes\Stack Items</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\StackItemBase.cpp">
+      <Filter>Common Classes\Stack Items</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\ThreadStackItem.cpp">
+      <Filter>Common Classes\Stack Items</Filter>
+    </ClCompile>
+    <ClCompile Include="src\network\networkclient.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="src\helpers\srw_helper.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.cpp">
+      <Filter>CProfilerClass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\CorProfilerCallbackImplementation.cpp">
+      <Filter>CorProfilerCallback</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -334,15 +334,21 @@
     <None Include="rsrc\profilermain.rgs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="src\asm\etl_leave_x86.inc">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="src\asm\etl_tail_x86.inc">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="src\etl_enter_x64.asm">
+    <MASM Include="src\asm\etl_enter_x64.asm">
       <Filter>x64 Function Hooks</Filter>
     </MASM>
-    <MASM Include="src\etl_leave_x64.asm">
+    <MASM Include="src\asm\etl_leave_x64.asm">
       <Filter>x64 Function Hooks</Filter>
     </MASM>
-    <MASM Include="src\etl_tail_x64.asm">
+    <MASM Include="src\asm\etl_tail_x64.asm">
       <Filter>x64 Function Hooks</Filter>
     </MASM>
   </ItemGroup>
@@ -355,5 +361,6 @@
     <Text Include="docs\CommandPacketLayout.md">
       <Filter>Documents</Filter>
     </Text>
+    <Text Include="src\asm\etl_enter_x86.inc" />
   </ItemGroup>
 </Project>
