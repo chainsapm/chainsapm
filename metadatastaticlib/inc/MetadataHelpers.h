@@ -1,7 +1,12 @@
 #ifndef METADATAHELPERS_H
 #define METADATAHELPERS_H
+#include <cor.h>
+#include <corprof.h>
+#include <string>
+#include <map>
+#include <stack>
 #include <memory>
-#include "FunctionInfo.h"
+#include "allinfo.h"
 
 
 #define MAX_LENGTH 2048

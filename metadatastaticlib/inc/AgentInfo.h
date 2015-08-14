@@ -29,8 +29,6 @@ namespace InformationClasses {
 			RESERVED8 = 0x4000,
 			RESERVED9 = 0x8000
 		} AgentCapabilities;
-
-
 		__int8 AgentMajorVersion;
 		__int8 AgentMinorVersion;
 		__int8 AgentIncrementalVersion;

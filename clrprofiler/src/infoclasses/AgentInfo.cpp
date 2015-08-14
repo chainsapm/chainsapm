@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "AgentInfo.h"
+#include "../../metadatastaticlib/inc/AgentInfo.h"
 
 namespace InformationClasses {
 

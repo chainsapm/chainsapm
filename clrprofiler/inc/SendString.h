@@ -16,10 +16,9 @@ namespace Commands
 		virtual std::wstring Name();
 		virtual std::wstring Description();
 		virtual short Code() { return code; }
-
-	private:
 		std::wstring m_wstring;
 		std::string m_string;
+	private:
 		std::shared_ptr<std::vector<char>> m_internalvector;
 		bool hasEncoded;
 		bool wchar = false;

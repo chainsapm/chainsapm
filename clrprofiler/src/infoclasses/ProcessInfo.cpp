@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "ProcessInfo.h"
+#include "../../metadatastaticlib/inc/ProcessInfo.h"
 
 namespace InformationClasses {
 

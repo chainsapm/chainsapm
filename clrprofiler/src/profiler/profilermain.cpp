@@ -6,7 +6,7 @@
 #include "profilermain.h"
 #include "srw_helper.h"
 #include "critsec_helper.h"
-#include "AgentInfo.h"
+#include "../../metadatastaticlib/inc/allinfo.h"
 
 
 
@@ -361,8 +361,6 @@ void Cprofilermain::SetUpAgent()
 
 	AddCommonFunctions();
 
-
-
 	tp = new tp_helper(this, 1, 1);
 	tp->CreateNetworkIoThreadPool(m_NetworkClient);
 	m_NetworkClient->Start(); // Ready for normal unblocked operation
@@ -391,8 +389,10 @@ void Cprofilermain::SendAgentInformation()
 	m_NetworkClient->SendCommand<Commands::SendPackedStructure>(
 		std::make_shared<Commands::SendPackedStructure>(
 			Commands::SendPackedStructure(ainfo)));
-
-	auto cmd = m_NetworkClient->ReceiveCommand();
+	m_NetworkClient->SendNow();
+	m_NetworkClient->RecvNow();
+	auto cmd = std::dynamic_pointer_cast<Commands::SendString>(m_NetworkClient->ReceiveCommand());
+	auto s = cmd->m_wstring;
 }
 
 Cprofilermain::~Cprofilermain()
@@ -431,49 +431,21 @@ void Cprofilermain::AddCommonFunctions()
 {
 	
 	// TODO Ask network client to give me data
+	m_NetworkClient->SendCommand<Commands::GetFunctionsToInstrument>(
+		std::make_shared<Commands::GetFunctionsToInstrument>(
+			Commands::GetFunctionsToInstrument()));
+
+	auto cmd = std::dynamic_pointer_cast<Commands::GetString>(m_NetworkClient->ReceiveCommand());
 
 	auto newMapping2 = ItemMapping();
-	//ItemMapping *newMapping3 = new ItemMapping();
-	//ItemMapping *newMapping4 = new ItemMapping();
-	//ItemMapping *newMapping5 = new ItemMapping();
-	//ItemMapping *newMapping6 = new ItemMapping();
-	//ItemMapping *newMapping7 = new ItemMapping();
-	//ItemMapping *newMapping8 = new ItemMapping();
-	//ItemMapping *newMapping9 = new ItemMapping();
-
 
 	newMapping2.FunctionName = TEXT("AddNumbers");
 	newMapping2.Match = ItemMapping::MatchType::FunctionOnly;
 	this->m_Container->g_FullyQualifiedMethodsToProfile->insert(newMapping2);
 
-	/*newMapping3->ItemName = TEXT("Thread");
-	newMapping3->compare = STRINGCOMPARE::CONTAINS;
-	this->m_Container->g_FunctionNameSet->insert(newMapping3);
-
-	newMapping4->ItemName = TEXT("Connect");
-	newMapping4->compare = STRINGCOMPARE::CONTAINS;
-	this->m_Container->g_FunctionNameSet->insert(newMapping4);
-
-	newMapping5->ItemName = TEXT("WriteStream");
-	newMapping5->compare = STRINGCOMPARE::CONTAINS;
-	this->m_Container->g_FunctionNameSet->insert(newMapping5);
-
-	newMapping6->ItemName = TEXT("Headers");
-	newMapping6->compare = STRINGCOMPARE::CONTAINS;
-	this->m_Container->g_FunctionNameSet->insert(newMapping6);
-
-	newMapping7->ItemName = TEXT("AddNumbers");
-	newMapping7->compare = STRINGCOMPARE::CONTAINS;
-	this->m_Container->g_FunctionNameSet->insert(newMapping7);
-
-	newMapping8->ItemName = TEXT("WriteLine");
-	newMapping8->compare = STRINGCOMPARE::CONTAINS;
-	this->m_Container->g_FunctionNameSet->insert(newMapping8);
-
-	newMapping9->ItemName = TEXT("Run");
-	newMapping9->compare = STRINGCOMPARE::CONTAINS;
-	this->m_Container->g_FunctionNameSet->insert(newMapping9);*/
-
+	m_NetworkClient->SendCommand<Commands::GetFunctionsToInstrument>(
+		std::make_shared<Commands::GetFunctionsToInstrument>(
+			Commands::GetFunctionsToInstrument()));
 
 }
 

@@ -239,6 +239,8 @@ namespace ChainsAPM.ConsoleServer
                         tcbah.AgentInfo = item as ChainsAPM.Commands.Agent.AgentInformation;
                         tcbah.ConnectedTime = DateTime.Now;
                         Console.WriteLine("Agent {0} connected with version {1} from machine {2}", ((ChainsAPM.Commands.Agent.AgentInformation)item).AgentName, ((ChainsAPM.Commands.Agent.AgentInformation)item).Version, ((ChainsAPM.Commands.Agent.AgentInformation)item).MachineName);
+                        var okCmd = new ChainsAPM.Commands.Common.SendString("OK!");
+                        tcbah.SendCommand(okCmd);
                     }
                     if (item is ChainsAPM.Commands.Agent.FunctionEnterQuick)
                     {
@@ -292,6 +294,8 @@ namespace ChainsAPM.ConsoleServer
                     }
                     if (item is ChainsAPM.Commands.Common.SendString)
                     {
+                        var it = item as ChainsAPM.Commands.Common.SendString;
+                        Console.WriteLine("Agent {0} has sent string {1}", tcbah.AgentInfo.AgentName, it.StringData);
                         if (((ChainsAPM.Commands.Common.SendString)item).StringData == "Done!")
                         {
                             tcbah.SendCommand(stringCmd);

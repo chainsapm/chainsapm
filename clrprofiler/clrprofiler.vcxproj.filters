@@ -79,9 +79,6 @@
     <ClCompile Include="src\commands\FunctionEnterQuick.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
-    <ClCompile Include="src\commands\FunctionInfo.cpp">
-      <Filter>Common Classes\Info Classes</Filter>
-    </ClCompile>
     <ClCompile Include="src\commands\FunctionLeaveLong.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
@@ -136,9 +133,6 @@
     <ClCompile Include="src\commands\GetString.cpp">
       <Filter>Commands</Filter>
     </ClCompile>
-    <ClCompile Include="src\commands\ICommand.cpp">
-      <Filter>Commands\Interface</Filter>
-    </ClCompile>
     <ClCompile Include="src\infoclasses\ParameterInfo.cpp">
       <Filter>Common Classes\Info Classes</Filter>
     </ClCompile>
@@ -189,6 +183,12 @@
     </ClCompile>
     <ClCompile Include="src\profiler\CorProfilerCallbackImplementation.cpp">
       <Filter>CorProfilerCallback</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\GetFunctionsToInstrument.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\FunctionInfo.cpp">
+      <Filter>Common Classes\Info Classes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -255,12 +255,6 @@
     <ClInclude Include="inc\FunctionLeaveLong.h">
       <Filter>Commands</Filter>
     </ClInclude>
-    <ClInclude Include="inc\AgentInfo.h">
-      <Filter>Common Classes\Agent Info Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\ProcessInfo.h">
-      <Filter>Common Classes\Agent Info Classes</Filter>
-    </ClInclude>
     <ClInclude Include="inc\AssemblyDefinition.h">
       <Filter>Commands</Filter>
     </ClInclude>
@@ -314,6 +308,12 @@
     </ClInclude>
     <ClInclude Include="inc\bit_converter.h">
       <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\INetworkClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\GetFunctionsToInstrument.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -2,7 +2,7 @@
 #define NETCLIENT
 
 #pragma once
-#include "Commands.h"
+#include "INetworkClient.h"
 
 class Cprofilermain;
 
@@ -25,7 +25,7 @@ enum NetworkCommands
 
 
 
-class NetworkClient
+class NetworkClient : public INetworkClient
 {
 public:
 	NetworkClient(std::wstring hostName, std::wstring port);
@@ -33,7 +33,7 @@ public:
 	static SOCKET m_SocketConnection;
 	static PTP_IO m_ptpIO;
 	void SetPTPIO(PTP_IO ptpIO);
-
+	static std::vector<char> s_OverflowBuffer;
 private:
 	// Create a singleton socket so we can control what happens if this
 	// class is instantiated more than once.
@@ -58,6 +58,8 @@ private:
 	CRITICAL_SECTION FrontInboundLock;
 	CRITICAL_SECTION BackInboundLock;
 
+	static CRITICAL_SECTION OverflowBufferLock;
+
 	PTP_TIMER recvTimer;
 
 	PTP_TIMER sendTimer;
@@ -75,6 +77,7 @@ private:
 	bool insideSendLock = false;
 	bool insideReceiveLock = false;
 
+	
 
 
 
@@ -106,6 +109,8 @@ public:
 	void Start();
 	// Shutdown the socket and stop send and recv.
 	void Shutdown();
+
+	HRESULT SendCommand(std::shared_ptr<Commands::ICommand> packet);
 
 
 	// Send a single command to the buffer to be processed.

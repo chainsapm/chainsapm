@@ -406,6 +406,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\commands\GetFunctionsToInstrument.cpp" />
     <ClCompile Include="src\helpers\bit_converter.cpp" />
     <ClCompile Include="src\commands\DefineAssembly.cpp" />
     <ClCompile Include="src\commands\DefineClass.cpp" />
@@ -465,14 +466,13 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ClCompile>
     <ClCompile Include="src\commands\FunctionEnterLong.cpp" />
     <ClCompile Include="src\commands\FunctionEnterQuick.cpp" />
-    <ClCompile Include="src\commands\FunctionInfo.cpp" />
+    <ClCompile Include="src\infoclasses\FunctionInfo.cpp" />
     <ClCompile Include="src\commands\FunctionLeaveLong.cpp" />
     <ClCompile Include="src\commands\FunctionStackItem.cpp" />
     <ClCompile Include="src\commands\GarbageCollectionFinished.cpp" />
     <ClCompile Include="src\common\GarbageCollectionStackItem.cpp" />
     <ClCompile Include="src\commands\GarbageCollectionStarted.cpp" />
     <ClCompile Include="src\commands\GetString.cpp" />
-    <ClCompile Include="src\commands\ICommand.cpp" />
     <ClCompile Include="src\infoclasses\ModuleInfo.cpp" />
     <ClCompile Include="src\network\networkclient.cpp" />
     <ClCompile Include="src\infoclasses\ParameterInfo.cpp" />
@@ -514,7 +514,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="inc\AgentInfo.h" />
     <ClInclude Include="inc\AssemblyDefinition.h" />
     <ClInclude Include="inc\AssemblyInfo.h" />
     <ClInclude Include="inc\bit_converter.h" />
@@ -539,12 +538,13 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="inc\FunctionTailQuick.h" />
     <ClInclude Include="inc\GarbageCollectionFinished.h" />
     <ClInclude Include="inc\GarbageCollectionStarted.h" />
+    <ClInclude Include="inc\GetFunctionsToInstrument.h" />
     <ClInclude Include="inc\GetString.h" />
     <ClInclude Include="inc\ICommand.h" />
+    <ClInclude Include="inc\INetworkClient.h" />
     <ClInclude Include="inc\ModuleInfo.h" />
     <ClInclude Include="inc\networkclient.h" />
     <ClInclude Include="inc\ParameterInfo.h" />
-    <ClInclude Include="inc\ProcessInfo.h" />
     <ClInclude Include="inc\profilermain.h" />
     <ClInclude Include="inc\Resource.h" />
     <ClInclude Include="inc\SendString.h" />

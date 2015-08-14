@@ -11,8 +11,8 @@
 SOCKET NetworkClient::m_SocketConnection = NULL;
 PTP_IO NetworkClient::m_ptpIO = NULL;
 HANDLE NetworkClient::SendRecvEvent;
-
-
+CRITICAL_SECTION NetworkClient::OverflowBufferLock;
+std::vector<char> NetworkClient::s_OverflowBuffer = std::vector<char>{ 0 };
 
 NetworkClient::NetworkClient(std::wstring hostName, std::wstring port)
 {
@@ -24,6 +24,9 @@ NetworkClient::NetworkClient(std::wstring hostName, std::wstring port)
 	InitializeCriticalSection(&BackInboundLock);
 	InitializeCriticalSection(&FrontOutboundLock);
 	InitializeCriticalSection(&BackOutboundLock);
+	InitializeCriticalSection(&NetworkClient::OverflowBufferLock);
+	
+	s_OverflowBuffer.reserve(10 * 1024 * 1024);
 
 	// Select the highest socket version 2.2
 	WORD wVersionRequested = MAKEWORD(2, 2);
@@ -73,6 +76,10 @@ void NetworkClient::Shutdown()
 	closesocket(m_SocketConnection);
 }
 
+HRESULT NetworkClient::SendCommand(std::shared_ptr<Commands::ICommand> packet)
+{
+	return S_OK;
+};
 
 // Receive a single command from the buffer to be processed.
 std::shared_ptr<Commands::ICommand> NetworkClient::ReceiveCommand()
@@ -248,6 +255,7 @@ void CALLBACK NetworkClient::NewDataReceived(
 		auto charBuff = (char*)buffOut->buf;
 		auto iterBuff = (char*)buffOut->buf;
 		DWORD totalBuffSize = *(DWORD*)charBuff;
+
 		if (totalBuffSize == cbTransferred)
 		{
 			auto term = *(unsigned int*)charBuff[totalBuffSize - 4];
@@ -262,7 +270,32 @@ void CALLBACK NetworkClient::NewDataReceived(
 				}
 			}
 		}
-
+		else {
+			auto cshFQ = critsec_helper::critsec_helper(&NetworkClient::OverflowBufferLock);
+			std::copy(charBuff, charBuff + cbTransferred, NetworkClient::s_OverflowBuffer.begin() + NetworkClient::s_OverflowBuffer.size());
+		}
+		
+		auto cshFQ = critsec_helper::critsec_helper(&NetworkClient::OverflowBufferLock);
+		{
+			if (NetworkClient::s_OverflowBuffer.size() > 0 && NetworkClient::s_OverflowBuffer.size() == *(DWORD*)NetworkClient::s_OverflowBuffer.data()) {
+				auto term = *(unsigned int*)NetworkClient::s_OverflowBuffer.data()[NetworkClient::s_OverflowBuffer.size() - 4];
+				charBuff = NetworkClient::s_OverflowBuffer.data();
+				iterBuff = NetworkClient::s_OverflowBuffer.data();
+				if (term == 0xCCCCCCCC)
+				{
+					iterBuff += 4;
+					while (iterBuff < iterBuff + (totalBuffSize - 4))
+					{
+						int localBufferSize = *(int*)iterBuff;
+						//short term = *(short*)(iterBuff + localBufferSize - 2);
+						iterBuff += localBufferSize;
+					}
+				}
+				NetworkClient::s_OverflowBuffer.clear();
+			}
+		}
+		
+		delete buffOut; 
 	}
 }
 
@@ -394,8 +427,6 @@ HRESULT NetworkClient::RecvNow()
 		DWORD flags = 0;
 		WSAOVERLAPPED overlapped;
 		SecureZeroMemory(&overlapped, sizeof(WSAOVERLAPPED));
-
-		StartThreadpoolIo(NetworkClient::m_ptpIO);
 		auto result = WSARecv(netClient->m_SocketConnection, bigBuffer, 1, &bytesRecvd, &flags, nullptr, nullptr);
 		if (!result)
 		{
@@ -428,6 +459,9 @@ HRESULT NetworkClient::RecvNow()
 						iterBuff += localBufferSize;
 					}
 				}
+			}
+			else {
+				RecvNow();
 			}
 
 		}

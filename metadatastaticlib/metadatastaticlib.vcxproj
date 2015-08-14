@@ -154,13 +154,24 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="inc\AgentInfo.h" />
+    <ClInclude Include="inc\allinfo.h" />
+    <ClInclude Include="inc\AssemblyInfo.h" />
+    <ClInclude Include="inc\ClassInfo.h" />
+    <ClInclude Include="inc\commonstructures.h" />
+    <ClInclude Include="inc\ContainerClass.h" />
+    <ClInclude Include="inc\FunctionInfo.h" />
     <ClInclude Include="inc\MetadataHelpers.h" />
+    <ClInclude Include="inc\ModuleInfo.h" />
+    <ClInclude Include="inc\ParameterInfo.h" />
+    <ClInclude Include="inc\ProcessInfo.h" />
     <ClInclude Include="inc\stdafx.h" />
     <ClInclude Include="inc\targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ilrewriter.cpp" />
     <ClCompile Include="src\MetadataHelpers.cpp" />
+    <ClCompile Include="src\metadatastaticlib.cpp" />
     <ClCompile Include="src\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
