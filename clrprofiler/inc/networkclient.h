@@ -35,6 +35,9 @@ public:
 	void SetThreadPoolIO(PTP_IO ptpIO);
 	std::vector<char> OverflowBuffer;
 	std::map<short, std::shared_ptr<Commands::ICommand>> m_CommandList;
+	static VOID CALLBACK TimerRoutine(PVOID lpParam, BOOLEAN TimerOrWaitFired);
+	static VOID CALLBACK TimerRoutine2(PVOID lpParam, BOOLEAN TimerOrWaitFired);
+
 private:
 	// Create a singleton socket so we can control what happens if this
 	// class is instantiated more than once.
@@ -73,8 +76,8 @@ private:
 		PVOID pvContext,
 		PTP_TIMER pTimer);
 
-	bool insideSendLock = false;
-	bool insideReceiveLock = false;
+	bool insideSendLock;
+	bool insideReceiveLock;
 
 
 public:
@@ -107,7 +110,6 @@ public:
 	static HANDLE DataReceived;
 	static HANDLE DataSent;
 
-	TP_CALLBACK_ENVIRON *m_ptpcbe;
 
 	static VOID CALLBACK IoCompletionCallback(
 		_Inout_     PTP_CALLBACK_INSTANCE Instance,

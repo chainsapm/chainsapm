@@ -419,7 +419,7 @@ public:
 	static std::map<UINT_PTR, Cprofilermain*> * g_StaticContainerClass;
 	static CRITICAL_SECTION g_StaticContainerClassCritSec;
 
-	NetworkClient *m_NetworkClient = NULL;
+	NetworkClient* m_NetworkClient = NULL;
 
 	/************************************************************************************
 	!!!NOTE!!!!
@@ -549,6 +549,24 @@ tp_helper::tp_helper(Cprofilermain * cpmain, int min, int max)
 	tp_helper::m_cprof = cpmain;
 	m_ptpcbe = new TP_CALLBACK_ENVIRON();
 	InitializeThreadpoolEnvironment(m_ptpcbe);
+	HMODULE _ignore;
+	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, TEXT("clrprofiler.dll"), &_ignore);
+	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, TEXT("msvcrt.dll"), &_ignore);
+	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, TEXT("msvcrtd.dll"), &_ignore);
+	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, TEXT("ucrtbase.dll"), &_ignore);
+	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, TEXT("ucrtbased.dll"), &_ignore);
+
+	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("clrprofiler.dll")));
+	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("msvcrt.dll")));
+	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("msvcrtd.dll")));
+	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("ucrtbase.dll")));
+	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("ucrtbased.dll")));
+	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("MSVCR120_CLR0400.dll")));
+	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("MSVCP140D.dll")));
+	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("VCRUNTIME140D.dll")));
+	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("MSVCP140.dll")));
+	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("VCRUNTIME140.dll")));
+	
 	m_customThreadPool = CreateThreadpool(NULL);
 	SetThreadpoolThreadMinimum(m_customThreadPool, min);
 	SetThreadpoolThreadMaximum(m_customThreadPool, max);
@@ -563,7 +581,6 @@ void tp_helper::CreateNetworkIoThreadPool(NetworkClient* NetClient)
 
 	NetClient->SetThreadPoolIO(CreateThreadpoolIo(reinterpret_cast<HANDLE>(NetworkClient::m_SocketConnection),
 		NetworkClient::IoCompletionCallback, NetClient, m_ptpcbe));
-	NetClient->m_ptpcbe = m_ptpcbe;
 
 }
 

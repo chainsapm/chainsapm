@@ -40,7 +40,7 @@ namespace HelloWorldTestHarness
             System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
             System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
             System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
-            while (loops < 100)
+            while (loops < 1000)
             {
                 ++loops;
                 //Console.ReadLine();

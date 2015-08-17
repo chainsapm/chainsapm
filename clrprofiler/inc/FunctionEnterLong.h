@@ -10,7 +10,8 @@ namespace Commands
 	public:
 		FunctionEnterLong(InformationClasses::FunctionInfo funcinfo);
 		FunctionEnterLong::FunctionEnterLong(FunctionEnterLong&& funcinfo);
-		FunctionEnterLong::FunctionEnterLong(FunctionEnterLong& funcinfo) = delete;
+		FunctionEnterLong::FunctionEnterLong(FunctionEnterLong& funcinfo) = delete ;
+
 		~FunctionEnterLong();
 		virtual std::shared_ptr<std::vector<char>> Encode();
 		virtual std::shared_ptr<ICommand> Decode(std::shared_ptr<std::vector<char>> &data);

@@ -1035,7 +1035,7 @@ again:
 			mdTokenNil,
 			&tdSystemArray);
 
-		unsigned char pDataDout[4] {0};
+		unsigned char pDataDout[4];
 		//unsigned char tk;
 		ULONG SigTok = CorSigCompressToken(tdSystemArray, &pDataDout);
 
@@ -1615,7 +1615,7 @@ HRESULT RewriteIL2(
 		assert(mdExitProbeRef != mdTokenNil);
 		UINT stringToken = rewriter.AddNewString();
 		IfFailRet(AddEnterProbe2(&rewriter, moduleID, methodDef, stringToken, mdEnterProbeRef));
-		IfFailRet(AddExitProbe2(&rewriter, moduleID, methodDef, stringToken, mdExitProbeRef));
+		IfFailRet(AddExitProbe(&rewriter, moduleID, methodDef, nVersion, 0, mdExitProbeRef));
 	}
 	IfFailRet(rewriter.Export());
 

@@ -11,6 +11,7 @@
 SOCKET NetworkClient::m_SocketConnection = NULL;
 HANDLE NetworkClient::DataReceived = NULL;
 HANDLE NetworkClient::DataSent = NULL;
+
 NetworkClient::NetworkClient(std::wstring hostName, std::wstring port)
 {
 	// TODO: Complete the network client.
@@ -163,6 +164,7 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 			cshFQ.leave_early();
 		}
 
+		
 		auto cshBQ = critsec_helper::critsec_helper(&netClient->BackOutboundLock);
 		size_t buffersize = netClient->m_OutboundQueueBack.size() + 2;
 		bufs = new WSABUF[buffersize];
@@ -170,14 +172,16 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 		size_t sizeCounter = 0;
 		while (!netClient->m_OutboundQueueBack.empty())
 		{
-			auto itemtodecodeout = netClient->m_OutboundQueueBack.front()->Encode();
+			auto itemtodelete = netClient->m_OutboundQueueBack.front();
+			auto itemtodecodeout = itemtodelete->Encode();
 			bufs[counter].buf = itemtodecodeout->data();
 #pragma warning(suppress : 4267) // I'm only sending max 4k of data in one command however, the size() prop is __int64. This is valid.
 			bufs[counter].len = itemtodecodeout->size();
-			netClient->m_OutboundQueueBack.pop();
 			m_Passable->emplace(itemtodecodeout);
 			++counter;
 			sizeCounter += itemtodecodeout->size();
+			netClient->m_OutboundQueueBack.pop();
+
 		}
 		cshBQ.leave_early();
 		sizeCounter += 8;
@@ -215,7 +219,8 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 				CancelThreadpoolIo(netClient->m_ptpIO);
 			}
 		}
-		WaitForThreadpoolIoCallbacks(netClient->m_ptpIO, FALSE);
+		//WaitForThreadpoolTimerCallbacks(pTimer, FALSE);
+		//WaitForThreadpoolIoCallbacks(netClient->m_ptpIO, FALSE);
 		netClient->insideSendLock = false;
 	}
 }
@@ -259,7 +264,8 @@ VOID CALLBACK NetworkClient::ReceiveTimerCallback(
 			CancelThreadpoolIo(netClient->m_ptpIO);
 		}
 		// If there is nothing here we need to continue
-		WaitForThreadpoolIoCallbacks(netClient->m_ptpIO, FALSE);
+		//WaitForThreadpoolTimerCallbacks(pTimer, FALSE);
+		//WaitForThreadpoolIoCallbacks(netClient->m_ptpIO, FALSE);
 		netClient->insideReceiveLock = false;
 	}
 }
@@ -354,6 +360,6 @@ void NetworkClient::SetThreadPoolIO(PTP_IO ptpIO)
 		dw = GetLastError();
 	}
 	HRESULT hr = HRESULT_FROM_WIN32(dw);
-	NetworkClient::m_ptpIO = ptpIO;
+	m_ptpIO = ptpIO;
 }
 

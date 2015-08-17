@@ -21,7 +21,7 @@ namespace Commands
 		std::string m_string;
 		std::shared_ptr<std::vector<char>> m_internalvector;
 		bool hasEncoded;
-		bool wchar = false;
+		bool wchar;
 		short code;
 	};
 

@@ -10,7 +10,7 @@ MetadataHelpers::MetadataHelpers()
 }
 
 
-MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo> profilerInfo, ModuleID moduleId) : MetadataHelpers()
+MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo> profilerInfo, ModuleID moduleId) : MetadataHelpers() 
 {
 	m_pICorProfilerInfo = profilerInfo;
 }
