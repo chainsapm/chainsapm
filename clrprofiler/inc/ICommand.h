@@ -13,5 +13,5 @@ namespace Commands
 		virtual std::wstring Description() = 0;
 		virtual short Code() = 0;
 	};
-
 }
+

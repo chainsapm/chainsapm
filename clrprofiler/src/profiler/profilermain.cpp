@@ -155,7 +155,7 @@ BOOL ContainsAtEnd(LPCWSTR wszContainer, LPCWSTR wszProspectiveEnding);
 
 
 
-std::map<UINT_PTR, Cprofilermain*> * Cprofilermain::g_StaticContainerClass = 
+std::map<UINT_PTR, Cprofilermain*> * Cprofilermain::g_StaticContainerClass =
 new std::map<UINT_PTR, Cprofilermain*>();
 
 CRITICAL_SECTION Cprofilermain::g_StaticContainerClassCritSec;
@@ -181,7 +181,7 @@ EXTERN_C void STDAPICALLTYPE NtvEnteredFunctionArraySA(
 	mdMethodDef mdCur,
 	SAFEARRAY*  ar)
 {
-	
+
 	UNREFERENCED_PARAMETER(ar);
 	Cprofilermain * pContainerClass = nullptr;
 	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
@@ -265,7 +265,7 @@ protected:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Enter hook function for creating shadow stacks
- EXTERN_C void FunctionEnter2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
+EXTERN_C void FunctionEnter2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
 {
 	Cprofilermain * pContainerClass = (Cprofilermain*)clientData;
@@ -279,7 +279,7 @@ protected:
 }
 
 // Leave hook function for creating shadow stacks
- EXTERN_C void FunctionLeave2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
+EXTERN_C void FunctionLeave2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentRange)
 {
 	Cprofilermain * pContainerClass = (Cprofilermain*)clientData;
@@ -292,7 +292,7 @@ protected:
 }
 
 // Tail hook function for creating shadow stacks
- EXTERN_C void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
+EXTERN_C void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 	COR_PRF_FRAME_INFO func)
 {
 
@@ -323,15 +323,15 @@ protected:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Cprofilermain::Cprofilermain() :
-m_fInstrumentationHooksInSeparateAssembly(FALSE),
-m_mdIntPtrExplicitCast(mdTokenNil),
-m_mdEnterPInvoke(mdTokenNil),
-m_mdExitPInvoke(mdTokenNil),
-m_mdEnter(mdTokenNil),
-m_mdExit(mdTokenNil),
-m_modidMscorlib(NULL),
-m_refCount(0),
-m_dwShadowStackTlsIndex(0)
+	m_fInstrumentationHooksInSeparateAssembly(FALSE),
+	m_mdIntPtrExplicitCast(mdTokenNil),
+	m_mdEnterPInvoke(mdTokenNil),
+	m_mdExitPInvoke(mdTokenNil),
+	m_mdEnter(mdTokenNil),
+	m_mdExit(mdTokenNil),
+	m_modidMscorlib(NULL),
+	m_refCount(0),
+	m_dwShadowStackTlsIndex(0)
 {
 
 
@@ -343,12 +343,7 @@ m_dwShadowStackTlsIndex(0)
 		LeaveCriticalSection(&Cprofilermain::g_StaticContainerClassCritSec);
 	}
 
-	// Get things like the process name, working directory, command line, etc.
-	this->SetProcessName();
-	if (this->DoWeProfile() == S_OK) // No reason to execute this code if the process is not what we're looking for.
-	{
-		SetUpAgent();
-	}
+
 }
 
 void Cprofilermain::SetUpAgent()
@@ -357,13 +352,28 @@ void Cprofilermain::SetUpAgent()
 	InitializeCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
 	m_NetworkClient = new NetworkClient(this->m_ServerName, this->m_ServerPort);
 
+	tp = new tp_helper(this, 1, 1);
+	tp->CreateNetworkIoThreadPool(m_NetworkClient);
+
+	auto cmd1 = std::make_shared<Commands::SendString>(L"");
+	auto cmd2 = std::make_shared<Commands::DefineFunction>();
+	m_NetworkClient->m_CommandList.emplace(cmd1->Code(), cmd1);
+	m_NetworkClient->m_CommandList.emplace(cmd2->Code(), cmd2);
+
+
+	auto sz = sizeof(Commands::FunctionEnterQuick);
+	auto defp = new Commands::FunctionEnterQuick(0,0,0);
+
+	m_NetworkClient->Start(); // Ready for normal unblocked operation
+
+
+
 	SendAgentInformation();
 
 	AddCommonFunctions();
 
-	tp = new tp_helper(this, 1, 1);
-	tp->CreateNetworkIoThreadPool(m_NetworkClient);
-	m_NetworkClient->Start(); // Ready for normal unblocked operation
+
+
 }
 
 void Cprofilermain::SendAgentInformation()
@@ -386,13 +396,15 @@ void Cprofilermain::SendAgentInformation()
 	this->m_ComputerName._Copy_s(ainfo->MachineName, this->m_ComputerName.length(), this->m_ComputerName.length(), 0);
 	ainfo->MachineNameHash = strhasher(this->m_ComputerName);
 	ainfo->Code = 5;
-	m_NetworkClient->SendCommand<Commands::SendPackedStructure>(
-		std::make_shared<Commands::SendPackedStructure>(
-			Commands::SendPackedStructure(ainfo)));
-	m_NetworkClient->SendNow();
-	m_NetworkClient->RecvNow();
-	auto cmd = std::dynamic_pointer_cast<Commands::SendString>(m_NetworkClient->ReceiveCommand());
-	auto s = cmd->m_wstring;
+
+	ResetEvent(NetworkClient::DataReceived);
+	m_NetworkClient->SendCommand<Commands::SendPackedStructure>(new Commands::SendPackedStructure(ainfo));
+	if (WaitForSingleObject(NetworkClient::DataReceived, 10000) == 0)
+	{
+		auto cmd = std::dynamic_pointer_cast<Commands::SendString>(m_NetworkClient->ReceiveCommand());
+		auto s = cmd->m_wstring;
+	}
+
 }
 
 Cprofilermain::~Cprofilermain()
@@ -429,13 +441,13 @@ Cprofilermain::~Cprofilermain()
 
 void Cprofilermain::AddCommonFunctions()
 {
-	
-	// TODO Ask network client to give me data
-	m_NetworkClient->SendCommand<Commands::GetFunctionsToInstrument>(
-		std::make_shared<Commands::GetFunctionsToInstrument>(
-			Commands::GetFunctionsToInstrument()));
 
-	auto cmd = std::dynamic_pointer_cast<Commands::GetString>(m_NetworkClient->ReceiveCommand());
+	//// TODO Ask network client to give me data
+	//m_NetworkClient->SendCommand<Commands::GetFunctionsToInstrument>(
+	//	std::make_shared<Commands::GetFunctionsToInstrument>(
+	//		Commands::GetFunctionsToInstrument()));
+
+	//auto cmd = std::dynamic_pointer_cast<Commands::GetString>(m_NetworkClient->ReceiveCommand());
 
 	auto newMapping2 = ItemMapping();
 
@@ -443,17 +455,15 @@ void Cprofilermain::AddCommonFunctions()
 	newMapping2.Match = ItemMapping::MatchType::FunctionOnly;
 	this->m_Container->g_FullyQualifiedMethodsToProfile->insert(newMapping2);
 
-	m_NetworkClient->SendCommand<Commands::GetFunctionsToInstrument>(
-		std::make_shared<Commands::GetFunctionsToInstrument>(
-			Commands::GetFunctionsToInstrument()));
+
 
 }
 
 void Cprofilermain::SetProcessName()
 {
-	WCHAR imageName[MAX_PATH]{0};
-	WCHAR currentPath[MAX_PATH]{0};
-	WCHAR computerName[MAX_COMPUTERNAME_LENGTH + 1]{0};
+	WCHAR imageName[MAX_PATH]{ 0 };
+	WCHAR currentPath[MAX_PATH]{ 0 };
+	WCHAR computerName[MAX_COMPUTERNAME_LENGTH + 1]{ 0 };
 	DWORD maxCNameLen = (MAX_COMPUTERNAME_LENGTH + 1);
 	GetModuleFileName(NULL, imageName, MAX_PATH);
 	LPWSTR cmdline = GetCommandLine();
@@ -795,11 +805,18 @@ STDMETHODIMP Cprofilermain::DoWeProfile()
 
 STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 {
+	// Get things like the process name, working directory, command line, etc.
+	this->SetProcessName();
+
+
 	// We're using this as a quick exit so the profiler doesn't actually load.
-	if ((this->m_ProcessName.compare(L"w3wp.exe") == 0)
-		|| (this->m_ProcessName.compare(L"HelloWorldTestHarness.exe") == 0)
-		|| (this->m_ProcessName.compare(L"iisexpress.exe") == 0))
+	if (this->DoWeProfile() == S_OK)
 	{
+		//_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);
+		//_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+		//_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
+		SetUpAgent();
+
 		// get the ICorProfilerInfo interface
 
 		HRESULT hr;
@@ -1022,11 +1039,9 @@ STDMETHODIMP Cprofilermain::RuntimeResumeFinished(void)
 
 STDMETHODIMP Cprofilermain::Shutdown(void)
 {
-	m_NetworkClient->SendCommand<Commands::SendString>(
-		std::make_shared<Commands::SendString>(
-			Commands::SendString(std::wstring(L"Done!"))));
-	m_NetworkClient->SendNow();
-	Sleep(3000);
+	m_NetworkClient->SendCommand<Commands::SendString>(new
+		Commands::SendString(std::wstring(L"Done!")));
+	WaitForSingleObject(m_NetworkClient->DataSent, 5000); // Wait for data to be sent or 5 seconds
 	return S_OK;
 }
 
@@ -1155,7 +1170,8 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 	GetSystemTimeAsFileTime(&HighPrecisionFileTime);
 	__int64 timestamp = (((__int64)HighPrecisionFileTime.dwHighDateTime) << 32) + HighPrecisionFileTime.dwLowDateTime;
 
-	tp->SendEvent<Commands::DefineFunction>(new Commands::DefineFunction(funcId, funcInfo->ClassInformation()->ClassId(), funcInfo->SignatureString(), timestamp));
+	auto df = new Commands::DefineFunction(funcId, funcInfo->ClassInformation()->ClassId(), funcInfo->SignatureString(), timestamp);
+	tp->SendEvent<Commands::DefineFunction>(df);
 	*pbHookFunction = TRUE;
 
 #else
@@ -1464,7 +1480,7 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 
 		ModuleIDToInfoMap::Const_Iterator iterator;
 		for (iterator = m_moduleIDToInfoMap.Begin();
-			iterator != m_moduleIDToInfoMap.End();
+		iterator != m_moduleIDToInfoMap.End();
 			++iterator)
 		{
 			// Skip the entry we just added for this module
@@ -1486,7 +1502,7 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 			// The module is a match!
 			MethodDefToLatestVersionMap::Const_Iterator iterMethodDef;
 			for (iterMethodDef = pModInfo->m_pMethodDefToLatestVersionMap->Begin();
-				iterMethodDef != pModInfo->m_pMethodDefToLatestVersionMap->End();
+			iterMethodDef != pModInfo->m_pMethodDefToLatestVersionMap->End();
 				iterMethodDef++)
 			{
 				if (iterMethodDef->second == 0)
@@ -1618,7 +1634,9 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 			mifm.m_ModuleID = moduleID;
 			m_ModFuncMap.emplace(mifm, functionID);
 
-			tp->SendEvent<Commands::DefineFunction>(new Commands::DefineFunction(functionID, classID, wszMethodDefName, timestamp));
+			auto defp = new Commands::DefineFunction(functionID, classID, wszMethodDefName, timestamp);
+
+			tp->SendEvent<Commands::DefineFunction>(defp);
 		}
 
 		/*hr = RewriteIL(

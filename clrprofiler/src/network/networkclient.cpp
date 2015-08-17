@@ -9,11 +9,8 @@
 
 // Initialize the socket to NULL.
 SOCKET NetworkClient::m_SocketConnection = NULL;
-PTP_IO NetworkClient::m_ptpIO = NULL;
-HANDLE NetworkClient::SendRecvEvent;
-CRITICAL_SECTION NetworkClient::OverflowBufferLock;
-std::vector<char> NetworkClient::s_OverflowBuffer = std::vector<char>{ 0 };
-
+HANDLE NetworkClient::DataReceived = NULL;
+HANDLE NetworkClient::DataSent = NULL;
 NetworkClient::NetworkClient(std::wstring hostName, std::wstring port)
 {
 	// TODO: Complete the network client.
@@ -24,9 +21,12 @@ NetworkClient::NetworkClient(std::wstring hostName, std::wstring port)
 	InitializeCriticalSection(&BackInboundLock);
 	InitializeCriticalSection(&FrontOutboundLock);
 	InitializeCriticalSection(&BackOutboundLock);
-	InitializeCriticalSection(&NetworkClient::OverflowBufferLock);
-	
-	s_OverflowBuffer.reserve(10 * 1024 * 1024);
+	InitializeCriticalSection(&OverflowBufferLock);
+
+	OverflowBuffer.reserve(10 * 1024 * 1024);
+
+	DataSent = CreateEvent(NULL, TRUE, FALSE, TEXT("DataSentEvent"));
+	DataReceived = CreateEvent(NULL, TRUE, FALSE, TEXT("DataReceivedEvent"));
 
 	// Select the highest socket version 2.2
 	WORD wVersionRequested = MAKEWORD(2, 2);
@@ -47,23 +47,18 @@ NetworkClient::~NetworkClient()
 	i++;
 }
 
-// This is the main loop that will be used for sending and receving data. When a call comes in we will have a callback to a correct processor
-void NetworkClient::ControllerLoop()
-{
-}
-
 // Start the network client when we're ready.
 void NetworkClient::Start()
 {
-
 	recvTimer = CreateThreadpoolTimer(&NetworkClient::ReceiveTimerCallback, this, NULL); // See "Customized Thread Pools" section
 	sendTimer = CreateThreadpoolTimer(&NetworkClient::SendTimerCallback, this, NULL); // See "Customized Thread Pools" section
 
 	__int64 dueFileTime = -1 * _SECOND;
+
 	FILETIME ftDue;
 	ftDue.dwLowDateTime = (DWORD)(dueFileTime & 0xFFFFFFFF);
 	ftDue.dwHighDateTime = (DWORD)(dueFileTime >> 32);
-	SetThreadpoolTimer(recvTimer, &ftDue, 1000, 0);
+	SetThreadpoolTimer(recvTimer, &ftDue, 500, 0);
 	SetThreadpoolTimer(sendTimer, &ftDue, 250, 0);
 }
 
@@ -76,8 +71,11 @@ void NetworkClient::Shutdown()
 	closesocket(m_SocketConnection);
 }
 
-HRESULT NetworkClient::SendCommand(std::shared_ptr<Commands::ICommand> packet)
+HRESULT NetworkClient::SendCommand(Commands::ICommand* packet)
 {
+	auto csh = critsec_helper::critsec_helper(&FrontOutboundLock);
+	m_OutboundQueueFront.emplace(packet);
+	csh.leave_early();
 	return S_OK;
 };
 
@@ -86,21 +84,34 @@ std::shared_ptr<Commands::ICommand> NetworkClient::ReceiveCommand()
 {
 	std::shared_ptr<Commands::ICommand> itemout;
 	{
-		critsec_helper::critsec_helper(&FrontInboundLock);
-		auto itemtodecodeout = m_InboundQueueFront.front();
-		auto cmdnumber = itemtodecodeout->at(4);
-		itemout = m_CommandList[cmdnumber]->Decode(itemtodecodeout);
-		m_InboundQueueBack.pop();
+		auto cmdlist = std::vector<std::shared_ptr<Commands::ICommand>>();
+		{
+			auto csback = critsec_helper::critsec_helper(&BackInboundLock);
+			auto csfront = critsec_helper::critsec_helper(&FrontInboundLock);
+			if (!m_InboundQueueBack.empty() && m_InboundQueueFront.empty())
+				m_InboundQueueFront.swap(m_InboundQueueBack); // Swap the back buffer with the front to allow uninterrupted data flow
+			csback.leave_early(); // Done with the back buffer, bail early
+
+			auto itemtodecodeout = m_InboundQueueFront.front();
+			auto cmdnumber = itemtodecodeout->at(4);
+			if (m_CommandList[cmdnumber] != nullptr)
+			{
+				auto itemout = m_CommandList[cmdnumber]->Decode(itemtodecodeout);
+				return itemout;
+			}
+
+		}
+
 	}
-	return itemout;
+	return nullptr;
 }
 // Send a list of commands the buffer to be processed.
-HRESULT NetworkClient::SendCommands(std::vector<std::shared_ptr<Commands::ICommand>> &packet)
+HRESULT NetworkClient::SendCommands(std::vector<Commands::ICommand*> &packet)
 {
 	auto csh = critsec_helper::critsec_helper(&FrontOutboundLock);
 	for (auto &x : packet)
 	{
-		m_OutboundQueueFront.emplace(x->Encode());
+		m_OutboundQueueFront.emplace(x);
 	}
 	csh.leave_early();
 	return S_OK;
@@ -110,18 +121,27 @@ std::vector<std::shared_ptr<Commands::ICommand>>& NetworkClient::ReceiveCommands
 {
 	auto cmdlist = std::vector<std::shared_ptr<Commands::ICommand>>();
 	{
-		critsec_helper::critsec_helper(&FrontInboundLock);
+		auto csback = critsec_helper::critsec_helper(&BackInboundLock);
+		auto csfront = critsec_helper::critsec_helper(&FrontInboundLock);
+		if (!m_InboundQueueBack.empty() && m_InboundQueueFront.empty())
+			m_InboundQueueFront.swap(m_InboundQueueBack); // Swap the back buffer with the front to allow uninterrupted data flow
+		csback.leave_early(); // Done with the back buffer, bail early
+
 		while (!m_InboundQueueFront.empty())
 		{
 			auto itemtodecodeout = m_InboundQueueFront.front();
 			auto cmdnumber = itemtodecodeout->at(4);
-			auto itemout = m_CommandList[cmdnumber]->Decode(itemtodecodeout);
-			cmdlist.emplace_back(itemout);
+			if (m_CommandList[cmdnumber] != nullptr)
+			{
+				auto itemout = m_CommandList[cmdnumber]->Decode(itemtodecodeout);
+				cmdlist.emplace_back(itemout);
+			}
 			m_InboundQueueBack.pop();
 		}
 	}
-	return cmdlist = std::vector<std::shared_ptr<Commands::ICommand>>();
+	return cmdlist;
 }
+
 
 VOID CALLBACK NetworkClient::SendTimerCallback(
 	PTP_CALLBACK_INSTANCE pInstance, // See "Callback Termination Actions" section
@@ -150,7 +170,7 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 		size_t sizeCounter = 0;
 		while (!netClient->m_OutboundQueueBack.empty())
 		{
-			auto itemtodecodeout = netClient->m_OutboundQueueBack.front();
+			auto itemtodecodeout = netClient->m_OutboundQueueBack.front()->Encode();
 			bufs[counter].buf = itemtodecodeout->data();
 #pragma warning(suppress : 4267) // I'm only sending max 4k of data in one command however, the size() prop is __int64. This is valid.
 			bufs[counter].len = itemtodecodeout->size();
@@ -175,12 +195,13 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 			NetClietCallback *ncc = new NetClietCallback();
 			ncc->netclient = netClient;
 			ncc->sendqueue = m_Passable;
+			ncc->Direction = NetClietCallback::_direction::SEND;
 			DWORD bytesSent = 0;
 			DWORD flags = 0;
 			WSAOVERLAPPED overlapped;
 			SecureZeroMemory(&overlapped, sizeof(WSAOVERLAPPED));
-			StartThreadpoolIo(NetworkClient::m_ptpIO);
-			auto result = WSASend(netClient->m_SocketConnection, bufs, bufscount, &bytesSent, flags, &overlapped, nullptr);
+			StartThreadpoolIo(netClient->m_ptpIO);
+			auto result = WSASend(netClient->m_SocketConnection, bufs, bufscount, &bytesSent, flags, ncc, nullptr);
 			if (!result)
 			{
 				result = WSA_IO_PENDING;
@@ -191,10 +212,10 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 			}
 			if (WSA_IO_PENDING != result)
 			{
-				CancelThreadpoolIo(NetworkClient::m_ptpIO);
+				CancelThreadpoolIo(netClient->m_ptpIO);
 			}
 		}
-		WaitForThreadpoolIoCallbacks(NetworkClient::m_ptpIO, FALSE);
+		WaitForThreadpoolIoCallbacks(netClient->m_ptpIO, FALSE);
 		netClient->insideSendLock = false;
 	}
 }
@@ -221,8 +242,10 @@ VOID CALLBACK NetworkClient::ReceiveTimerCallback(
 		NetClietCallback *ncc = new NetClietCallback();
 		ncc->netclient = netClient;
 		ncc->queue = bigBuffer;
-		StartThreadpoolIo(NetworkClient::m_ptpIO);
-		auto result = WSARecv(netClient->m_SocketConnection, bigBuffer, 1, &bytesRecvd, &flags, &overlapped, nullptr);
+		ncc->Direction = NetClietCallback::_direction::RECV;
+
+		StartThreadpoolIo(netClient->m_ptpIO);
+		auto result = WSARecv(netClient->m_SocketConnection, bigBuffer, 1, &bytesRecvd, &flags, ncc, nullptr);
 		if (!result)
 		{
 			result = WSA_IO_PENDING;
@@ -233,97 +256,14 @@ VOID CALLBACK NetworkClient::ReceiveTimerCallback(
 		}
 		if (WSA_IO_PENDING != result)
 		{
-			CancelThreadpoolIo(NetworkClient::m_ptpIO);
+			CancelThreadpoolIo(netClient->m_ptpIO);
 		}
 		// If there is nothing here we need to continue
-		WaitForThreadpoolIoCallbacks(NetworkClient::m_ptpIO, TRUE);
+		WaitForThreadpoolIoCallbacks(netClient->m_ptpIO, FALSE);
 		netClient->insideReceiveLock = false;
 	}
 }
 
-
-void CALLBACK NetworkClient::NewDataReceived(
-	IN DWORD dwError,
-	IN DWORD cbTransferred,
-	IN LPWSAOVERLAPPED lpOverlapped,
-	IN DWORD dwFlags
-	)
-{
-	if (cbTransferred > 0)
-	{
-		auto buffOut = (LPWSABUF)lpOverlapped->hEvent;
-		auto charBuff = (char*)buffOut->buf;
-		auto iterBuff = (char*)buffOut->buf;
-		DWORD totalBuffSize = *(DWORD*)charBuff;
-
-		if (totalBuffSize == cbTransferred)
-		{
-			auto term = *(unsigned int*)charBuff[totalBuffSize - 4];
-			if (term == 0xCCCCCCCC)
-			{
-				iterBuff += 4;
-				while (iterBuff < iterBuff + (totalBuffSize - 4))
-				{
-					int localBufferSize = *(int*)iterBuff;
-					//short term = *(short*)(iterBuff + localBufferSize - 2);
-					iterBuff += localBufferSize;
-				}
-			}
-		}
-		else {
-			auto cshFQ = critsec_helper::critsec_helper(&NetworkClient::OverflowBufferLock);
-			std::copy(charBuff, charBuff + cbTransferred, NetworkClient::s_OverflowBuffer.begin() + NetworkClient::s_OverflowBuffer.size());
-		}
-		
-		auto cshFQ = critsec_helper::critsec_helper(&NetworkClient::OverflowBufferLock);
-		{
-			if (NetworkClient::s_OverflowBuffer.size() > 0 && NetworkClient::s_OverflowBuffer.size() == *(DWORD*)NetworkClient::s_OverflowBuffer.data()) {
-				auto term = *(unsigned int*)NetworkClient::s_OverflowBuffer.data()[NetworkClient::s_OverflowBuffer.size() - 4];
-				charBuff = NetworkClient::s_OverflowBuffer.data();
-				iterBuff = NetworkClient::s_OverflowBuffer.data();
-				if (term == 0xCCCCCCCC)
-				{
-					iterBuff += 4;
-					while (iterBuff < iterBuff + (totalBuffSize - 4))
-					{
-						int localBufferSize = *(int*)iterBuff;
-						//short term = *(short*)(iterBuff + localBufferSize - 2);
-						iterBuff += localBufferSize;
-					}
-				}
-				NetworkClient::s_OverflowBuffer.clear();
-			}
-		}
-		
-		delete buffOut; 
-	}
-}
-
-void CALLBACK NetworkClient::DataSent(
-	IN DWORD dwError,
-	IN DWORD cbTransferred,
-	IN LPWSAOVERLAPPED lpOverlapped,
-	IN DWORD dwFlags
-	)
-{
-	if (lpOverlapped->hEvent != NULL)
-	{
-		NetClietCallback *ncc = (NetClietCallback*)lpOverlapped->hEvent;
-		ncc->netclient->insideSendLock = false;
-		ncc->netclient = NULL;
-		delete lpOverlapped->hEvent;
-	}
-}
-
-
-VOID CALLBACK NetworkClient::SendRecvData(
-	_In_ PVOID   lpParameter,
-	_In_ BOOLEAN TimerOrWaitFired
-	)
-{
-	Sleep(5000);
-	ResetEvent(NetworkClient::SendRecvEvent);
-}
 
 VOID CALLBACK NetworkClient::IoCompletionCallback(
 	_Inout_     PTP_CALLBACK_INSTANCE Instance,
@@ -334,137 +274,86 @@ VOID CALLBACK NetworkClient::IoCompletionCallback(
 	_Inout_     PTP_IO                Io
 	)
 {
-	ResetEvent(NetworkClient::SendRecvEvent);
+	auto lpOverlapped = (NetClietCallback*)Overlapped;
+	auto cbTransferred = NumberOfBytesTransferred;
+	if (lpOverlapped->Direction == NetClietCallback::_direction::RECV)
+	{
+		if (cbTransferred > 0)
+		{
+			auto charBuff = (char*)lpOverlapped->queue->buf;
+			auto iterBuff = (char*)lpOverlapped->queue->buf;
+			DWORD totalBuffSize = *(DWORD*)charBuff;
+
+			if (totalBuffSize == cbTransferred)
+			{
+				auto term = *(unsigned int*)(charBuff + (totalBuffSize - 4));
+				lpOverlapped->netclient->AddItemsToBackBuffer(term, iterBuff, totalBuffSize);
+			}
+			else {
+				auto cshFQ = critsec_helper::critsec_helper(&lpOverlapped->netclient->OverflowBufferLock);
+				std::copy(charBuff, charBuff + cbTransferred, lpOverlapped->netclient->OverflowBuffer.begin() + lpOverlapped->netclient->OverflowBuffer.size());
+			}
+
+			auto cshFQ = critsec_helper::critsec_helper(&lpOverlapped->netclient->OverflowBufferLock);
+			{
+				totalBuffSize = *(DWORD*)lpOverlapped->netclient->OverflowBuffer.data();
+
+				if (lpOverlapped->netclient->OverflowBuffer.size() > 0 && lpOverlapped->netclient->OverflowBuffer.size() == totalBuffSize) {
+					auto term = *(unsigned int*)(lpOverlapped->netclient->OverflowBuffer.data() + (lpOverlapped->netclient->OverflowBuffer.size() - 4));
+					charBuff = lpOverlapped->netclient->OverflowBuffer.data();
+					iterBuff = lpOverlapped->netclient->OverflowBuffer.data();
+					lpOverlapped->netclient->AddItemsToBackBuffer(term, iterBuff, totalBuffSize);
+					lpOverlapped->netclient->OverflowBuffer.clear();
+				}
+			}
+
+		}
+		try
+		{
+			SetEventWhenCallbackReturns(Instance, NetworkClient::DataReceived);
+		}
+		catch (...)
+		{
+			auto s = L"TEST";
+		}
+
+	}
+	else {
+		SetEventWhenCallbackReturns(Instance, NetworkClient::DataSent);; // Signal to the event processor that we have data.
+	}
+	lpOverlapped->netclient = nullptr;
+	delete Overlapped;
+
 }
 
-void NetworkClient::SetPTPIO(PTP_IO ptpIO)
+void NetworkClient::AddItemsToBackBuffer(unsigned int term, char * &iterBuff, const DWORD &totalBuffSize)
 {
+	if (term == 0xCCCCCCCC)
+	{
+		char* lastBuffer = iterBuff + (totalBuffSize - 4);
+		iterBuff += 4; // Skip the first 4 bytes for the size
+		while (iterBuff < lastBuffer)
+		{
+			int localBufferSize = *(int*)iterBuff; // Size of the current command
+			auto vec = new std::vector<char>(iterBuff, iterBuff + localBufferSize);
+			{
+				critsec_helper csh(&BackInboundLock);
+				m_InboundQueueBack.emplace(vec);
+			}
+			iterBuff += localBufferSize;
+
+		}
+	}
+}
+
+void NetworkClient::SetThreadPoolIO(PTP_IO ptpIO)
+{
+	DWORD dw = 0;
+	if (ptpIO == NULL)
+	{
+		dw = GetLastError();
+	}
+	HRESULT hr = HRESULT_FROM_WIN32(dw);
 	NetworkClient::m_ptpIO = ptpIO;
 }
 
-HRESULT NetworkClient::SendNow()
-{
-	auto netClient = this;
-	if (!netClient->insideSendLock)
-	{
-		std::queue<std::shared_ptr<std::vector<char>>> * m_Passable = new std::queue<std::shared_ptr<std::vector<char>>>();
-		netClient->insideSendLock = true;
-		WSABUF *bufs = NULL;
-		int bufscount = 0;
-		{
-			auto cshFQ = critsec_helper::critsec_helper(&netClient->FrontOutboundLock);
-			auto cshBQ = critsec_helper::critsec_helper(&netClient->BackOutboundLock);
-			netClient->m_OutboundQueueBack.swap(netClient->m_OutboundQueueFront);
-			cshBQ.leave_early();
-			cshFQ.leave_early();
-		}
-
-		auto cshBQ = critsec_helper::critsec_helper(&netClient->BackOutboundLock);
-		size_t buffersize = netClient->m_OutboundQueueBack.size() + 2;
-		bufs = new WSABUF[buffersize];
-		int counter = 1;
-		size_t sizeCounter = 0;
-		while (!netClient->m_OutboundQueueBack.empty())
-		{
-			auto itemtodecodeout = netClient->m_OutboundQueueBack.front();
-			bufs[counter].buf = itemtodecodeout->data();
-#pragma warning(suppress : 4267) // I'm only sending max 4k of data in one command however, the size() prop is __int64. This is valid.
-			bufs[counter].len = itemtodecodeout->size();
-			netClient->m_OutboundQueueBack.pop();
-			m_Passable->emplace(itemtodecodeout);
-			++counter;
-			sizeCounter += itemtodecodeout->size();
-		}
-		cshBQ.leave_early();
-		sizeCounter += 8;
-		char *size = (char*)&sizeCounter;
-		char term[] = { 0xCC, 0xCC, 0xCC, 0xCC };
-		bufs[0].buf = size;
-		bufs[0].len = 4;
-		bufs[counter].buf = term;
-		bufs[counter].len = 4;
-
-		bufscount = buffersize;
-
-		if (bufscount > 2)
-		{
-			NetClietCallback *ncc = new NetClietCallback();
-			ncc->netclient = netClient;
-			ncc->sendqueue = m_Passable;
-			DWORD bytesSent = 0;
-			DWORD flags = 0;
-			auto result = WSASend(netClient->m_SocketConnection, bufs, bufscount, &bytesSent, flags, nullptr, nullptr);
-			if (!result)
-			{
-				result = WSA_IO_PENDING;
-			}
-			else
-			{
-				result = WSAGetLastError();
-			}
-			if (WSA_IO_PENDING != result)
-			{
-				CancelThreadpoolIo(NetworkClient::m_ptpIO);
-			}
-		}
-		netClient->insideSendLock = false;
-	}
-	return S_OK;
-}
-
-HRESULT NetworkClient::RecvNow()
-{
-	auto netClient = static_cast<NetworkClient*>(this);
-	if (!netClient->insideReceiveLock)
-	{
-		netClient->insideReceiveLock = true;
-		auto bigBufferChars = new char[10 * 1024];
-		LPWSABUF bigBuffer = new WSABUF;
-		bigBuffer->buf = bigBufferChars;
-		bigBuffer->len = 10 * 1024;
-		SecureZeroMemory(bigBufferChars, 10 * 1024);
-		DWORD bytesRecvd = 0;
-		DWORD flags = 0;
-		WSAOVERLAPPED overlapped;
-		SecureZeroMemory(&overlapped, sizeof(WSAOVERLAPPED));
-		auto result = WSARecv(netClient->m_SocketConnection, bigBuffer, 1, &bytesRecvd, &flags, nullptr, nullptr);
-		if (!result)
-		{
-			result = WSA_IO_PENDING;
-		}
-		else
-		{
-			result = WSAGetLastError();
-		}
-
-		// If there is nothing here we need to continue
-		netClient->insideReceiveLock = false;
-
-		if (bytesRecvd > 0)
-		{
-			auto buffOut = (LPWSABUF)bigBuffer;
-			auto charBuff = (char*)buffOut->buf;
-			auto iterBuff = (char*)buffOut->buf;
-			DWORD totalBuffSize = *(DWORD*)charBuff;
-			if (totalBuffSize == bytesRecvd)
-			{
-				auto term = *(unsigned int*)charBuff[totalBuffSize - 4];
-				if (term == 0xCCCCCCCC)
-				{
-					iterBuff += 4;
-					while (iterBuff < iterBuff + (totalBuffSize - 4))
-					{
-						int localBufferSize = *(int*)iterBuff;
-						//short term = *(short*)(iterBuff + localBufferSize - 2);
-						iterBuff += localBufferSize;
-					}
-				}
-			}
-			else {
-				RecvNow();
-			}
-
-		}
-	}
-	return S_OK;
-}

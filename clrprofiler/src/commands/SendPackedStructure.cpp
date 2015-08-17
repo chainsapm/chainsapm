@@ -6,8 +6,7 @@ namespace Commands {
 	{
 	}
 
-
-	SendPackedStructure::~SendPackedStructure()
+	SendPackedStructure::~SendPackedStructure() 
 	{
 	}
 

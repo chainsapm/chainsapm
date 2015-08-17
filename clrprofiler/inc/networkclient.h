@@ -31,23 +31,23 @@ public:
 	NetworkClient(std::wstring hostName, std::wstring port);
 	~NetworkClient();
 	static SOCKET m_SocketConnection;
-	static PTP_IO m_ptpIO;
-	void SetPTPIO(PTP_IO ptpIO);
-	static std::vector<char> s_OverflowBuffer;
+	PTP_IO m_ptpIO;
+	void SetThreadPoolIO(PTP_IO ptpIO);
+	std::vector<char> OverflowBuffer;
+	std::map<short, std::shared_ptr<Commands::ICommand>> m_CommandList;
 private:
 	// Create a singleton socket so we can control what happens if this
 	// class is instantiated more than once.
 
 	std::wstring m_HostName;
 	std::wstring m_HostPort;
-	
 
 	// List of ICommand implementations by code
-	std::map<short, std::shared_ptr<Commands::ICommand>> m_CommandList;
+	
 
 	// Double buffered queues for reading and writing so we don't bog down the enter/exit methods
-	std::queue<std::shared_ptr<std::vector<char>>> m_OutboundQueueFront;
-	std::queue<std::shared_ptr<std::vector<char>>> m_OutboundQueueBack;
+	std::queue<Commands::ICommand*> m_OutboundQueueFront;
+	std::queue<Commands::ICommand*> m_OutboundQueueBack;
 	std::queue<std::shared_ptr<std::vector<char>>> m_InboundQueueFront;
 	std::queue<std::shared_ptr<std::vector<char>>> m_InboundQueueBack;
 
@@ -57,8 +57,7 @@ private:
 	CRITICAL_SECTION BackOutboundLock;
 	CRITICAL_SECTION FrontInboundLock;
 	CRITICAL_SECTION BackInboundLock;
-
-	static CRITICAL_SECTION OverflowBufferLock;
+	CRITICAL_SECTION OverflowBufferLock;
 
 	PTP_TIMER recvTimer;
 
@@ -77,62 +76,39 @@ private:
 	bool insideSendLock = false;
 	bool insideReceiveLock = false;
 
-	
-
-
-
-	// This is the main loop that will be used for sending and receving data. When a call comes in we will have a callback to a correct processor
-	void ControllerLoop();
-
-	// Completion routines
-	static void CALLBACK NewDataReceived(
-		IN DWORD dwError,
-		IN DWORD cbTransferred,
-		IN LPWSAOVERLAPPED lpOverlapped,
-		IN DWORD dwFlags
-		);
-
-	static void CALLBACK DataSent(
-		IN DWORD dwError,
-		IN DWORD cbTransferred,
-		IN LPWSAOVERLAPPED lpOverlapped,
-		IN DWORD dwFlags
-		);
-
-	static VOID CALLBACK SendRecvData(
-		_In_ PVOID   lpParameter,
-		_In_ BOOLEAN TimerOrWaitFired
-		);
 
 public:
+
 	// Start the network client when we're ready.
 	void Start();
 	// Shutdown the socket and stop send and recv.
 	void Shutdown();
 
-	HRESULT SendCommand(std::shared_ptr<Commands::ICommand> packet);
+	HRESULT SendCommand(Commands::ICommand* packet);
 
 
 	// Send a single command to the buffer to be processed.
 	template<typename C>
-	HRESULT SendCommand(std::shared_ptr<C> packet)
+	HRESULT SendCommand(C* packet)
 	{
 		auto cshFQ = critsec_helper::critsec_helper(&FrontOutboundLock);
-		m_OutboundQueueFront.emplace(packet->Encode());
+		m_OutboundQueueFront.emplace(packet);
 		cshFQ.leave_early();
 		return S_OK;
 	}
 
-	HRESULT SendNow();
-	HRESULT RecvNow();
 
 	std::shared_ptr<Commands::ICommand> ReceiveCommand();
 
-	HRESULT SendCommands(std::vector<std::shared_ptr<Commands::ICommand>> &packet);
+	HRESULT SendCommands(std::vector<Commands::ICommand*> &packet);
 
 	std::vector<std::shared_ptr<Commands::ICommand>>& ReceiveCommands();
 
-	static HANDLE SendRecvEvent;
+	static HANDLE DataReceived;
+	static HANDLE DataSent;
+
+	TP_CALLBACK_ENVIRON *m_ptpcbe;
+
 	static VOID CALLBACK IoCompletionCallback(
 		_Inout_     PTP_CALLBACK_INSTANCE Instance,
 		_Inout_opt_ PVOID                 Context,
@@ -141,15 +117,22 @@ public:
 		_In_        ULONG_PTR             NumberOfBytesTransferred,
 		_Inout_     PTP_IO                Io
 		);
+
+	void AddItemsToBackBuffer(unsigned int term, char * &iterBuff, const DWORD &totalBuffSize);
 };
 
 
-struct NetClietCallback
+struct NetClietCallback : OVERLAPPED
 {
 	HANDLE rstHandle;
 	NetworkClient *netclient;
 	std::queue<std::shared_ptr<std::vector<char>>> *sendqueue;
 	LPWSABUF queue;
+	enum _direction
+	{
+		SEND,
+		RECV
+	} Direction;
 };
 
 

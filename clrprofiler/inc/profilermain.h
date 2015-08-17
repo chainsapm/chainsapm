@@ -519,7 +519,7 @@ private:
 	{
 		UNREFERENCED_PARAMETER(Instance);
 		UNREFERENCED_PARAMETER(Work);
-		m_cprof->m_NetworkClient->SendCommand(std::make_shared<C>(*(C*)Parameter));
+		m_cprof->m_NetworkClient->SendCommand<C>(static_cast<C*>(Parameter));
 	}
 
 
@@ -530,19 +530,13 @@ public:
 	~tp_helper();
 
 	template <class C>
-	void SendEvent(C *param)
+	void SendEvent(C* param)
 	{
 		auto tpw = CreateThreadpoolWork(&tp_helper::SendEventCallBack<C>, param, m_ptpcbe);
 		SubmitThreadpoolWork(tpw);
 	}
 
 	void CreateNetworkIoThreadPool(NetworkClient* NetClient);
-	
-
-
-
-
-
 	
 };
 
@@ -566,8 +560,11 @@ tp_helper::tp_helper(Cprofilermain * cpmain, int min, int max)
 
 void tp_helper::CreateNetworkIoThreadPool(NetworkClient* NetClient)
 {
-	 NetClient->SetPTPIO(CreateThreadpoolIo(reinterpret_cast<HANDLE>(NetworkClient::m_SocketConnection),
-			&NetworkClient::IoCompletionCallback, NetClient, nullptr));
+
+	NetClient->SetThreadPoolIO(CreateThreadpoolIo(reinterpret_cast<HANDLE>(NetworkClient::m_SocketConnection),
+		NetworkClient::IoCompletionCallback, NetClient, m_ptpcbe));
+	NetClient->m_ptpcbe = m_ptpcbe;
+
 }
 
 

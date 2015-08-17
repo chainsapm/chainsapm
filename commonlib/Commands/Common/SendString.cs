@@ -73,7 +73,7 @@ namespace ChainsAPM.Commands.Common
         {
             byte[] sBuffer = System.Text.UnicodeEncoding.Unicode.GetBytes(m_string);
             var buffer = new List<byte>();
-            buffer.AddRange(BitConverter.GetBytes((sBuffer.Length * 2) + 20)); // 4 bytes for size, 2 byte for code, 4 bytes for strlen, 8 bytes for hash, Xbytes for string 2 bytes for term
+            buffer.AddRange(BitConverter.GetBytes((sBuffer.Length) + 20)); // 4 bytes for size, 2 byte for code, 4 bytes for strlen, 8 bytes for hash, Xbytes for string 2 bytes for term
             buffer.AddRange(BitConverter.GetBytes((short)3));
             if (m_hash == null)
             {

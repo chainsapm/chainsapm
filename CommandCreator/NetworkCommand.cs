@@ -34,6 +34,7 @@ namespace CommandCreator
         public string SaveDirectory { get; set; }
         public TypeHelper TypeHelp { get; internal set; }
 
+        public int lastCommandNumber;
 
         private bool m_HasChanges;
         public bool HasChanges

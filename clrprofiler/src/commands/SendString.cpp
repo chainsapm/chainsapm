@@ -7,14 +7,17 @@ namespace Commands
 {
 	SendString::SendString(std::wstring& data) : m_wstring(data), hasEncoded(false), wchar(true)
 	{
+		code = 0x03;
 	}
 
 	SendString::SendString(std::string& data) : m_string(data), hasEncoded(false)
 	{
+		code = 0x04;
 	}
 
 	SendString::SendString(std::wstring &&data) : hasEncoded(false)
 	{
+		code = 0x03;
 		m_wstring.swap(data);
 	}
 	SendString::~SendString()
@@ -39,7 +42,7 @@ namespace Commands
 		{
 			if (wchar)
 			{
-				code = 0x12;
+				code = 0x03;
 
 				size_t strlen = (m_wstring.length());
 				size_t strbytes = strlen*sizeof(wchar_t) + sizeof(wchar_t);
@@ -76,7 +79,7 @@ namespace Commands
 				m_internalvector = std::make_shared<std::vector<char>>(v);
 			}
 			else {
-				code = 0x11;
+				code = 0x04;
 				size_t strlen = (m_string.length() + 1) * sizeof(char);
 				size_t size = sizeof(__int32)	// len
 					+ sizeof(short)				// code
@@ -117,6 +120,26 @@ namespace Commands
 	std::shared_ptr<ICommand> SendString::Decode(std::shared_ptr<std::vector<char>> &data)
 	{
 		UNREFERENCED_PARAMETER(data);
-		return std::make_shared<SendString>(SendString(m_wstring));
+		auto ptr = data->data();
+		
+		auto len = *(unsigned int*)ptr;
+		ptr += sizeof(unsigned int);
+		
+		auto code = (char)ptr;
+		ptr += sizeof(short);
+		
+		auto strlen = *(__int32*)ptr;
+		ptr += sizeof(__int32);
+		
+		auto hash = *(__int64*)ptr;
+		ptr += sizeof(__int64);
+		
+		auto str = (wchar_t*)ptr;
+		ptr += strlen * 2;
+
+		auto term = *(short*)ptr;
+		ptr += sizeof(short);
+
+		return std::make_shared<SendString>(str);
 	}
 }
