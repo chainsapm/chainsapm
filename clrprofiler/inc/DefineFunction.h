@@ -2,7 +2,7 @@
 #include "ICommand.h"
 namespace Commands {
 	class DefineFunction :
-		public virtual ICommand
+		public ICommand
 	{
 	public:
 		DefineFunction();

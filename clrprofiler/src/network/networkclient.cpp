@@ -152,7 +152,7 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 	auto netClient = static_cast<NetworkClient*>(pvContext);
 	if (!netClient->insideSendLock)
 	{
-		std::queue<std::shared_ptr<std::vector<char>>> * m_Passable = new std::queue<std::shared_ptr<std::vector<char>>>();
+		std::vector<std::shared_ptr<std::vector<char>>> * m_Passable = new std::vector<std::shared_ptr<std::vector<char>>>();
 		netClient->insideSendLock = true;
 		WSABUF *bufs = NULL;
 		size_t bufscount = 0;
@@ -172,16 +172,14 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 		size_t sizeCounter = 0;
 		while (!netClient->m_OutboundQueueBack.empty())
 		{
-			auto itemtodelete = netClient->m_OutboundQueueBack.front();
-			auto itemtodecodeout = itemtodelete->Encode();
+			auto itemtodecodeout = netClient->m_OutboundQueueBack.front()->Encode();
 			bufs[counter].buf = itemtodecodeout->data();
 #pragma warning(suppress : 4267) // I'm only sending max 4k of data in one command however, the size() prop is __int64. This is valid.
 			bufs[counter].len = itemtodecodeout->size();
-			m_Passable->emplace(itemtodecodeout);
+			m_Passable->emplace_back(itemtodecodeout);
 			++counter;
 			sizeCounter += itemtodecodeout->size();
 			netClient->m_OutboundQueueBack.pop();
-
 		}
 		cshBQ.leave_early();
 		sizeCounter += 8;
@@ -317,18 +315,21 @@ VOID CALLBACK NetworkClient::IoCompletionCallback(
 		try
 		{
 			SetEventWhenCallbackReturns(Instance, NetworkClient::DataReceived);
+			
 		}
 		catch (...)
 		{
 			auto s = L"TEST";
 		}
-
+		delete lpOverlapped->queue;
 	}
 	else {
 		SetEventWhenCallbackReturns(Instance, NetworkClient::DataSent);; // Signal to the event processor that we have data.
+		// Get rid of all of the vector<char> we sent
+		lpOverlapped->sendqueue->clear();
+		delete lpOverlapped->sendqueue;
 	}
-	lpOverlapped->netclient = nullptr;
-	delete Overlapped;
+	
 
 }
 

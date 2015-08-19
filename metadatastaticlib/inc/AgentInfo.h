@@ -1,7 +1,7 @@
 #pragma once
 
 namespace InformationClasses {
-#pragma pack(1)
+    __pragma(pack(1))
 	struct AgentInfo
 	{
 		AgentInfo()
@@ -39,5 +39,5 @@ namespace InformationClasses {
 		__int32 AgentHash;
 		wchar_t AgentName[0];
 	};
-
+	__pragma(pack())
 }

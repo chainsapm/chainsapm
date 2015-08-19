@@ -6,9 +6,11 @@
 namespace Commands
 {
 	DefineFunction::DefineFunction(FunctionID funcId, ClassID classId, const std::wstring& data, __int64 timestamp)
-		: hasEncoded(false), wchar(true), code(0x1B), m_funcId((__int64)funcId), m_classId((__int64)classId), m_timestamp(timestamp)
+		: ICommand(), hasEncoded(false), wchar(true), code(0x1B), 
+		m_funcId((__int64)funcId), m_classId((__int64)classId), 
+		m_timestamp(timestamp)
 	{
-		m_wstring->assign(data);
+		m_wstring = new std::wstring(data);
 	}
 
 	DefineFunction::DefineFunction()
@@ -66,10 +68,8 @@ namespace Commands
 			v2 += sizeof(short);
 
 			hasEncoded = true;
-			std::vector<char> v(size);
-			v.assign(vector, v2);
 
-			m_internalvector = std::make_shared<std::vector<char>>(v);
+			m_internalvector = std::make_shared<std::vector<char>>(vector, v2);
 		}
 		return m_internalvector;
 	}

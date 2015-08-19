@@ -364,15 +364,9 @@ public:
 		ModuleInfo * pModuleInfo);
 
 	HRESULT AddPInvoke(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdMethodDef * pmdPInvoke);
-	HRESULT AddPInvoke2(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdMethodDef * pmdPInvoke);
-	HRESULT AddPInvokeForSAMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdTypeDef tdSystemArray, mdMethodDef * pmdPInvoke);
-	HRESULT AddPInvokeAddNumbers(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdMethodDef * pmdPInvoke);
 	HRESULT GetSecuritySafeCriticalAttributeToken(IMetaDataImport * pImport, mdMethodDef * pmdSafeCritical);
 	HRESULT GetSystemArrayToken(IMetaDataImport * pImport, mdTypeDef * ptdSafeCritical);
 	HRESULT AddManagedHelperMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod);
-	HRESULT AddManagedHelperMethod2(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod);
-	HRESULT AddManagedHelperMethodAddNumbers(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod);
-	HRESULT AddManagedHelperSAMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdTypeDef tdSystemArray, mdMethodDef * pmdHelperMethod);
 	void AddHelperMethodDefs(IMetaDataImport * pImport, IMetaDataEmit * pEmit);
 	BOOL FindMscorlibReference(IMetaDataAssemblyImport * pAssemblyImport, mdAssemblyRef * rgAssemblyRefs, ULONG cAssemblyRefs, mdAssemblyRef * parMscorlib);
 
@@ -381,7 +375,7 @@ public:
 	HRESULT CallRequestRevert(UINT cFunctionsToRejit, ModuleID * rgModuleIDs, mdMethodDef * rgMethodIDs);
 
 	// P-INVOKED FUNCTIONS
-	void NtvEnteredFunction(ModuleID moduleIDCur, mdMethodDef mdCur, int nVersionCur);
+	void NtvEnteredFunction(unsigned __int64 moduleIDCur, mdMethodDef mdCur, int nVersionCur);
 	void NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, int nVersionCur);
 
 	// Pipe operations with the GUI
@@ -519,7 +513,8 @@ private:
 	{
 		UNREFERENCED_PARAMETER(Instance);
 		UNREFERENCED_PARAMETER(Work);
-		m_cprof->m_NetworkClient->SendCommand<C>(static_cast<C*>(Parameter));
+		std::shared_ptr<C> shrd(static_cast<C*>(Parameter));
+		m_cprof->m_NetworkClient->SendCommand<C>(shrd);
 	}
 
 
@@ -534,6 +529,7 @@ public:
 	{
 		auto tpw = CreateThreadpoolWork(&tp_helper::SendEventCallBack<C>, param, m_ptpcbe);
 		SubmitThreadpoolWork(tpw);
+		CloseThreadpoolWork(tpw);
 	}
 
 	void CreateNetworkIoThreadPool(NetworkClient* NetClient);

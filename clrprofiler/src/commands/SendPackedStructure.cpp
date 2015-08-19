@@ -8,6 +8,7 @@ namespace Commands {
 
 	SendPackedStructure::~SendPackedStructure() 
 	{
+		delete m_data;
 	}
 
 	std::wstring SendPackedStructure::Name()

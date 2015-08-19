@@ -3,8 +3,9 @@
 
 namespace Commands
 {
+	
 	class FunctionEnterQuick :
-		public virtual ICommand
+		public ICommand
 	{
 	public:
 		FunctionEnterQuick(FunctionID data, ThreadID threadid, __int64 timestamp);
@@ -16,12 +17,12 @@ namespace Commands
 		virtual short Code() { return code; }
 
 	private:
-		__int64 function;
-		__int64 thread;
 		short code;
 		std::shared_ptr<std::vector<char>> m_internalvector;
 		bool hasEncoded;
-		__int64 timestamp;
+		__int64 function;
+		__int64 thread;
+		__int64 m_timestamp;
 	};
 
 }

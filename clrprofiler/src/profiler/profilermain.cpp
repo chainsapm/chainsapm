@@ -167,7 +167,7 @@ CRITICAL_SECTION Cprofilermain::g_StaticContainerClassCritSec;
 //---------------------------------------------------------------------------------------
 
 EXTERN_C void STDAPICALLTYPE NtvEnteredFunction(
-	ModuleID moduleIDCur,
+	unsigned __int64 moduleIDCur,
 	mdMethodDef mdCur,
 	int nVersionCur)
 {
@@ -176,75 +176,14 @@ EXTERN_C void STDAPICALLTYPE NtvEnteredFunction(
 	pContainerClass->NtvEnteredFunction(moduleIDCur, mdCur, nVersionCur);
 }
 
-EXTERN_C void STDAPICALLTYPE NtvEnteredFunctionArraySA(
-	ModuleID moduleIDCur,
-	mdMethodDef mdCur,
-	SAFEARRAY*  ar)
-{
-
-	UNREFERENCED_PARAMETER(ar);
-	Cprofilermain * pContainerClass = nullptr;
-	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
-	pContainerClass->NtvEnteredFunction(moduleIDCur, mdCur, 0);
-}
-
 EXTERN_C void STDAPICALLTYPE NtvExitedFunction(
-	ModuleID moduleIDCur,
+	unsigned __int64 moduleIDCur,
 	mdMethodDef mdCur,
 	int nVersionCur)
 {
 	Cprofilermain * pContainerClass = nullptr;
 	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
 	pContainerClass->NtvExitedFunction(moduleIDCur, mdCur, nVersionCur);
-}
-
-EXTERN_C void STDAPICALLTYPE NtvEnteredFunction2(
-	ModuleID moduleIDCur,
-	mdMethodDef mdCur,
-	LPTSTR string)
-{
-	UNREFERENCED_PARAMETER(string);
-	Cprofilermain * pContainerClass = nullptr;
-	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
-	pContainerClass->NtvEnteredFunction(moduleIDCur, mdCur, 1);
-}
-
-EXTERN_C void STDAPICALLTYPE NtvExitedFunction2(
-	ModuleID moduleIDCur,
-	mdMethodDef mdCur,
-	LPTSTR string)
-{
-	UNREFERENCED_PARAMETER(string);
-	Cprofilermain * pContainerClass = nullptr;
-	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
-	pContainerClass->NtvExitedFunction(moduleIDCur, mdCur, 1);
-}
-
-
-EXTERN_C void STDAPICALLTYPE NtvEnteredFunctionAdd(
-	ModuleID moduleIDCur,
-	mdMethodDef mdCur,
-	long val1,
-	long val2)
-{
-	UNREFERENCED_PARAMETER(val1);
-	UNREFERENCED_PARAMETER(val2);
-	Cprofilermain * pContainerClass = nullptr;
-	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
-	pContainerClass->NtvEnteredFunction(moduleIDCur, mdCur, 1);
-}
-
-EXTERN_C void STDAPICALLTYPE NtvExitedFunctionAdd(
-	ModuleID moduleIDCur,
-	mdMethodDef mdCur,
-	long val1,
-	long val2)
-{
-	UNREFERENCED_PARAMETER(val1);
-	UNREFERENCED_PARAMETER(val2);
-	Cprofilermain * pContainerClass = nullptr;
-	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
-	pContainerClass->NtvExitedFunction(moduleIDCur, mdCur, 1);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -323,15 +262,15 @@ EXTERN_C void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Cprofilermain::Cprofilermain() :
-	m_fInstrumentationHooksInSeparateAssembly(FALSE),
-	m_mdIntPtrExplicitCast(mdTokenNil),
-	m_mdEnterPInvoke(mdTokenNil),
-	m_mdExitPInvoke(mdTokenNil),
-	m_mdEnter(mdTokenNil),
-	m_mdExit(mdTokenNil),
-	m_modidMscorlib(NULL),
-	m_refCount(0),
-	m_dwShadowStackTlsIndex(0)
+m_fInstrumentationHooksInSeparateAssembly(FALSE),
+m_mdIntPtrExplicitCast(mdTokenNil),
+m_mdEnterPInvoke(mdTokenNil),
+m_mdExitPInvoke(mdTokenNil),
+m_mdEnter(mdTokenNil),
+m_mdExit(mdTokenNil),
+m_modidMscorlib(NULL),
+m_refCount(0),
+m_dwShadowStackTlsIndex(0)
 {
 
 
@@ -342,8 +281,9 @@ Cprofilermain::Cprofilermain() :
 	else {
 		LeaveCriticalSection(&Cprofilermain::g_StaticContainerClassCritSec);
 	}
-
-	
+	auto shrp = std::make_shared<Commands::FunctionEnterQuick>(0, 0, 0);
+	shrp.reset();
+	auto shrp2 = std::make_shared<Commands::FunctionEnterQuick>(0, 0, 0);
 }
 
 void Cprofilermain::SetUpAgent()
@@ -355,11 +295,14 @@ void Cprofilermain::SetUpAgent()
 	tp->CreateNetworkIoThreadPool(m_NetworkClient);
 
 	auto cmd1 = std::make_shared<Commands::SendString>(L"");
+	auto df = new Commands::DefineFunction(0, 0, L"", 0);
+	std::shared_ptr<Commands::DefineFunction> def(df);
 	m_NetworkClient->m_CommandList.emplace(cmd1->Code(), cmd1);
+	m_NetworkClient->m_CommandList.emplace(def->Code(), def);
 
 
 	auto sz = sizeof(Commands::FunctionEnterQuick);
-	auto defp = new Commands::FunctionEnterQuick(0,0,0);
+	auto defp = new Commands::FunctionEnterQuick(0, 0, 0);
 
 	m_NetworkClient->Start(); // Ready for normal unblocked operation
 
@@ -393,7 +336,7 @@ void Cprofilermain::SendAgentInformation()
 	ainfo->Code = 5;
 
 	ResetEvent(NetworkClient::DataReceived);
-	m_NetworkClient->SendCommand<Commands::SendPackedStructure>(new Commands::SendPackedStructure(ainfo));
+	m_NetworkClient->SendCommand<Commands::SendPackedStructure>(std::make_shared<Commands::SendPackedStructure>(ainfo));
 	if (WaitForSingleObject(NetworkClient::DataReceived, 10000) == 0)
 	{
 		auto cmd = std::dynamic_pointer_cast<Commands::SendString>(m_NetworkClient->ReceiveCommand());
@@ -449,8 +392,6 @@ void Cprofilermain::AddCommonFunctions()
 	newMapping2.FunctionName = TEXT("AddNumbers");
 	newMapping2.Match = ItemMapping::MatchType::FunctionOnly;
 	this->m_Container->g_FullyQualifiedMethodsToProfile->insert(newMapping2);
-
-
 
 }
 
@@ -1035,8 +976,8 @@ STDMETHODIMP Cprofilermain::RuntimeResumeFinished(void)
 
 STDMETHODIMP Cprofilermain::Shutdown(void)
 {
-	m_NetworkClient->SendCommand<Commands::SendString>(new
-		Commands::SendString(std::wstring(L"Done!")));
+	m_NetworkClient->SendCommand<Commands::SendString>(
+		std::make_shared<Commands::SendString>(std::wstring(L"Done!")));
 	WaitForSingleObject(m_NetworkClient->DataSent, 5000); // Wait for data to be sent or 5 seconds
 	return S_OK;
 }
@@ -1228,7 +1169,7 @@ void Cprofilermain::SetILFunctionBodyForManagedHelper(ModuleID moduleID, mdMetho
 		moduleID,
 		methodDef,
 		m_mdIntPtrExplicitCast,
-		(methodDef == m_mdEnter) ? m_mdEnterPInvoke2 : m_mdExitPInvoke2);
+		(methodDef == m_mdEnter) ? m_mdEnterPInvoke : m_mdExitPInvoke);
 
 	if (FAILED(hr))
 	{
@@ -1411,12 +1352,10 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 		// We're operating on mscorlib and the helper methods are being pumped directly into it.
 		// So we reference (from within mscorlib) the helpers via methodDefs, not memberRefs.
 
-		assert(m_mdEnter2 != mdTokenNil);
-		assert(m_mdExit2 != mdTokenNil);
+		assert(m_mdEnter != mdTokenNil);
+		assert(m_mdExit != mdTokenNil);
 		moduleInfo.m_mdEnterProbeRef = m_mdEnter;
 		moduleInfo.m_mdExitProbeRef = m_mdExit;
-		moduleInfo.m_mdEnterProbeRef2 = m_mdEnter2;
-		moduleInfo.m_mdExitProbeRef2 = m_mdExit2;
 	}
 	else
 	{
@@ -1476,7 +1415,7 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 
 		ModuleIDToInfoMap::Const_Iterator iterator;
 		for (iterator = m_moduleIDToInfoMap.Begin();
-		iterator != m_moduleIDToInfoMap.End();
+			iterator != m_moduleIDToInfoMap.End();
 			++iterator)
 		{
 			// Skip the entry we just added for this module
@@ -1498,7 +1437,7 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 			// The module is a match!
 			MethodDefToLatestVersionMap::Const_Iterator iterMethodDef;
 			for (iterMethodDef = pModInfo->m_pMethodDefToLatestVersionMap->Begin();
-			iterMethodDef != pModInfo->m_pMethodDefToLatestVersionMap->End();
+				iterMethodDef != pModInfo->m_pMethodDefToLatestVersionMap->End();
 				iterMethodDef++)
 			{
 				if (iterMethodDef->second == 0)
@@ -1568,7 +1507,7 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 
 	ModuleInfo moduleInfo__ = m_moduleIDToInfoMap.Lookup(moduleID);
 
-	int nVersion;
+	int nVersion = 1;
 	moduleInfo__.m_pMethodDefToLatestVersionMap->LookupIfExists(methodDef, &nVersion);
 
 	GetClassAndFunctionNamesFromMethodDef(
@@ -1584,17 +1523,10 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 	// printf("JITCompile: %S::%S\t\t\r\nmethodDef = %#8x | m_mdEnter2 = %#8x | m_mdExit2= %#8x\r\n", wszTypeDefName, wszMethodDefName, methodDef, m_mdEnter2, m_mdExit2);
 
 	if ((moduleID == m_modidMscorlib) &&
-		((methodDef == m_mdEnter2) || (methodDef == m_mdExit2)))
+		((methodDef == m_mdEnter) || (methodDef == m_mdExit)))
 	{
 
-		if (methodDef == m_mdExit2)
-		{
-			SetILFunctionBodyForManagedHelper2(moduleID, methodDef);
-		}
-		else {
-			SetILFunctionBodyForManagedHelperAdd(moduleID, methodDef);
-		}
-
+		SetILFunctionBodyForManagedHelper(moduleID, methodDef);
 	}
 
 	else {
@@ -1613,22 +1545,23 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 
 		if (StrCmpW(wszMethodDefName, L"AddNumbers") == 0)
 		{
-			hr = RewriteIL2(
+			hr = RewriteIL(
 				m_pICorProfilerInfo.get(),
 				NULL,
 				moduleID,
 				methodDef,
 				nVersion,
-				moduleInfo.m_mdEnterProbeRef2,
-				moduleInfo.m_mdExitProbeRef2);
-			FILETIME HighPrecisionFileTime{ 0 };
+				moduleInfo.m_mdEnterProbeRef,
+				moduleInfo.m_mdExitProbeRef);
+
+			/*FILETIME HighPrecisionFileTime{ 0 };
 			GetSystemTimeAsFileTime(&HighPrecisionFileTime);
 			__int64 timestamp = (((__int64)HighPrecisionFileTime.dwHighDateTime) << 32) + HighPrecisionFileTime.dwLowDateTime;
-
-			ModInfoFunctionMap mifm;
+*/
+			/*ModInfoFunctionMap mifm;
 			mifm.m_ClassDef = methodDef;
 			mifm.m_ModuleID = moduleID;
-			m_ModFuncMap.emplace(mifm, functionID);
+			m_ModFuncMap.emplace(mifm, functionID);*/
 
 			/*auto defp = new Commands::DefineFunction(functionID, classID, wszMethodDefName, timestamp);
 			tp->SendEvent<Commands::DefineFunction>(defp);*/
@@ -1753,42 +1686,20 @@ void Cprofilermain::AddMemberRefs(IMetaDataAssemblyImport * pAssemblyImport, IMe
 #ifdef _WIN64
 	COR_SIGNATURE sigFunctionProbe[] = {
 		IMAGE_CEE_CS_CALLCONV_DEFAULT,      // default calling convention
-		0x04,                               // number of arguments == 3
+		0x03,                               // number of arguments == 3
 		ELEMENT_TYPE_VOID,                  // return type == void
 		ELEMENT_TYPE_U8,                    // arg 1: UInt64 moduleIDCur
 		ELEMENT_TYPE_U4,                    // arg 2: UInt32 mdCur
 		ELEMENT_TYPE_I4,                    // arg 3: int Param1
-		ELEMENT_TYPE_I4,                    // arg 3: int Param2
 	};
 #else //  ! _WIN64 (32-bit code follows)
 	COR_SIGNATURE sigFunctionProbe[] = {
 		IMAGE_CEE_CS_CALLCONV_DEFAULT,      // default calling convention
-		0x04,                               // number of arguments == 3
+		0x03,                               // number of arguments == 3
 		ELEMENT_TYPE_VOID,                  // return type == void
 		ELEMENT_TYPE_U4,                    // arg 1: UInt32 moduleIDCur
 		ELEMENT_TYPE_U4,                    // arg 2: UInt32 mdCur
 		ELEMENT_TYPE_I4,                    // arg 3: int Param1
-		ELEMENT_TYPE_I4,                    // arg 4: int Param2
-	};
-#endif //_WIN64
-
-#ifdef _WIN64
-	COR_SIGNATURE sigFunctionProbe2[] = {
-		IMAGE_CEE_CS_CALLCONV_DEFAULT,      // default calling convention
-		0x03,                               // number of arguments == 3
-		ELEMENT_TYPE_VOID,                  // return type == void
-		ELEMENT_TYPE_U8,                    // arg 1: UInt64 moduleIDCur
-		ELEMENT_TYPE_U4,                    // arg 2: UInt32 mdCur
-		ELEMENT_TYPE_I4,                // arg 3: int nVersionCur
-	};
-#else //  ! _WIN64 (32-bit code follows)
-	COR_SIGNATURE sigFunctionProbe2[] = {
-		IMAGE_CEE_CS_CALLCONV_DEFAULT,      // default calling convention
-		0x03,                               // number of arguments == 3
-		ELEMENT_TYPE_VOID,                  // return type == void
-		ELEMENT_TYPE_U4,                    // arg 1: UInt32 moduleIDCur
-		ELEMENT_TYPE_U4,                    // arg 2: UInt32 mdCur
-		ELEMENT_TYPE_I4,                    // arg 3: int nVersionCur
 	};
 #endif //_WIN64
 
@@ -1886,28 +1797,28 @@ void Cprofilermain::AddMemberRefs(IMetaDataAssemblyImport * pAssemblyImport, IMe
 
 	hr = pEmit->DefineMemberRef(
 		typeRef,
-		k_wszEnteredFunctionProbeName2,
+		k_wszEnteredFunctionProbeName,
 		sigFunctionProbe,
 		sizeof(sigFunctionProbe),
-		&(pModuleInfo->m_mdEnterProbeRef2));
+		&(pModuleInfo->m_mdEnterProbeRef));
 
 	if (FAILED(hr))
 	{
-		LOG_APPEND(L"DefineMemberRef to " << k_wszEnteredFunctionProbeName2 <<
+		LOG_APPEND(L"DefineMemberRef to " << k_wszEnteredFunctionProbeName <<
 			L" failed, hr = " << HEX(hr));
 	}
 
 	hr = pEmit->DefineMemberRef(
 		typeRef,
-		k_wszExitedFunctionProbeName2,
-		sigFunctionProbe2,
-		sizeof(sigFunctionProbe2),
-		&(pModuleInfo->m_mdExitProbeRef2));
+		k_wszExitedFunctionProbeName,
+		sigFunctionProbe,
+		sizeof(sigFunctionProbe),
+		&(pModuleInfo->m_mdExitProbeRef));
 
 
 	if (FAILED(hr))
 	{
-		LOG_APPEND(L"DefineMemberRef to " << k_wszExitedFunctionProbeName2 <<
+		LOG_APPEND(L"DefineMemberRef to " << k_wszExitedFunctionProbeName <<
 			L" failed, hr = " << HEX(hr));
 	}
 }
@@ -2061,77 +1972,51 @@ void Cprofilermain::AddHelperMethodDefs(IMetaDataImport * pImport, IMetaDataEmit
 		return;
 	}
 
-	//// Generate the PInvokes into the profiler DLL
-	//AddPInvoke(
-	//	pEmit,
-	//	tdHelpersContainer,
-	//	L"NtvEnteredFunction",
-	//	modrefNativeExtension,
-	//	&m_mdEnterPInvoke);
+	// Generate the PInvokes into the profiler DLL
 
-	//AddPInvoke(
-	//	pEmit,
-	//	tdHelpersContainer,
-	//	L"NtvExitedFunction",
-	//	modrefNativeExtension,
-	//	&m_mdExitPInvoke);
-
-	
-	AddPInvokeAddNumbers(
+	AddPInvoke(
 		pEmit,
 		tdHelpersContainer,
-		L"NtvEnteredFunctionAdd",
+		L"NtvEnteredFunction",
 		modrefNativeExtension,
-		&m_mdEnterPInvoke2);
+		&m_mdEnterPInvoke);
 
-
-	//AddPInvokeForSAMethod(
-	//	pEmit,
-	//	tdHelpersContainer,
-	//	L"NtvEnteredFunctionArraySA",
-	//	modrefNativeExtension,
-	//	tdSystemArray,
-	//	&m_mdEnterPInvoke2);
-
+	assert(m_mdEnterPInvoke != mdTokenNil);
 
 	AddPInvoke(
 		pEmit,
 		tdHelpersContainer,
 		L"NtvExitedFunction",
 		modrefNativeExtension,
-		&m_mdExitPInvoke2);
+		&m_mdExitPInvoke);
 
+	assert(m_mdExitPInvoke != mdTokenNil);
 	// Generate the SafeCritical managed methods which call the PInvokes
 	mdMethodDef mdSafeCritical;
 	GetSecuritySafeCriticalAttributeToken(pImport, &mdSafeCritical);
-
-	/*AddManagedHelperMethod(
-		pEmit,
-		tdHelpersContainer,
-		k_wszEnteredFunctionProbeName,
-		m_mdEnterPInvoke,
-		rvaCtor,
-		mdSafeCritical, &m_mdEnter);*/
-
-	AddManagedHelperMethodAddNumbers(
-		pEmit,
-		tdHelpersContainer,
-		k_wszEnteredFunctionProbeName2,
-		m_mdEnterPInvoke2,
-		rvaCtor,
-		mdSafeCritical,
-		&m_mdEnter2);
 
 
 	AddManagedHelperMethod(
 		pEmit,
 		tdHelpersContainer,
-		k_wszExitedFunctionProbeName2,
-		m_mdExitPInvoke2,
+		k_wszEnteredFunctionProbeName,
+		m_mdEnterPInvoke,
 		rvaCtor,
 		mdSafeCritical,
-		&m_mdExit2);
+		&m_mdEnter);
 
+	assert(m_mdEnter != mdTokenNil);
+
+	AddManagedHelperMethod(
+		pEmit,
+		tdHelpersContainer,
+		k_wszExitedFunctionProbeName,
+		m_mdExitPInvoke,
+		rvaCtor,
+		mdSafeCritical,
+		&m_mdExit);
+
+	assert(m_mdExit != mdTokenNil);
 }
 
 // [private] Creates a PInvoke method to inject into mscorlib.
@@ -2149,15 +2034,9 @@ HRESULT Cprofilermain::AddPInvoke(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR w
 	COR_SIGNATURE newMethodSignature[] = { IMAGE_CEE_CS_CALLCONV_DEFAULT,   //__stdcall
 		3,                               // 3 inputs
 		ELEMENT_TYPE_VOID,               // No return
-#ifdef _X86_
-		ELEMENT_TYPE_U4,                // ModuleID
-#elif defined(_AMD64_)
-		ELEMENT_TYPE_U8,                // ModuleID
-#else
-#error THIS SAMPLE ONLY WORKS ON X86 AND X64
-#endif
+		ELEMENT_TYPE_U8,                 // ModuleID
 		ELEMENT_TYPE_U4,                 // mdMethodDef token
-		ELEMENT_TYPE_I4                  // Rejit version number
+		ELEMENT_TYPE_I4                 // Rejit version number
 	};
 
 	hr = pEmit->DefineMethod(
@@ -2178,160 +2057,6 @@ HRESULT Cprofilermain::AddPInvoke(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR w
 		wszName,
 		modrefTarget);
 
-
-	LOG_IFFAILEDRET(hr, L"Failed in DefinePinvokeMap when creating P/Invoke method " << wszName);
-
-	return hr;
-}
-
-
-HRESULT Cprofilermain::AddPInvoke2(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdMethodDef * pmdPInvoke)
-{
-	HRESULT hr;
-
-	//COR_SIGNATURE representation
-	//   Calling convention
-	//   Number of Arguments
-	//   Return type
-	//   Argument type
-	//   ...
-
-	COR_SIGNATURE newMethodSignature[] = { IMAGE_CEE_CS_CALLCONV_DEFAULT,   //__stdcall
-		3,                               // 3 inputs
-		ELEMENT_TYPE_VOID,               // No return
-#ifdef _X86_
-		ELEMENT_TYPE_U4,                // ModuleID
-#elif defined(_AMD64_)
-		ELEMENT_TYPE_U8,                // ModuleID
-#else
-#error THIS SAMPLE ONLY WORKS ON X86 AND X64
-#endif
-		ELEMENT_TYPE_U4,                 // mdMethodDef token
-		ELEMENT_TYPE_STRING             // Rejit version number
-	};
-
-	hr = pEmit->DefineMethod(
-		td,
-		wszName,
-		~mdAbstract & (mdStatic | mdPublic | mdPinvokeImpl),
-		newMethodSignature,
-		sizeof(newMethodSignature),
-		0,
-		miPreserveSig,
-		pmdPInvoke);
-
-	LOG_IFFAILEDRET(hr, L"Failed in DefineMethod when creating P/Invoke method " << wszName);
-
-	hr = pEmit->DefinePinvokeMap(
-		*pmdPInvoke,
-		pmCallConvStdcall | pmNoMangle | pmCharSetUnicode,
-		wszName,
-		modrefTarget);
-
-	LOG_IFFAILEDRET(hr, L"Failed in DefinePinvokeMap when creating P/Invoke method " << wszName);
-
-	return hr;
-}
-
-HRESULT Cprofilermain::AddPInvokeForSAMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdTypeDef tdSystemArray, mdMethodDef * pmdPInvoke)
-{
-	UNREFERENCED_PARAMETER(tdSystemArray);
-	HRESULT hr;
-
-	//COR_SIGNATURE representation
-	//   Calling convention
-	//   Number of Arguments
-	//   Return type
-	//   Argument type
-	//   ...
-
-
-	COR_SIGNATURE newMethodSignature[] = { IMAGE_CEE_CS_CALLCONV_DEFAULT,   //__stdcall
-		3,                               // 3 inputs
-		ELEMENT_TYPE_VOID,               // No return
-		ELEMENT_TYPE_I,                  // ModuleID
-		ELEMENT_TYPE_U4,                 // mdMethodDef token
-		ELEMENT_TYPE_CLASS,
-		ELEMENT_TYPE_END,
-		ELEMENT_TYPE_END,
-		ELEMENT_TYPE_END,
-		ELEMENT_TYPE_END,
-		ELEMENT_TYPE_END,
-	};
-
-	//ULONG SigTok = CorSigCompressToken(tdSystemArray, &newMethodSignature[6]);
-
-	hr = pEmit->DefineMethod(
-		td,
-		wszName,
-		~mdAbstract & (mdStatic | mdPublic | mdPinvokeImpl | mdHideBySig),
-		newMethodSignature,
-		sizeof(newMethodSignature),
-		0,
-		miPreserveSig,
-		pmdPInvoke);
-
-	LOG_IFFAILEDRET(hr, L"Failed in DefineMethod when creating P/Invoke method " << wszName);
-
-	hr = pEmit->DefinePinvokeMap(
-		*pmdPInvoke,
-		pmCallConvStdcall | pmNoMangle | pmCharSetUnicode,
-		wszName,
-		modrefTarget);
-
-	mdParamDef pmdParamDef;
-	COR_SIGNATURE nativeSig[] = { NATIVE_TYPE_SAFEARRAY };
-	pEmit->DefineParam(*pmdPInvoke, 3, NULL, pdHasFieldMarshal, NULL, NULL, NULL, &pmdParamDef);
-	pEmit->SetFieldMarshal(pmdParamDef, nativeSig, 1);
-
-	LOG_IFFAILEDRET(hr, L"Failed in DefinePinvokeMap when creating P/Invoke method " << wszName);
-
-	return hr;
-}
-
-HRESULT Cprofilermain::AddPInvokeAddNumbers(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdMethodDef * pmdPInvoke)
-{
-	HRESULT hr;
-
-	//COR_SIGNATURE representation
-	//   Calling convention
-	//   Number of Arguments
-	//   Return type
-	//   Argument type
-	//   ...
-
-	COR_SIGNATURE newMethodSignature[] = { IMAGE_CEE_CS_CALLCONV_DEFAULT,   //__stdcall
-		4,                               // 3 inputs
-		ELEMENT_TYPE_VOID,               // No return
-#ifdef _X86_
-		ELEMENT_TYPE_U4,                // ModuleID
-#elif defined(_AMD64_)
-		ELEMENT_TYPE_U8,                // ModuleID
-#else
-#error THIS SAMPLE ONLY WORKS ON X86 AND X64
-#endif
-		ELEMENT_TYPE_U4,                 // mdMethodDef token
-		ELEMENT_TYPE_I4,                 // Param1
-		ELEMENT_TYPE_I4,                 // Param2
-	};
-
-	hr = pEmit->DefineMethod(
-		td,
-		wszName,
-		~mdAbstract & (mdStatic | mdPublic | mdPinvokeImpl),
-		newMethodSignature,
-		sizeof(newMethodSignature),
-		0,
-		miPreserveSig,
-		pmdPInvoke);
-
-	LOG_IFFAILEDRET(hr, L"Failed in DefineMethod when creating P/Invoke method " << wszName);
-
-	hr = pEmit->DefinePinvokeMap(
-		*pmdPInvoke,
-		pmCallConvStdcall | pmNoMangle,
-		wszName,
-		modrefTarget);
 
 	LOG_IFFAILEDRET(hr, L"Failed in DefinePinvokeMap when creating P/Invoke method " << wszName);
 
@@ -2368,19 +2093,6 @@ HRESULT Cprofilermain::GetSecuritySafeCriticalAttributeToken(IMetaDataImport * p
 	return hr;
 }
 
-HRESULT Cprofilermain::GetSystemArrayToken(IMetaDataImport * pImport, mdTypeDef * ptdSafeCritical)
-{
-
-	HRESULT hr = pImport->FindTypeDefByName(
-		L"System.Array",
-		mdTokenNil,
-		ptdSafeCritical);
-
-	LOG_IFFAILEDRET(hr, L"FindTypeDefByName(System.Security.SecuritySafeCriticalAttribute) failed");
-
-	return hr;
-}
-
 // [private] Adds the managed helper methods to mscorlib.
 HRESULT Cprofilermain::AddManagedHelperMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod)
 {
@@ -2401,153 +2113,6 @@ HRESULT Cprofilermain::AddManagedHelperMethod(IMetaDataEmit * pEmit, mdTypeDef t
 		ELEMENT_TYPE_U4,                // mdMethodDef token
 		ELEMENT_TYPE_I4,                // Rejit version number
 	};
-
-	hr = pEmit->DefineMethod(
-		td,
-		wszName,
-		mdStatic | mdPublic,
-		newMethodSignature,
-		sizeof(newMethodSignature),
-		rvaDummy,
-		miIL | miNoInlining,
-		pmdHelperMethod);
-
-	LOG_IFFAILEDRET(hr, L"Failed in DefineMethod when creating managed helper method " << wszName);
-
-	mdToken tkCustomAttribute;
-	hr = pEmit->DefineCustomAttribute(
-		*pmdHelperMethod,
-		mdSafeCritical,
-		NULL,          //Blob, contains constructor params in this case none
-		0,             //Size of the blob
-		&tkCustomAttribute);
-
-	LOG_IFFAILEDRET(hr, L"Failed in DefineCustomAttribute when applying SecuritySafeCritical to " <<
-		L"new managed helper method " << wszName);
-
-	return hr;
-}
-
-HRESULT Cprofilermain::AddManagedHelperMethod2(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod)
-{
-	UNREFERENCED_PARAMETER(mdTargetPInvoke);
-	HRESULT hr;
-
-	COR_SIGNATURE newMethodSignature[] = {
-		IMAGE_CEE_CS_CALLCONV_DEFAULT,  //__stdcall
-		3,
-		ELEMENT_TYPE_VOID,              // returns void
-#ifdef _X86_
-		ELEMENT_TYPE_U4,                // ModuleID
-#elif defined(_AMD64_)
-		ELEMENT_TYPE_U8,                // ModuleID
-#else
-#error THIS SAMPLE ONLY WORKS ON X86 AND X64
-#endif
-		ELEMENT_TYPE_U4,                // mdMethodDef token
-		ELEMENT_TYPE_STRING,                // Rejit version number
-	};
-
-	hr = pEmit->DefineMethod(
-		td,
-		wszName,
-		mdStatic | mdPublic,
-		newMethodSignature,
-		sizeof(newMethodSignature),
-		rvaDummy,
-		miIL | miNoInlining,
-		pmdHelperMethod);
-
-	LOG_IFFAILEDRET(hr, L"Failed in DefineMethod when creating managed helper method " << wszName);
-
-	mdToken tkCustomAttribute;
-	hr = pEmit->DefineCustomAttribute(
-		*pmdHelperMethod,
-		mdSafeCritical,
-		NULL,          //Blob, contains constructor params in this case none
-		0,             //Size of the blob
-		&tkCustomAttribute);
-
-	LOG_IFFAILEDRET(hr, L"Failed in DefineCustomAttribute when applying SecuritySafeCritical to " <<
-		L"new managed helper method " << wszName);
-
-	return hr;
-}
-
-HRESULT Cprofilermain::AddManagedHelperMethodAddNumbers(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod)
-{
-	UNREFERENCED_PARAMETER(mdTargetPInvoke);
-	HRESULT hr;
-
-	COR_SIGNATURE newMethodSignature[] = {
-		IMAGE_CEE_CS_CALLCONV_DEFAULT,  //__stdcall
-		4,
-		ELEMENT_TYPE_VOID,              // returns void
-#ifdef _X86_
-		ELEMENT_TYPE_U4,                // ModuleID
-#elif defined(_AMD64_)
-		ELEMENT_TYPE_U8,                // ModuleID
-#else
-#error THIS SAMPLE ONLY WORKS ON X86 AND X64
-#endif
-		ELEMENT_TYPE_U4,                // mdMethodDef token
-		ELEMENT_TYPE_I4,                // Param 1
-		ELEMENT_TYPE_I4,                // Param 2
-	};
-
-	hr = pEmit->DefineMethod(
-		td,
-		wszName,
-		mdStatic | mdPublic,
-		newMethodSignature,
-		sizeof(newMethodSignature),
-		rvaDummy,
-		miIL | miNoInlining,
-		pmdHelperMethod);
-
-	LOG_IFFAILEDRET(hr, L"Failed in DefineMethod when creating managed helper method " << wszName);
-
-	mdToken tkCustomAttribute;
-	hr = pEmit->DefineCustomAttribute(
-		*pmdHelperMethod,
-		mdSafeCritical,
-		NULL,          //Blob, contains constructor params in this case none
-		0,             //Size of the blob
-		&tkCustomAttribute);
-
-	LOG_IFFAILEDRET(hr, L"Failed in DefineCustomAttribute when applying SecuritySafeCritical to " <<
-		L"new managed helper method " << wszName);
-
-	return hr;
-}
-
-HRESULT Cprofilermain::AddManagedHelperSAMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdTypeDef tdSystemArray, mdMethodDef * pmdHelperMethod)
-{
-	UNREFERENCED_PARAMETER(mdTargetPInvoke);
-	UNREFERENCED_PARAMETER(tdSystemArray);
-	HRESULT hr;
-
-	COR_SIGNATURE newMethodSignature[] = {
-		IMAGE_CEE_CS_CALLCONV_DEFAULT,  //__stdcall
-		4,
-		ELEMENT_TYPE_VOID,              // returns void
-#ifdef _X86_
-		ELEMENT_TYPE_U4,                // ModuleID
-#elif defined(_AMD64_)
-		ELEMENT_TYPE_U8,                // ModuleID
-#else
-#error THIS SAMPLE ONLY WORKS ON X86 AND X64
-#endif
-		ELEMENT_TYPE_U4,                // mdMethodDef token
-		ELEMENT_TYPE_CLASS,             // Rejit version number
-		ELEMENT_TYPE_END,
-		ELEMENT_TYPE_END,
-		ELEMENT_TYPE_END,
-		ELEMENT_TYPE_END,
-		ELEMENT_TYPE_END,
-	};
-
-	//ULONG SigTok = CorSigCompressToken(tdSystemArray, &newMethodSignature[6]);
 
 	hr = pEmit->DefineMethod(
 		td,
@@ -2623,27 +2188,27 @@ void Cprofilermain::GetClassAndFunctionNamesFromMethodDef(IMetaDataImport * pImp
 // [private] Launches the listener for file changes to ILRWP_watchercommands.log.
 // [public] Instrumented code eventually calls into here (when function is entered)
 // to do the work of maintaining the shadow stack and function timings.
-void Cprofilermain::NtvEnteredFunction(ModuleID moduleIDCur, mdMethodDef mdCur, int nVersionCur)
+void Cprofilermain::NtvEnteredFunction(unsigned __int64 moduleIDCur, mdMethodDef mdCur, int nVersionCur)
 {
 	UNREFERENCED_PARAMETER(nVersionCur);
 	ModuleInfo moduleInfo = m_moduleIDToInfoMap.Lookup(moduleIDCur);
-	WCHAR wszTypeDefName[512];
-	WCHAR wszMethodDefName[512];
-	GetClassAndFunctionNamesFromMethodDef(
-		moduleInfo.m_pImport,
-		moduleIDCur,
-		mdCur,
-		wszTypeDefName,
-		_countof(wszTypeDefName),
-		wszMethodDefName,
-		_countof(wszMethodDefName));
+	//WCHAR wszTypeDefName[512];
+	//WCHAR wszMethodDefName[512];
+	//GetClassAndFunctionNamesFromMethodDef(
+	//	moduleInfo.m_pImport,
+	//	moduleIDCur,
+	//	mdCur,
+	//	wszTypeDefName,
+	//	_countof(wszTypeDefName),
+	//	wszMethodDefName,
+	//	_countof(wszMethodDefName));
 
 	ThreadID threadId = 0;
-	{
-		//critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
-		//this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
-		//csh.leave_early();
-	}
+	/*{
+		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
+		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+		csh.leave_early();
+	}*/
 
 	FILETIME HighPrecisionFileTime{ 0 };
 	GetSystemTimeAsFileTime(&HighPrecisionFileTime);
@@ -2655,16 +2220,10 @@ void Cprofilermain::NtvEnteredFunction(ModuleID moduleIDCur, mdMethodDef mdCur, 
 	mifm.m_ClassDef = mdCur;
 	mifm.m_ModuleID = moduleIDCur;
 	auto id = m_ModFuncMap.find(mifm);
-
-	if (id != m_ModFuncMap.end())
-	{
+	//if (id != m_ModFuncMap.end())
+	//{
 		tp->SendEvent<Commands::FunctionEnterQuick>(new Commands::FunctionEnterQuick(id->second, threadId, timestamp));
-	}
-
-
-
-
-
+	//}
 }
 
 // [public] Instrumented code eventually calls into here (when function is exited)
@@ -2673,16 +2232,16 @@ void Cprofilermain::NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, i
 {
 	UNREFERENCED_PARAMETER(nVersionCur);
 	ModuleInfo moduleInfo = m_moduleIDToInfoMap.Lookup(moduleIDCur);
-	WCHAR wszTypeDefName[512];
-	WCHAR wszMethodDefName[512];
-	GetClassAndFunctionNamesFromMethodDef(
+	/*WCHAR wszTypeDefName[512];
+	WCHAR wszMethodDefName[512];*/
+	/*GetClassAndFunctionNamesFromMethodDef(
 		moduleInfo.m_pImport,
 		moduleIDCur,
 		mdCur,
 		wszTypeDefName,
 		_countof(wszTypeDefName),
 		wszMethodDefName,
-		_countof(wszMethodDefName));
+		_countof(wszMethodDefName));*/
 
 	ThreadID threadId = 0;
 	{
@@ -2702,10 +2261,7 @@ void Cprofilermain::NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, i
 	mifm.m_ModuleID = moduleIDCur;
 	auto id = m_ModFuncMap.find(mifm);
 
-	if (id != m_ModFuncMap.end())
-	{
 		tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(id->second, threadId, timestamp));
-	}
 
 
 

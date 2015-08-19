@@ -1183,19 +1183,6 @@ HRESULT AddProbe(
 	pNewInstr->m_Arg32 = nVersion;
 	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
 
-	//     stloc LocalVarUsedForVersion
-	pNewInstr = pilr->NewILInstr();
-	pNewInstr->m_opcode = CEE_STLOC;
-	pNewInstr->m_Arg16 = (INT16) iLocalVersion;
-	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
-
-	//     ldloc LocalVarUsedForVersion
-	pNewInstr = pilr->NewILInstr();
-	pNewInstr->m_opcode = CEE_LDLOC;
-	pNewInstr->m_Arg16 = (INT16) iLocalVersion;
-	pilr->InsertBefore(pInsertProbeBeforeThisInstr, pNewInstr);
-
-
 	//     call MgdEnteredFunction32/64 (may be via memberRef or methodDef)
 	pNewInstr = pilr->NewILInstr();
 	pNewInstr->m_opcode = CEE_CALL;
@@ -1233,8 +1220,6 @@ HRESULT AddProbeSA(
 	// #endif
 	//     ldc.i4 mdMethodDefCur
 	//     ldc.i4 VersionNumberCur
-	//     stloc LocalVarUsedForVersion
-	//     ldloc LocalVarUsedForVersion
 	//     call MgdEnteredFunction32/64
 	//     pInsertProbeBeforeThisInstr
 	//     ...
@@ -1583,10 +1568,9 @@ HRESULT RewriteIL(
 		// Adds enter/exit probes
 		assert(mdEnterProbeRef != mdTokenNil);
 		assert(mdExitProbeRef != mdTokenNil);
-		UINT iLocalVersion = rewriter.AddNewInt32Local();
-		UINT stringToken = rewriter.AddNewString();
-		IfFailRet(AddEnterProbe(&rewriter, moduleID, methodDef, nVersion, iLocalVersion, mdEnterProbeRef));
-		IfFailRet(AddExitProbe(&rewriter, moduleID, methodDef, nVersion, iLocalVersion, mdExitProbeRef));
+		//UINT iLocalVersion = rewriter.AddNewInt32Local();
+		IfFailRet(AddEnterProbe(&rewriter, moduleID, methodDef, nVersion, 1, mdEnterProbeRef));
+		IfFailRet(AddExitProbe(&rewriter, moduleID, methodDef, nVersion, 1, mdExitProbeRef));
 	}
 	IfFailRet(rewriter.Export());
 
@@ -1660,11 +1644,11 @@ HRESULT SetILForManagedHelper(
 	pNewInstr->m_opcode = CEE_CONV_U8;
 	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
 
-	// call System.IntPtr::op_Explicit(int64) (convert ModuleIDCur to native int)
-	pNewInstr = rewriter.NewILInstr();
-	pNewInstr->m_opcode = CEE_CALL;
-	pNewInstr->m_Arg32 = mdIntPtrExplicitCast;
-	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+	//// call System.IntPtr::op_Explicit(int64) (convert ModuleIDCur to native int)
+	//pNewInstr = rewriter.NewILInstr();
+	//pNewInstr->m_opcode = CEE_CALL;
+	//pNewInstr->m_Arg32 = mdIntPtrExplicitCast;
+	//rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
 
 	// ldarg.1 (uint32 methodDef of function being entered/exited)
 	pNewInstr = rewriter.NewILInstr();

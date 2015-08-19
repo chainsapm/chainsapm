@@ -49,8 +49,9 @@ private:
 	
 
 	// Double buffered queues for reading and writing so we don't bog down the enter/exit methods
-	std::queue<Commands::ICommand*> m_OutboundQueueFront;
-	std::queue<Commands::ICommand*> m_OutboundQueueBack;
+	std::queue<std::shared_ptr<Commands::ICommand>> m_OutboundQueueFront;
+	std::queue<std::shared_ptr<Commands::ICommand>> m_OutboundQueueBack;
+	std::vector<std::shared_ptr<Commands::ICommand>> m_DelayedRemovalQueue;
 	std::queue<std::shared_ptr<std::vector<char>>> m_InboundQueueFront;
 	std::queue<std::shared_ptr<std::vector<char>>> m_InboundQueueBack;
 
@@ -92,7 +93,7 @@ public:
 
 	// Send a single command to the buffer to be processed.
 	template<typename C>
-	HRESULT SendCommand(C* packet)
+	HRESULT SendCommand(std::shared_ptr<C> packet)
 	{
 		auto cshFQ = critsec_helper::critsec_helper(&FrontOutboundLock);
 		m_OutboundQueueFront.emplace(packet);
@@ -128,7 +129,7 @@ struct NetClietCallback : OVERLAPPED
 {
 	HANDLE rstHandle;
 	NetworkClient *netclient;
-	std::queue<std::shared_ptr<std::vector<char>>> *sendqueue;
+	std::vector<std::shared_ptr<std::vector<char>>> *sendqueue;
 	LPWSABUF queue;
 	enum _direction
 	{

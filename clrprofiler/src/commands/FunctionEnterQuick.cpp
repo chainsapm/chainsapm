@@ -6,14 +6,14 @@ namespace Commands
 {
 
 	FunctionEnterQuick::FunctionEnterQuick(FunctionID data, ThreadID threadid, __int64 timestamp) 
-		: function((__int64)data), thread((__int64)threadid), code(0x18), hasEncoded(false), timestamp(timestamp)
+		: function((__int64)data), thread((__int64)threadid), code(0x18), hasEncoded(false), m_timestamp(timestamp)
 	{
+		
 	}
 
 	FunctionEnterQuick::~FunctionEnterQuick()
 	{
 	}
-
 	std::wstring FunctionEnterQuick::Name()
 	{
 		return L"Function Enter (Quick)";
@@ -40,9 +40,9 @@ namespace Commands
 			short term = 0;
 			auto v2 = (char*)memcpy(vector, &size, sizeof(__int32));
 			v2 += sizeof(__int32);
-			memcpy(v2 , &code, sizeof(short));
+			memcpy(v2, &code, sizeof(short));
 			v2 += sizeof(short);
-			memcpy(v2, &timestamp, sizeof(__int64));
+			memcpy(v2, &m_timestamp, sizeof(__int64));
 			v2 += sizeof(__int64);
 			memcpy(v2, &function, sizeof(__int64));
 			v2 += sizeof(__int64);
@@ -51,8 +51,9 @@ namespace Commands
 			memcpy(v2, &term, sizeof(short));
 
 			hasEncoded = true;
-			auto v = std::vector<char>(vector, vector + size);
-			m_internalvector = std::make_shared<std::vector<char>>(v);
+
+			m_internalvector = std::make_shared<std::vector<char>>(vector, vector + size);
+			delete vector;
 		}
 
 		return m_internalvector;
@@ -60,6 +61,7 @@ namespace Commands
 
 	std::shared_ptr<ICommand> FunctionEnterQuick::Decode(std::shared_ptr<std::vector<char>> &data)
 	{
-		return std::make_shared<FunctionEnterQuick>(FunctionEnterQuick(0,0,0));
+		UNREFERENCED_PARAMETER(data);
+		return std::make_shared<FunctionEnterQuick>(0,0,0);
 	}
 }

@@ -11,6 +11,7 @@ namespace Commands
 
 	FunctionLeaveQuick::~FunctionLeaveQuick()
 	{
+		m_internalvector.reset();
 	}
 
 	std::wstring FunctionLeaveQuick::Name()
@@ -37,6 +38,7 @@ namespace Commands
 				+ sizeof(short);			// term
 
 			auto vector = new char[size];
+
 			short term = 0;
 			auto v2 = (char*)memcpy(vector, &size, sizeof(__int32));
 			v2 += sizeof(__int32);
@@ -51,8 +53,9 @@ namespace Commands
 			memcpy(v2, &term, sizeof(short));
 
 			hasEncoded = true;
-			auto v = std::vector<char>(vector, vector + size);
-			m_internalvector = std::make_shared<std::vector<char>>(v);
+
+			m_internalvector = std::make_shared<std::vector<char>>(vector, vector + size);
+			delete vector;
 		}
 
 		return m_internalvector;
