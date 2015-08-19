@@ -58,6 +58,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\EntryPoint.cs" />
+    <Compile Include="Classes\StackItem.cs" />
     <Compile Include="Commands\Agent\AgentInformation.cs" />
     <Compile Include="Commands\Agent\DefineFunction.cs" />
     <Compile Include="Commands\Agent\FunctionTailQuick.cs" />

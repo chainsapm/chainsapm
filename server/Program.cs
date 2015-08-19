@@ -290,6 +290,18 @@ namespace ChainsAPM.ConsoleServer
                             tcbah.ThreadEntryPoint.Add(feq.ThreadID, new List<Tuple<long, long>>());
 
                         tcbah.ThreadEntryPoint[feq.ThreadID].Add(new Tuple<long, long>(tcbah.ThreadDepth[feq.ThreadID], feq.FunctionID));
+                        if (tcbah.ThreadDepth[feq.ThreadID] == 0)
+                        {
+                            using (var fw = new System.IO.StreamWriter(string.Format(@"C:\LogFiles\{0}_T{1}.txt", DateTime.Now.Ticks, feq.ThreadID)))
+                            {
+                                foreach (var StackItem in tcbah.ThreadEntryPoint[feq.ThreadID])
+                                {
+                                    fw.WriteLine("{0}{1}", "".PadLeft((int)StackItem.Item1, ' '), StackItem.Item2);
+                                }
+                            }
+                            tcbah.ThreadDepth.Remove(feq.ThreadID);
+                            tcbah.ThreadEntryPoint.Remove(feq.ThreadID);
+                        }
 
                     }
                     if (item is ChainsAPM.Commands.Common.SendString)

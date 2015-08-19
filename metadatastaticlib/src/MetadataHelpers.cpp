@@ -10,25 +10,25 @@ MetadataHelpers::MetadataHelpers()
 }
 
 
-MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo> profilerInfo, ModuleID moduleId) : MetadataHelpers() 
+MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo> profilerInfo) : MetadataHelpers() 
 {
 	m_pICorProfilerInfo = profilerInfo;
 }
 
-MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo2> profilerInfo, ModuleID moduleId) : MetadataHelpers()
+MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo2> profilerInfo) : MetadataHelpers()
 {
 	m_pICorProfilerInfo = profilerInfo;
 	m_pICorProfilerInfo2 = profilerInfo;
 }
 
-MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo3> profilerInfo, ModuleID moduleId) :MetadataHelpers()
+MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo3> profilerInfo) :MetadataHelpers()
 {
 	m_pICorProfilerInfo = profilerInfo;
 	m_pICorProfilerInfo2 = profilerInfo;
 	m_pICorProfilerInfo3 = profilerInfo;
 }
 
-MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo4> profilerInfo, ModuleID moduleId) : MetadataHelpers()
+MetadataHelpers::MetadataHelpers(std::shared_ptr<ICorProfilerInfo4> profilerInfo) : MetadataHelpers()
 {
 	m_pICorProfilerInfo = profilerInfo;
 	m_pICorProfilerInfo2 = profilerInfo;

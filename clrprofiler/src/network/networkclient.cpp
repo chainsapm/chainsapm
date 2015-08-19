@@ -217,7 +217,6 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 				CancelThreadpoolIo(netClient->m_ptpIO);
 			}
 		}
-		//WaitForThreadpoolTimerCallbacks(pTimer, FALSE);
 		//WaitForThreadpoolIoCallbacks(netClient->m_ptpIO, FALSE);
 		netClient->insideSendLock = false;
 	}

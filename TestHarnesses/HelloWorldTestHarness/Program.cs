@@ -14,6 +14,16 @@ namespace HelloWorldTestHarness
             wr.EndGetResponse(result);
             var s = result;
         }
+
+        static int Recursive(int counter, int max)
+        {
+            if (counter < max)
+            {
+                return Recursive(++counter, max);
+            }
+            return max;
+        }
+
         static void Main(string[] args)
         {
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
@@ -36,6 +46,7 @@ namespace HelloWorldTestHarness
                 System.Console.WriteLine(AddNumbers(ref i, ref b));
                 System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
                 System.Console.WriteLine(AddNumbers(ref i, ref b));
+                Recursive(0, 10);
             });
             System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
             System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));
@@ -78,6 +89,7 @@ namespace HelloWorldTestHarness
                     var t2 = new System.Threading.Thread(new System.Threading.ThreadStart(
                    () =>
                    {
+                       Recursive(0, 10);
                        System.Threading.Thread.CurrentThread.Name = string.Format("Worker Thread {0}", f);
                        System.Console.WriteLine("Hello world from another thread!");
                        System.Console.WriteLine(AddNumbers(0x41414141, 0x42424242));

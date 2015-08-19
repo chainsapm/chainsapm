@@ -37,11 +37,8 @@ namespace Commands
 	std::shared_ptr<std::vector<char>> SendString::Encode()
 	{
 
-
-		if (!hasEncoded)
-		{
-			if (wchar)
-			{
+		if (!hasEncoded) {
+			if (wchar) {
 				code = 0x03;
 
 				size_t strlen = (m_wstring.length());
@@ -73,10 +70,8 @@ namespace Commands
 				v2 += sizeof(short);
 
 				hasEncoded = true;
-				std::vector<char> v(size);
-				v.assign(vector, v2);
-
-				m_internalvector = std::make_shared<std::vector<char>>(v);
+				m_internalvector = std::make_shared<std::vector<char>>(vector, v2);
+				delete vector;
 			}
 			else {
 				code = 0x04;
@@ -108,9 +103,8 @@ namespace Commands
 				v2 += sizeof(short);
 
 				hasEncoded = true;
-				std::vector<char> v(size);
-				v.assign(vector, v2);
-				m_internalvector = std::make_shared<std::vector<char>>(v);
+				m_internalvector = std::make_shared<std::vector<char>>(vector, v2);
+				delete vector;
 			}
 		}
 
@@ -119,21 +113,20 @@ namespace Commands
 
 	std::shared_ptr<ICommand> SendString::Decode(std::shared_ptr<std::vector<char>> &data)
 	{
-		UNREFERENCED_PARAMETER(data);
 		auto ptr = data->data();
-		
+
 		auto len = *(unsigned int*)ptr;
 		ptr += sizeof(unsigned int);
-		
+
 		auto code = (char)ptr;
 		ptr += sizeof(short);
-		
+
 		auto strlen = *(__int32*)ptr;
 		ptr += sizeof(__int32);
-		
+
 		auto hash = *(__int64*)ptr;
 		ptr += sizeof(__int64);
-		
+
 		auto str = (wchar_t*)ptr;
 		ptr += strlen * 2;
 

@@ -105,17 +105,66 @@ if (typeName.ToLower() == "std::wstring")
 			v2 += sizeof(short);
 
 			hasEncoded = true;
-			std::vector<char> v(size);
-			v.assign(vector, v2);
 
-			m_internalvector = std::make_shared<std::vector<char>>(v);
+			m_internalvector = std::make_shared<std::vector<char>>(vector, v2);
 		}
 		return m_internalvector;
 	}
 
 	std::shared_ptr<ICommand> <#= this.ClassName #>::Decode(std::shared_ptr<std::vector<char>> &data)
 	{
-		return std::make_shared<<#= this.ClassName #>>(<#= this.ClassName #>(m_timestamp, <# foreach (var cpItem in this.ClassProperties) { #> m_<#= cpItem.Name #> <#  if (this.ClassProperties.Last().Name != cpItem.Name) { #>, <# } else { } } #>));
+	// 
+
+		auto ptr = data->data();
+
+		auto len = *(unsigned int*)ptr;
+		ptr += sizeof(unsigned int);
+
+		auto code = (char)ptr;
+		ptr += sizeof(short);
+
+<# foreach (var cpItem in this.ClassProperties)
+{ 
+string typeName = "";
+if (TypeMapping.ContainsKey(cpItem.TypeName)) { typeName = TypeMapping[cpItem.TypeName].ToString(); } else { typeName = cpItem.TypeName.ToString(); } 
+if (typeName.ToLower() == "std::wstring") {#> 
+			// Regenerate the string information
+
+			auto strlen_<#= cpItem.Name #> = *(__int32*)ptr;
+			ptr += sizeof(__int32);
+
+			auto hash_<#= cpItem.Name #> = *(__int64*)ptr;
+			ptr += sizeof(__int64);
+
+			auto local_<#= cpItem.Name #> = (wchar_t*)ptr;
+			ptr += strlen_<#= cpItem.Name #> * 2;
+
+			hashout = hash(m_<#= cpItem.Name #>);
+
+<# } else if (typeName.ToLower() == "std::string") {#> 
+			// Regenerate the string information
+
+			auto strlen_<#= cpItem.Name #> = *(__int32*)ptr;
+			ptr += sizeof(__int32);
+
+			auto hash_<#= cpItem.Name #> = *(__int64*)ptr;
+			ptr += sizeof(__int64);
+
+			auto local_<#= cpItem.Name #> = (char*)ptr;
+			ptr += strlen_<#= cpItem.Name #>;
+
+			hashout = hash(m_<#= cpItem.Name #>);
+
+<# } else { #>
+
+			auto local_<#= cpItem.Name #> = *(<#= typeName #>*)ptr;
+			ptr += sizeof(<#= typeName #>);
+<# } #>
+<# } #>
+			// Terminator
+		auto term = *(short*)ptr;
+		ptr += sizeof(short);
+		return std::make_shared<<#= this.ClassName #>>(local_timestamp, <# foreach (var cpItem in this.ClassProperties) { #> local_<#= cpItem.Name #> <#  if (this.ClassProperties.Last().Name != cpItem.Name) { #>, <# } else { } } #>);
 	}
 }
 

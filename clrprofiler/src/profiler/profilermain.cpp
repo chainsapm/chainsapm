@@ -468,6 +468,8 @@ STDMETHODIMP Cprofilermain::SetMask()
 
 	DWORD eventMask = (DWORD)(
 		COR_PRF_MONITOR_THREADS
+		//| COR_PRF_MONITOR_REMOTING_COOKIE 
+		//| COR_PRF_MONITOR_REMOTING_ASYNC
 		| COR_PRF_MONITOR_SUSPENDS
 		| COR_PRF_MONITOR_EXCEPTIONS
 		| COR_PRF_MONITOR_CLR_EXCEPTIONS
@@ -804,6 +806,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 
 		if (m_pICorProfilerInfo2 != NULL)
 		{
+			this->m_Container->g_MetadataHelpers = new MetadataHelpers(m_pICorProfilerInfo2);
 			clientData = new UINT_PTR(0x0);; // Obviously we're not using any 
 			m_pICorProfilerInfo2->SetFunctionIDMapper((FunctionIDMapper*)&Cprofilermain::Mapper1);
 #ifdef _WIN64 
@@ -815,6 +818,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 		if (m_pICorProfilerInfo3 != NULL)
 		{
 			// .NET40
+			this->m_Container->g_MetadataHelpers = new MetadataHelpers(m_pICorProfilerInfo2);
 			clientData = new UINT_PTR(40);
 			m_pICorProfilerInfo3->SetFunctionIDMapper2((FunctionIDMapper2*)&Cprofilermain::Mapper2, this);
 #ifdef _WIN64 
@@ -829,6 +833,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 		if (m_pICorProfilerInfo4 != NULL)
 		{
 			// .NET45
+			this->m_Container->g_MetadataHelpers = new MetadataHelpers(m_pICorProfilerInfo2);
 			clientData = new UINT_PTR(45);
 			m_pICorProfilerInfo4->SetFunctionIDMapper2((FunctionIDMapper2*)&Cprofilermain::Mapper2, this);
 
@@ -1543,7 +1548,7 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 			wszMethodDefName,
 			_countof(wszMethodDefName));
 
-		if (StrCmpW(wszMethodDefName, L"AddNumbers") == 0)
+		if (StrCmpW(wszMethodDefName, L"Recursive") == 0)
 		{
 			hr = RewriteIL(
 				m_pICorProfilerInfo.get(),
@@ -1558,10 +1563,10 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 			GetSystemTimeAsFileTime(&HighPrecisionFileTime);
 			__int64 timestamp = (((__int64)HighPrecisionFileTime.dwHighDateTime) << 32) + HighPrecisionFileTime.dwLowDateTime;
 */
-			/*ModInfoFunctionMap mifm;
+			ModInfoFunctionMap mifm;
 			mifm.m_ClassDef = methodDef;
 			mifm.m_ModuleID = moduleID;
-			m_ModFuncMap.emplace(mifm, functionID);*/
+			m_ModFuncMap.emplace(mifm, functionID);
 
 			/*auto defp = new Commands::DefineFunction(functionID, classID, wszMethodDefName, timestamp);
 			tp->SendEvent<Commands::DefineFunction>(defp);*/
@@ -2204,11 +2209,11 @@ void Cprofilermain::NtvEnteredFunction(unsigned __int64 moduleIDCur, mdMethodDef
 	//	_countof(wszMethodDefName));
 
 	ThreadID threadId = 0;
-	/*{
+	{
 		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
 		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
 		csh.leave_early();
-	}*/
+	}
 
 	FILETIME HighPrecisionFileTime{ 0 };
 	GetSystemTimeAsFileTime(&HighPrecisionFileTime);
@@ -2220,10 +2225,10 @@ void Cprofilermain::NtvEnteredFunction(unsigned __int64 moduleIDCur, mdMethodDef
 	mifm.m_ClassDef = mdCur;
 	mifm.m_ModuleID = moduleIDCur;
 	auto id = m_ModFuncMap.find(mifm);
-	//if (id != m_ModFuncMap.end())
-	//{
+	if (id != m_ModFuncMap.end())
+	{
 		tp->SendEvent<Commands::FunctionEnterQuick>(new Commands::FunctionEnterQuick(id->second, threadId, timestamp));
-	//}
+	}
 }
 
 // [public] Instrumented code eventually calls into here (when function is exited)
@@ -2245,9 +2250,9 @@ void Cprofilermain::NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, i
 
 	ThreadID threadId = 0;
 	{
-		//critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
-		//this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
-		//csh.leave_early();
+		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
+		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+		csh.leave_early();
 	}
 
 	FILETIME HighPrecisionFileTime{ 0 };

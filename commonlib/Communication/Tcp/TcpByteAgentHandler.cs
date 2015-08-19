@@ -31,8 +31,9 @@ namespace ChainsAPM.Communication.Tcp
         public Dictionary<long, string> FunctionList;
 
         public Dictionary<long, long> ThreadDepth;
+        public Dictionary<long, ChainsAPM.Classes.EntryPoint> CurrentThreadEntryPoint;
 
-        // Thread Id, sequence, threadid
+        // Thread Id, sequence, method
         public Dictionary<long, List<Tuple<long, long>>> ThreadEntryPoint;
 
         private ITransport<byte[]> m_PacketHandler;

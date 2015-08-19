@@ -16,10 +16,10 @@ class MetadataHelpers
 {
 public:
 	MetadataHelpers();
-	MetadataHelpers(std::shared_ptr<ICorProfilerInfo> profilerInfo, ModuleID moduleId);
-	MetadataHelpers(std::shared_ptr<ICorProfilerInfo2> profilerInfo, ModuleID moduleId);
-	MetadataHelpers(std::shared_ptr<ICorProfilerInfo3> profilerInfo, ModuleID moduleId);
-	MetadataHelpers(std::shared_ptr<ICorProfilerInfo4> profilerInfo, ModuleID moduleId);
+	MetadataHelpers(std::shared_ptr<ICorProfilerInfo> profilerInfo);
+	MetadataHelpers(std::shared_ptr<ICorProfilerInfo2> profilerInfo);
+	MetadataHelpers(std::shared_ptr<ICorProfilerInfo3> profilerInfo);
+	MetadataHelpers(std::shared_ptr<ICorProfilerInfo4> profilerInfo);
 	~MetadataHelpers();
 
 	STDMETHOD(GetCurrentThread)(ThreadID* threadId);
