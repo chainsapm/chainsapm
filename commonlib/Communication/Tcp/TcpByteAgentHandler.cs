@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ChainsAPM.Commands.Agent;
 using ChainsAPM.Interfaces;
-using ChainsAPM.Commands.Common;
-using ChainsAPM.Commands.Agent;
+using System;
+using System.Collections.Generic;
 using System.Runtime.Remoting.Messaging;
+using System.Threading.Tasks;
 
 
 namespace ChainsAPM.Communication.Tcp
@@ -20,34 +16,23 @@ namespace ChainsAPM.Communication.Tcp
             ReceiveHeavy,
             Balanced
         }
-        public AgentInformation AgentInfo { get; set; }
-        public DateTime ConnectedTime { get; set; }
-        public DateTime DisconnectedTime { get; set; }
+        
+       
 
         private Dictionary<int, Interfaces.ICommand<byte>> CommandList;
         private object cmdListLock;
 
-        public Dictionary<long, string> StringList;
-        public Dictionary<long, string> FunctionList;
-
-        public Dictionary<long, long> ThreadDepth;
-        public Dictionary<long, Stack<ChainsAPM.Classes.EntryPoint>> ThreadEntryPointStack;
-
-
-        // Thread Id, sequence, method
-        public Dictionary<long, List<Tuple<long, long>>> ThreadEntryPoint;
+       
 
         private ITransport<byte[]> m_PacketHandler;
         
         private object lockingOutbound;
         private object lockingInbound;
         private Queue<byte[]> blockingOutboundQueue;
+
         private System.Threading.Timer sendTimer; // Let's keep this guy around
         private System.Threading.Timer recvTimer; // Let's keep this guy around
-        public delegate void HasDataEvent(object sender);
-        public event HasDataEvent HasData;
-        public delegate void DisconnectedEvent(object sender);
-        public event DisconnectedEvent Disconnected;
+        
         object timerLock = new object();
         public int messagesSent = 0;
         int MAX_SENDBUFFER = 1024 * 70; // Keep this out of the LOH
@@ -63,6 +48,9 @@ namespace ChainsAPM.Communication.Tcp
         private bool inRecv = false;
         private List<byte> chunkList;
 
+        public event HasDataEvent HasData;
+        public event DisconnectedEvent Disconnected;
+
         public TcpByteAgentHandler(ITransport<byte[]> packethand, HandlerType handType = HandlerType.Balanced)
         {
             m_PacketHandler = packethand;
@@ -77,13 +65,8 @@ namespace ChainsAPM.Communication.Tcp
             CommandList = CallContext.LogicalGetData("CommandProviders") as Dictionary<int, Interfaces.ICommand<byte>>;
             cmdListLock = new object();
 
-            StringList = new Dictionary<long, string>();
-            FunctionList = new Dictionary<long, string>();
+         
 
-            ThreadDepth = new Dictionary<long, long>();
-
-            // Thread Id, sequence, threadid
-            ThreadEntryPoint = new Dictionary<long, List<Tuple<long, long>>>();
 
             switch (handType)
             {
@@ -255,18 +238,18 @@ namespace ChainsAPM.Communication.Tcp
             }
         }
 
-        public void AddCommand(ICommand<byte> command)
-        {
-            lock (cmdListLock)
-            {
-                if (!CommandList.ContainsKey(command.Code))
-                {
-                    CommandList.Add(command.Code, command);
-                }
+        //public void AddCommand(ICommand<byte> command)
+        //{
+        //    lock (cmdListLock)
+        //    {
+        //        if (!CommandList.ContainsKey(command.Code))
+        //        {
+        //            CommandList.Add(command.Code, command);
+        //        }
 
-            }
+        //    }
 
-        }
+        //}
         public void SendCommand(ICommand<byte> command)
         {
             lock (lockingOutbound)

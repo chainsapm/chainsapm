@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ChainsAPM.Classes
+namespace ChainsAPM.Models
 {
     public class StackItem
     {
@@ -32,13 +30,19 @@ namespace ChainsAPM.Classes
 
             if (stackitem.Depth == Depth + 1)
             {
-                if (stackitem.Type == ItemType.Entry) {
+                if (stackitem.Type == ItemType.Entry)
+                {
                     Children.Push(stackitem);
                 }
-                else {
+                else
+                {
                     var lastItem = Children.Last();
-                    lastItem.Elapsed = stackitem.OriginalTimeStamp - lastItem.OriginalTimeStamp;
-                    lastItem.Finished = DateTime.FromFileTimeUtc(stackitem.OriginalTimeStamp);
+                    if (stackitem.Id == lastItem.Id)
+                    {
+                        lastItem.Elapsed = stackitem.OriginalTimeStamp - lastItem.OriginalTimeStamp;
+                        lastItem.Finished = DateTime.FromFileTimeUtc(stackitem.OriginalTimeStamp);
+                    }
+
                 }
             }
             else
@@ -48,11 +52,11 @@ namespace ChainsAPM.Classes
                     // TODO Create a corrupted StackItem representation
                     // Push that corrupt item to the stack
                     // Update the stack Item
-                    
                 }
                 return Children.Last().UpdateStack(stackitem);
             }
             return true;
         }
+
     }
 }
