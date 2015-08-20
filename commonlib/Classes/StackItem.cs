@@ -15,7 +15,7 @@ namespace ChainsAPM.Classes
             Informational
         }
         public ItemType Type { get; set; }
-        public int Depth{ get; set; }
+        public int Depth { get; set; }
         public string Name { get; set; }
         public long Id { get; set; }
         public long OriginalTimeStamp { get; set; }
@@ -23,48 +23,35 @@ namespace ChainsAPM.Classes
         public DateTime Started { get; set; }
         public DateTime Finished { get; set; }
         public long Elapsed { get; set; }
-        public List<StackItem> Children { get; set; }
+        public Stack<StackItem> Children { get; set; }
         public StackItem CurrentChild { get; set; }
         public virtual bool UpdateStack(StackItem stackitem)
         {
+            if (Children == null)
+                Children = new Stack<StackItem>();
+
             if (stackitem.Depth == Depth + 1)
             {
-                if (Children == null)
-                {
-                    Children = new List<StackItem>();
-                    CurrentChild = stackitem;
-                    Children.Add(stackitem);
+                if (stackitem.Type == ItemType.Entry) {
+                    Children.Push(stackitem);
                 }
-                CurrentChild.UpdateStack(stackitem);
+                else {
+                    var lastItem = Children.Last();
+                    lastItem.Elapsed = stackitem.OriginalTimeStamp - lastItem.OriginalTimeStamp;
+                    lastItem.Finished = DateTime.FromFileTimeUtc(stackitem.OriginalTimeStamp);
+                }
             }
-            if (stackitem.Depth == Depth)
+            else
             {
-                if (stackitem.Type == ItemType.Exit)
+                if (Children.Last() == null)
                 {
-                    if (Id == stackitem.Id)
-                    {
-                        Finished = DateTime.FromFileTimeUtc(stackitem.OriginalTimeStamp);
-                        Elapsed = stackitem.OriginalTimeStamp - OriginalTimeStamp;
-                    }
-                }
-                if (stackitem.Type == ItemType.Entry)
-                {
-                    if (Children == null)
-                    {
-                        Children = new List<StackItem>();
-                        CurrentChild = stackitem;
-                        Children.Add(stackitem);
-                    } else
-                    {
-                        //if (CurrentChild)
-                        //{
-
-                        //}
-                    }
+                    // TODO Create a corrupted StackItem representation
+                    // Push that corrupt item to the stack
+                    // Update the stack Item
                     
                 }
+                return Children.Last().UpdateStack(stackitem);
             }
-            
             return true;
         }
     }

@@ -14,18 +14,14 @@ namespace ChainsAPM.Classes
 
         public override bool UpdateStack(StackItem stackitem)
         {
-            
-            if (stackitem.Type == ItemType.Entry)
-            {
-                stackitem.Depth = ++CurrentDepth;
-                if (Children == null)
-                {
-                    Children = new List<StackItem>();
 
-                }
-                CurrentChild.UpdateStack(stackitem);
-            }
-            return true;
+            if (stackitem.Type == ItemType.Entry)
+                ++CurrentDepth;
+            else if (stackitem.Type == ItemType.Exit)
+                --CurrentDepth;
+
+            stackitem.Depth = CurrentDepth;
+            return base.UpdateStack(stackitem);
         }
-    }
+}
 }
