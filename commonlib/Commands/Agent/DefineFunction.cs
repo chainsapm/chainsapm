@@ -9,6 +9,10 @@ namespace ChainsAPM.Commands.Agent
         public long ClassID { get; set; }
         public string FunctionName { get; set; }
         public DateTime TimeStamp { get; set; }
+
+        public DefineFunction() : this(0, 0, "", 0)
+        {
+        }
         public DefineFunction(long functionid, long classid, string functioname, long timestamp)
         {
             FunctionID = functionid;

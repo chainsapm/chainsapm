@@ -7,6 +7,10 @@ namespace ChainsAPM.Commands.Agent
     {
         public List<string> Functions { get; set; }
         public long ThreadID { get; set; }
+        public FunctionsToProfile()
+        {
+
+        }
         public FunctionsToProfile(List<string> functions)
         {
             Functions = functions;

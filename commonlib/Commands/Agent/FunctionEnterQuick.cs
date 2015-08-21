@@ -8,6 +8,13 @@ namespace ChainsAPM.Commands.Agent
         public long FunctionID { get; set; }
         public long ThreadID { get; set; }
         public DateTime TimeStamp { get; set; }
+
+        public FunctionEnterQuick() : this (0,0,0)
+        {
+
+        }
+
+
         public FunctionEnterQuick(long functionid, long threadid, long timestamp)
         {
             FunctionID = functionid;

@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Agent\Agent.cs" />
+    <Compile Include="Commands\Processor.cs" />
     <Compile Include="Config\AgentConfig.cs" />
     <Compile Include="Config\AgentGroupConfig.cs" />
     <Compile Include="Config\AggregatorConfig.cs" />
@@ -103,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Commands\Aggregator\" />
+    <Folder Include="Commands\Processors\" />
     <Folder Include="Commands\Server\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

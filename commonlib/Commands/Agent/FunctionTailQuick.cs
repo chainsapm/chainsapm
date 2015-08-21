@@ -10,6 +10,10 @@ namespace ChainsAPM.Commands.Agent
 
         public DateTime TimeStamp { get; set; }
 
+        public FunctionTailQuick() : this(0, 0, 0)
+        {
+
+        }
         public FunctionTailQuick(long functionid, long threadid, long timestamp)
         {
             FunctionID = functionid;

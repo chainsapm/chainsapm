@@ -18,6 +18,8 @@ namespace ChainsAPM.ConsoleServer
     {
         static void Main(string[] args)
         {
+            
+
             var s = new Server.Server(8080);
             s.ServerListening += new Server.ConnectionEvent(S_ServerListening);
             s.AgentConnected += S_AgentConnected;

@@ -11,6 +11,12 @@ namespace ChainsAPM.Commands.Common
         private Helpers.Fnv1a64 hashhelper;
 
         private byte[] m_hash;
+
+        public SendString() : this("")
+        {
+
+        }
+
         public SendString(string data)
         {
             m_string = data;

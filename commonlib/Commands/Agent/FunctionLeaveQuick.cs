@@ -10,6 +10,11 @@ namespace ChainsAPM.Commands.Agent
 
         public DateTime TimeStamp { get; set; }
 
+        public FunctionLeaveQuick() : this (0,0,0)
+        {
+
+        }
+
         public FunctionLeaveQuick(long functionid, long threadid, long timestamp)
         {
             FunctionID = functionid;

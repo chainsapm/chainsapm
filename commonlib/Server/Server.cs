@@ -1,7 +1,9 @@
-﻿using ChainsAPM.Communication.Tcp;
+﻿using ChainsAPM.Commands;
+using ChainsAPM.Communication.Tcp;
 using ChainsAPM.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
@@ -28,9 +30,11 @@ namespace ChainsAPM.Server
         public long ClientsConnected { get { return clientsConnected; } }
         public long MessagesReceived { get { return messagesRecvd; } }
 
-        private System.Net.Sockets.TcpListener tcpListen;
+        public ObservableCollection<Agent.Agent> ConnectedAgents { get; set; }
 
-        private Config.AgentConfig testAgentConfig;
+        
+
+        private System.Net.Sockets.TcpListener tcpListen;
 
         System.Threading.WaitCallback wCb;
 
@@ -38,25 +42,7 @@ namespace ChainsAPM.Server
         {
             wCb = new System.Threading.WaitCallback(TimerCallback);
 
-
-            Dictionary<int, ChainsAPM.Interfaces.ICommand<byte>> CommandList
-                = new Dictionary<int, ICommand<byte>>();
-
-            var cmd1 = new ChainsAPM.Commands.Common.SendString("");
-            var cmd2 = new ChainsAPM.Commands.Agent.FunctionEnterQuick(0, 0, 0);
-            var cmd3 = new ChainsAPM.Commands.Agent.FunctionLeaveQuick(0, 0, 0);
-            var cmd4 = new ChainsAPM.Commands.Agent.AgentInformation();
-            var cmd5 = new ChainsAPM.Commands.Agent.FunctionTailQuick(0, 0, 0);
-            var cmd6 = new ChainsAPM.Commands.Agent.DefineFunction(0, 0, "", 0);
-
-            CommandList.Add(cmd1.Code, cmd1);
-            CommandList.Add(cmd1.Code + 1, cmd1); // SendString handles Unicode and ASCII
-            CommandList.Add(cmd2.Code, cmd2);
-            CommandList.Add(cmd3.Code, cmd3);
-            CommandList.Add(cmd4.Code, cmd4);
-            CommandList.Add(cmd5.Code, cmd5);
-            CommandList.Add(cmd6.Code, cmd6);
-            CallContext.LogicalSetData("CommandProviders", CommandList);
+            
 
             System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.LowLatency;
         }
@@ -254,11 +240,12 @@ namespace ChainsAPM.Server
 
         private void tcbah_HasDataEvent(object sender)
         {
-            var tcbah = sender as Agent.Agent;
-            var stringCmd = new ChainsAPM.Commands.Common.SendString("Done!");
-            var arr = tcbah.ConnectionHandler.GetCommands();
+            var agent = sender as Agent.Agent;
+            var arr = agent.ConnectionHandler.GetCommands();
+            // set up command processor
             foreach (var item in arr)
             {
+                
                 System.Threading.Interlocked.Increment(ref messagesRecvd);
                 if (item != null)
                 {
@@ -271,36 +258,36 @@ namespace ChainsAPM.Server
 
                     if (item is ChainsAPM.Commands.Agent.AgentInformation)
                     {
-                        tcbah.AgentInfo = item as ChainsAPM.Commands.Agent.AgentInformation;
-                        tcbah.ConnectedTime = DateTime.Now;
+                        agent.AgentInfo = item as ChainsAPM.Commands.Agent.AgentInformation;
+                        agent.ConnectedTime = DateTime.Now;
                         if (AgentConnected != null)
-                            AgentConnected(tcbah.AgentInfo.AgentName, null);
+                            AgentConnected(agent.AgentInfo.AgentName, null);
                         var okCmd = new ChainsAPM.Commands.Common.SendString("OK!");
-                        tcbah.ConnectionHandler.SendCommand(okCmd);
+                        agent.ConnectionHandler.SendCommand(okCmd);
                     }
                     if (item is ChainsAPM.Commands.Agent.FunctionEnterQuick)
                     {
                         var feq = item as ChainsAPM.Commands.Agent.FunctionEnterQuick;
-                        if (!tcbah.ThreadDepth.ContainsKey(feq.ThreadID))
-                            tcbah.ThreadDepth.Add(feq.ThreadID, 0);
+                        if (!agent.ThreadDepth.ContainsKey(feq.ThreadID))
+                            agent.ThreadDepth.Add(feq.ThreadID, 0);
 
-                        if (!tcbah.ThreadEntryPointStack.ContainsKey(feq.ThreadID))
-                            tcbah.ThreadEntryPointStack.Add(feq.ThreadID,
+                        if (!agent.ThreadEntryPointStack.ContainsKey(feq.ThreadID))
+                            agent.ThreadEntryPointStack.Add(feq.ThreadID,
                                 new Stack<ChainsAPM.Models.EntryPoint>());
                         else
                         {
                             if (true)
                             {
-                                tcbah.ThreadEntryPointStack[feq.ThreadID].Last();
+                                agent.ThreadEntryPointStack[feq.ThreadID].Last();
                             }
-                            tcbah.ThreadEntryPointStack[feq.ThreadID].Push(
+                            agent.ThreadEntryPointStack[feq.ThreadID].Push(
                                 new ChainsAPM.Models.EntryPoint()
                                 {
                                     CurrentDepth = 0,
                                     Id = feq.FunctionID,
                                     OriginalTimeStamp = feq.TimeStamp.ToFileTimeUtc(),
                                     //TODO RELPACE WITH METHOD LIST
-                                    //Name = tcbah.FunctionList[feq.FunctionID],
+                                    //Name = agent.FunctionList[feq.FunctionID],
                                     Type = Models.StackItem.ItemType.Entry
 
                                 });
@@ -311,36 +298,37 @@ namespace ChainsAPM.Server
                 if (item is ChainsAPM.Commands.Agent.FunctionLeaveQuick)
                 {
                     var feq = item as ChainsAPM.Commands.Agent.FunctionLeaveQuick;
-                    if (!tcbah.ThreadDepth.ContainsKey(feq.ThreadID))
-                        tcbah.ThreadDepth.Add(feq.ThreadID, 0);
+                    if (!agent.ThreadDepth.ContainsKey(feq.ThreadID))
+                        agent.ThreadDepth.Add(feq.ThreadID, 0);
 
-                    if (tcbah.ThreadDepth[feq.ThreadID] > 0)
+                    if (agent.ThreadDepth[feq.ThreadID] > 0)
                     {
-                        tcbah.ThreadDepth[feq.ThreadID]--;
+                        agent.ThreadDepth[feq.ThreadID]--;
                     }
 
-                    if (tcbah.ThreadDepth[feq.ThreadID] == 0)
+                    if (agent.ThreadDepth[feq.ThreadID] == 0)
                     {
                         using (var fw = new System.IO.StreamWriter(string.Format(@"C:\LogFiles\{0}_T{1}.txt", DateTime.Now.Ticks, feq.ThreadID)))
                         {
-                            foreach (var StackItem in tcbah.ThreadEntryPointStack[feq.ThreadID])
+                            foreach (var StackItem in agent.ThreadEntryPointStack[feq.ThreadID])
                             {
                                 // TODO FIX THIS TO PROPERLY UPDATE THE EXIT
                                 //fw.WriteLine("{0}{1}", "".PadLeft((int)StackItem.Item1, ' '), StackItem.Item2);
                             }
                         }
-                        tcbah.ThreadDepth.Remove(feq.ThreadID);
+                        agent.ThreadDepth.Remove(feq.ThreadID);
                     }
 
                 }
                 if (item is ChainsAPM.Commands.Common.SendString)
                 {
                     var it = item as ChainsAPM.Commands.Common.SendString;
-                    Console.WriteLine("Agent {0} has sent string {1}", tcbah.AgentInfo.AgentName, it.StringData);
+                    Console.WriteLine("Agent {0} has sent string {1}", agent.AgentInfo.AgentName, it.StringData);
                     if (((ChainsAPM.Commands.Common.SendString)item).StringData == "Done!")
                     {
-                        tcbah.ConnectionHandler.SendCommand(stringCmd);
-                        tcbah.ConnectionHandler.Dispose();
+                        //TODO add in proper shutdown commands
+                        //agent.ConnectionHandler.SendCommand(stringCmd);
+                        agent.ConnectionHandler.Dispose();
                     }
                 }
             }

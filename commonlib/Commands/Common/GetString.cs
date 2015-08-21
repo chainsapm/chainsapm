@@ -2,9 +2,14 @@
 
 namespace ChainsAPM.Commands.Common
 {
-    class GetString : Interfaces.ICommand<byte>
+    class GetString // : Interfaces.ICommand<byte>
 
     {
+        public GetString() 
+        {
+
+        }
+
         public string Name
         {
             get { throw new NotImplementedException(); }

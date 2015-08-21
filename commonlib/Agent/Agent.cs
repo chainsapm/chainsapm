@@ -1,4 +1,5 @@
-﻿using ChainsAPM.Commands.Agent;
+﻿using ChainsAPM.Commands;
+using ChainsAPM.Commands.Agent;
 using ChainsAPM.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -18,10 +19,16 @@ namespace ChainsAPM.Agent
         public DateTime ConnectedTime { get; set; }
         public DateTime DisconnectedTime { get; set; }
 
+        public Processor CommandProcessor { get; private set; }
+
         private Agent()
         {
             ThreadDepth = new Dictionary<long, long>();
             ThreadEntryPointStack = new Dictionary<long, Stack<Models.EntryPoint>>();
+
+            CommandProcessor = new Processor();
+
+            CommandProcessor.CreateList();
         }
 
         public Agent(IConnectionHandler connectionHandler)
