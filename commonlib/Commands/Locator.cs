@@ -8,15 +8,13 @@ using System.Threading.Tasks;
 
 namespace ChainsAPM.Commands
 {
-    public class Processor
+    public class ByteCommandLocator : ICommandLocator<byte>
     {
         private Dictionary<int, ICommand<byte>> CommandList;
 
-        public Processor()
+        public ByteCommandLocator()
         {
             CommandList = new Dictionary<int, ICommand<byte>>();
-
-           
         }
 
         public void CreateList()
@@ -32,14 +30,24 @@ namespace ChainsAPM.Commands
                     ICommand<byte> cmd = Activator.CreateInstance(item) as ICommand<byte>;
                     CommandList.Add(cmd.Code, cmd);
                 }
-
-                CallContext.LogicalSetData("CommandProviders", CommandList);
             }
             catch (Exception)
             {
                 // TODO Logging
                 throw;
             }
+        }
+
+        public ICommand<byte> ProcessCommands(ICommand<byte> command)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ICommand<byte> ProcessData(ArraySegment<byte> command)
+        {
+            var size = BitConverter.ToInt32(command.Array, command.Offset);
+            var code = command.Array[command.Offset + 4];
+            return CommandList[code].Decode(command);
         }
     }
 }

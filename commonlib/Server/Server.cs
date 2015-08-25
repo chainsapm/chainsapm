@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,26 +14,26 @@ namespace ChainsAPM.Server
 {
     public delegate void ConnectionEvent(string ConnectionName, System.Net.EndPoint endpoint);
 
-    public class Server
+    public class Server : IServerEvents, IAgentEvents
     {
         object lockConsole = new object();
 
-        static System.Collections.Concurrent.ConcurrentDictionary<int, Agent.Agent> concurrentAgentHandlerList =
-          new System.Collections.Concurrent.ConcurrentDictionary<int, Agent.Agent>();
+        private System.Collections.Concurrent.ConcurrentDictionary<long, Agent.Agent> concurrentAgentHandlerList;
+
 
         long clientsConnected = 0;
         long messagesRecvd = 0;
 
         public event ConnectionEvent ServerListening;
+        public event ConnectionEvent ServerShutdown;
+
         public event ConnectionEvent AgentConnected;
         public event ConnectionEvent AgentDisconnected;
 
         public long ClientsConnected { get { return clientsConnected; } }
         public long MessagesReceived { get { return messagesRecvd; } }
 
-        public ObservableCollection<Agent.Agent> ConnectedAgents { get; set; }
 
-        
 
         private System.Net.Sockets.TcpListener tcpListen;
 
@@ -41,11 +42,10 @@ namespace ChainsAPM.Server
         private Server()
         {
             wCb = new System.Threading.WaitCallback(TimerCallback);
-
-            
-
+            concurrentAgentHandlerList = new System.Collections.Concurrent.ConcurrentDictionary<long, Agent.Agent>();
             System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.LowLatency;
         }
+
 
         public Server(int port) : this(System.Net.IPAddress.Any, port)
         {
@@ -73,6 +73,8 @@ namespace ChainsAPM.Server
         public void Stop()
         {
             tcpListen.Stop();
+
+
         }
 
         private void TurnOnGCNotification()
@@ -151,48 +153,36 @@ namespace ChainsAPM.Server
 
         async private void TimerCallback(object objt)
         {
+            var tcpListen = objt as System.Net.Sockets.TcpListener;
+            tcpListen.Server.UseOnlyOverlappedIO = true;
             while (true)
             {
                 try
                 {
-                    var tcpListen = objt as System.Net.Sockets.TcpListener;
-                    var listenList = new List<Task<System.Net.Sockets.TcpClient>>();
-                    tcpListen.Server.UseOnlyOverlappedIO = true;
-                    while (tcpListen.Pending())
+
+                    await tcpListen.AcceptTcpClientAsync()
+                        .ContinueWith(async (tClient) =>
                     {
-                        listenList.Add(tcpListen.AcceptTcpClientAsync());
-                    }
-                    bool restart = false;
-                    for (int i = 0; i < listenList.Count; i++)
-                    {
-                        var item = listenList[i];
-                        var listen = await item;
+                        var client = await tClient;
                         System.Threading.Interlocked.Increment(ref clientsConnected);
-                        if (item.IsCompleted)
+                        Agent.Agent agent = new Agent.Agent(new TcpByteAgentHandler(new TcpByteTransport(client), TcpByteAgentHandler.HandlerType.ReceiveHeavy), this);
+                        concurrentAgentHandlerList.GetOrAdd(agent.GetHashCode(), agent);
+                        agent.AgentSubscription.Subscribe(ag =>
                         {
-                            Agent.Agent tcbah = new Agent.Agent(new TcpByteAgentHandler(new TcpByteTransport(listen), TcpByteAgentHandler.HandlerType.ReceiveHeavy));
-
-                            tcbah.ConnectionHandler.HasData += tcbah_HasDataEvent;
-                            tcbah.ConnectionHandler.Disconnected += tcbah_Disconnected;
-                            concurrentAgentHandlerList.GetOrAdd(tcbah.GetHashCode(), tcbah);
-                        }
-
-                        if (i == listenList.Count - 1 && restart == true)
-                        {
-                            i = 0;
-                            restart = false;
-                        }
-                    }
-
+                            ag = ag as Agent.Agent;
+                            Console.WriteLine("Agent {0} Connected from {1}.", ag.AgentInfo.AgentName, ag.AgentInfo.MachineName);
+                        });
+                    });
+                   
                 }
                 catch (Exception)
                 {
-                    throw;
+                    break;
+                    //TODO Log fatal exception
                 }
                 finally
                 {
                 }
-                System.Threading.Thread.Sleep(10);
             }
 
         }
@@ -201,14 +191,14 @@ namespace ChainsAPM.Server
         {
 
             System.Threading.Interlocked.Decrement(ref clientsConnected);
-            var tcbah = sender as Agent.Agent;
+            var agent = sender as Agent.Agent;
             lock (lockConsole)
             {
-                tcbah.DisconnectedTime = DateTime.Now;
-                Console.WriteLine("Agent {0} disconnected. It was connected for {1}", tcbah.AgentInfo.AgentName, (tcbah.DisconnectedTime - tcbah.ConnectedTime));
+                agent.DisconnectedTime = DateTime.Now;
+                Console.WriteLine("Agent {0} disconnected. It was connected for {1}", agent.AgentInfo.AgentName, (agent.DisconnectedTime - agent.ConnectedTime));
             }
 
-            var fstream = System.IO.File.CreateText(string.Format(@"C:\Logfiles\{0}_{1}.txt", tcbah.AgentInfo.AgentName, tcbah.ConnectedTime.ToFileTime()));
+            var fstream = System.IO.File.CreateText(string.Format(@"C:\Logfiles\{0}_{1}.txt", agent.AgentInfo.AgentName, agent.ConnectedTime.ToFileTime()));
             // TODO FIX THIS TO INCLUDE THE PROPER ENTRYPOINTS AND METHOD LIST
             //foreach (var item in tcbah.ThreadEntryPoint)
             //{
@@ -222,17 +212,18 @@ namespace ChainsAPM.Server
             fstream.Flush();
             fstream.Close();
             Agent.Agent refOut = null;
-            concurrentAgentHandlerList.TryRemove(tcbah.GetHashCode(), out refOut);
+            concurrentAgentHandlerList.TryRemove(agent.GetHashCode(), out refOut);
+
             if (refOut != null)
             {
                 lock (lockConsole)
                 {
-                    Console.WriteLine("<<<<Agent {0} removed from list.", tcbah.AgentInfo.AgentName);
+                    Console.WriteLine("<<<<Agent {0} removed from list.", agent.AgentInfo.AgentName);
                 }
                 Task.Factory.StartNew(async () =>
                 {
                     await Task.Delay(30000);
-                    tcbah.ConnectionHandler.Disconnect();
+                    agent.ConnectionHandler.Disconnect();
                 });
             }
 
@@ -245,7 +236,7 @@ namespace ChainsAPM.Server
             // set up command processor
             foreach (var item in arr)
             {
-                
+
                 System.Threading.Interlocked.Increment(ref messagesRecvd);
                 if (item != null)
                 {

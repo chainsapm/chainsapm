@@ -51,6 +51,22 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Interfaces.2.2.5\lib\net45\System.Reactive.Interfaces.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Linq, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Linq.2.2.5\lib\net45\System.Reactive.Linq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-PlatformServices.2.2.5\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -59,7 +75,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Agent\Agent.cs" />
-    <Compile Include="Commands\Processor.cs" />
+    <Compile Include="Commands\Agent\ByteListing.cs" />
+    <Compile Include="Commands\Agent\StringList.cs" />
+    <Compile Include="Commands\Locator.cs" />
     <Compile Include="Config\AgentConfig.cs" />
     <Compile Include="Config\AgentGroupConfig.cs" />
     <Compile Include="Config\AggregatorConfig.cs" />
@@ -70,6 +88,8 @@
     <Compile Include="Config\ResourceConfig.cs" />
     <Compile Include="Config\ResourceGroupConfig.cs" />
     <Compile Include="Config\ServerConfig.cs" />
+    <Compile Include="Interfaces\IAgentEvents.cs" />
+    <Compile Include="Interfaces\IServerEvents.cs" />
     <Compile Include="Models\Application.cs" />
     <Compile Include="Models\Assembly.cs" />
     <Compile Include="Models\Class.cs" />
@@ -92,7 +112,7 @@
     <Compile Include="Helpers\ArraySegmentStream.cs" />
     <Compile Include="Helpers\FNV1a.cs" />
     <Compile Include="Interfaces\ICommand.cs" />
-    <Compile Include="Interfaces\ICommandProcessor.cs" />
+    <Compile Include="Interfaces\ICommandLocator.cs" />
     <Compile Include="Interfaces\IConnectionHandler.cs" />
     <Compile Include="Interfaces\IPacketAssembler.cs" />
     <Compile Include="Interfaces\IPacketDisassembler.cs" />
@@ -106,6 +126,9 @@
     <Folder Include="Commands\Aggregator\" />
     <Folder Include="Commands\Processors\" />
     <Folder Include="Commands\Server\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

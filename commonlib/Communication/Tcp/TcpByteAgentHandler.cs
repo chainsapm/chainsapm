@@ -17,11 +17,9 @@ namespace ChainsAPM.Communication.Tcp
             Balanced
         }
         
-       
 
-        private Dictionary<int, Interfaces.ICommand<byte>> CommandList;
         private object cmdListLock;
-
+        private ICommandLocator<byte> CommandLocator;
        
 
         private ITransport<byte[]> m_PacketHandler;
@@ -62,11 +60,7 @@ namespace ChainsAPM.Communication.Tcp
             chunkList = new List<byte>(MAX_SENDBUFFER);
             int sendTimerInterval = 250;
             int recvTimerInterval = 250;
-            CommandList = CallContext.LogicalGetData("CommandProviders") as Dictionary<int, Interfaces.ICommand<byte>>;
             cmdListLock = new object();
-
-         
-
 
             switch (handType)
             {
@@ -81,28 +75,7 @@ namespace ChainsAPM.Communication.Tcp
                 default:
                     break;
             }
-            sendTimer = new System.Threading.Timer(new System.Threading.TimerCallback(async (object o) =>
-            {
-                if (!inSend)
-                {
-                    inSend = true;
-                    await SendData();
-                    inSend = false;
-                }
-
-
-            }), null, sendTimerInterval, sendTimerInterval);
-
-            recvTimer = new System.Threading.Timer(new System.Threading.TimerCallback(async (object o) =>
-            {
-                if (!inRecv)
-                {
-                    inRecv = true;
-                    await RecvData();
-                    ExtractData();
-                    inRecv = false;
-                }
-            }), null, recvTimerInterval, recvTimerInterval);
+            
         }
 
         public void PauseTimers()
@@ -237,19 +210,7 @@ namespace ChainsAPM.Communication.Tcp
                 }
             }
         }
-
-        //public void AddCommand(ICommand<byte> command)
-        //{
-        //    lock (cmdListLock)
-        //    {
-        //        if (!CommandList.ContainsKey(command.Code))
-        //        {
-        //            CommandList.Add(command.Code, command);
-        //        }
-
-        //    }
-
-        //}
+    
         public void SendCommand(ICommand<byte> command)
         {
             lock (lockingOutbound)
@@ -268,9 +229,7 @@ namespace ChainsAPM.Communication.Tcp
             }
             if (command != null)
             {
-                var size = BitConverter.ToInt32(command.Array, command.Offset);
-                var code = command.Array[command.Offset + 4];
-                return CommandList[code].Decode(command);
+                return CommandLocator.ProcessData(command);
             }
             return null;
 
@@ -301,9 +260,7 @@ namespace ChainsAPM.Communication.Tcp
 
                     if (command != null)
                     {
-                        var size = BitConverter.ToInt32(command.Array, command.Offset);
-                        var code = command.Array[command.Offset + 4];
-                        outList.Add(CommandList[code].Decode(command));
+                        outList.Add(CommandLocator.ProcessData(command));
                     }
                 }
             }
@@ -451,6 +408,37 @@ namespace ChainsAPM.Communication.Tcp
         public void Sent()
         {
             throw new NotImplementedException();
+        }
+
+        public void SetProcessor(ICommandLocator<byte> processor)
+        {
+            CommandLocator = processor;
+        }
+
+        public void Start()
+        {
+            sendTimer = new System.Threading.Timer(new System.Threading.TimerCallback(async (object o) =>
+            {
+                if (!inSend)
+                {
+                    inSend = true;
+                    await SendData();
+                    inSend = false;
+                }
+
+
+            }), null, sendTimerInterval, sendTimerInterval);
+
+            recvTimer = new System.Threading.Timer(new System.Threading.TimerCallback(async (object o) =>
+            {
+                if (!inRecv)
+                {
+                    inRecv = true;
+                    await RecvData();
+                    ExtractData();
+                    inRecv = false;
+                }
+            }), null, recvTimerInterval, recvTimerInterval);
         }
     }
 }

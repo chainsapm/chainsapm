@@ -17,7 +17,9 @@ namespace ChainsAPM.Interfaces
         ICommand<byte>[] GetCommands();
         ICommand<byte> GetCommand();
 
+        void SetProcessor(ICommandLocator<byte> processor);
 
+        void Start();
         bool Disconnect();
         bool Recycle();
         bool Flush();

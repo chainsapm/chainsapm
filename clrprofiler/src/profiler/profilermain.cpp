@@ -696,7 +696,7 @@ STDMETHODIMP Cprofilermain::DoWeProfile()
 		gotValue = RegGetValue(HKEY_LOCAL_MACHINE, currentKey.data(), L"Server", RRF_RT_ANY | RRF_ZEROONFAILURE, nullptr, BufferForStrings, &BufferSize);
 		if (gotValue == S_OK)
 		{
-			if (BufferForStrings == NULL)
+			if (BufferForStrings != NULL)
 			{
 				IsAMatch = true;
 				m_ServerName.insert(0, BufferForStrings, (BufferSize / 2));
@@ -1559,17 +1559,17 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 				moduleInfo.m_mdEnterProbeRef,
 				moduleInfo.m_mdExitProbeRef);
 
-			/*FILETIME HighPrecisionFileTime{ 0 };
+			FILETIME HighPrecisionFileTime{ 0 };
 			GetSystemTimeAsFileTime(&HighPrecisionFileTime);
 			__int64 timestamp = (((__int64)HighPrecisionFileTime.dwHighDateTime) << 32) + HighPrecisionFileTime.dwLowDateTime;
-*/
+
 			ModInfoFunctionMap mifm;
 			mifm.m_ClassDef = methodDef;
 			mifm.m_ModuleID = moduleID;
 			m_ModFuncMap.emplace(mifm, functionID);
 
-			/*auto defp = new Commands::DefineFunction(functionID, classID, wszMethodDefName, timestamp);
-			tp->SendEvent<Commands::DefineFunction>(defp);*/
+			auto defp = new Commands::DefineFunction(functionID, classID, wszMethodDefName, timestamp);
+			tp->SendEvent<Commands::DefineFunction>(defp);
 
 		}
 
@@ -2197,16 +2197,6 @@ void Cprofilermain::NtvEnteredFunction(unsigned __int64 moduleIDCur, mdMethodDef
 {
 	UNREFERENCED_PARAMETER(nVersionCur);
 	ModuleInfo moduleInfo = m_moduleIDToInfoMap.Lookup(moduleIDCur);
-	//WCHAR wszTypeDefName[512];
-	//WCHAR wszMethodDefName[512];
-	//GetClassAndFunctionNamesFromMethodDef(
-	//	moduleInfo.m_pImport,
-	//	moduleIDCur,
-	//	mdCur,
-	//	wszTypeDefName,
-	//	_countof(wszTypeDefName),
-	//	wszMethodDefName,
-	//	_countof(wszMethodDefName));
 
 	ThreadID threadId = 0;
 	{

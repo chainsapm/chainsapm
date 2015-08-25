@@ -21,15 +21,24 @@ namespace ChainsAPM.ConsoleServer
             
 
             var s = new Server.Server(8080);
+            
             s.ServerListening += new Server.ConnectionEvent(S_ServerListening);
             s.AgentConnected += S_AgentConnected;
 
 
             s.Start();
 
+
+            var sIPV6 = new Server.Server(System.Net.IPAddress.IPv6Any, 8080);
+            sIPV6.ServerListening += new Server.ConnectionEvent(S_ServerListening);
+            sIPV6.AgentConnected += S_AgentConnected;
+
+
+            sIPV6.Start();
             Console.ReadLine();
 
             s.Stop();
+            sIPV6.Stop();
         }
 
         private static void S_AgentConnected(string ConnectionName, System.Net.EndPoint endpoint)

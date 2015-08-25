@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+
 
 namespace ChainsAPM.Config
 {
-    public class AgentConfig
+    public class AgentConfig 
     {
         public AgentGroupConfig ParentAgentGroup { get; set; }
         public Dictionary<long,  Models.Method> MethodList{ get; set; }
@@ -15,5 +17,6 @@ namespace ChainsAPM.Config
             }
             return ParentAgentGroup.IsMethodEntryPoint(methodid);
         }
+
     }
 }

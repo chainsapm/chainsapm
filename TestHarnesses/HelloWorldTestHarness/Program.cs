@@ -29,7 +29,7 @@ namespace HelloWorldTestHarness
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             var env = Environment.GetEnvironmentVariable("COR_ENABLE_PROFILING");
             sw.Start();
-            System.IO.TextWriter tw = new System.IO.StreamWriter(@"C:\Logfiles\logfile.txt", true);
+            System.IO.TextWriter tw = new System.IO.StreamWriter(string.Format(@"C:\Logfiles\logfile_{0}.txt", System.Diagnostics.Process.GetCurrentProcess().Id), true);
             var StopTime = DateTime.Now.AddSeconds(5);
             System.Threading.Thread.CurrentThread.Name = "Main";
             int loops = 0;

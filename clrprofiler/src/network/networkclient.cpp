@@ -33,11 +33,55 @@ NetworkClient::NetworkClient(std::wstring hostName, std::wstring port)
 	WORD wVersionRequested = MAKEWORD(2, 2);
 	WSADATA wsaData;
 	WSAStartup(wVersionRequested, &wsaData);
-	NetworkClient::m_SocketConnection = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, WSA_FLAG_OVERLAPPED);
-	timeval t;
-	t.tv_sec = 2;
-	// Just connect to the 
-	WSAConnectByName(NetworkClient::m_SocketConnection, (LPWSTR)m_HostName.c_str(), (LPWSTR)m_HostPort.c_str(), NULL, NULL, NULL, NULL, &t, NULL);
+	NetworkClient::m_SocketConnection = WSASocket(AF_INET6, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, WSA_FLAG_OVERLAPPED);
+	if (NetworkClient::m_SocketConnection != INVALID_SOCKET)
+	{
+		DWORD ipv6only = 0;
+		int retval = setsockopt(NetworkClient::m_SocketConnection, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&ipv6only, sizeof(ipv6only));
+		if (retval == SOCKET_ERROR)
+		{
+			fprintf(stdout, "Error setting SOCKET OPTION for IPV6_ONLY");
+			OutputDebugString(L"Error setting SOCKET OPTION for IPV6_ONLY");
+		}
+		else {
+			timeval t;
+			t.tv_sec = 2;
+			fprintf(stdout, "Connecting to %S on port %S\n", m_HostName.c_str(), m_HostPort.c_str());
+			ADDRINFOW *ptr = NULL;
+			LPSOCKADDR sockaddr_ip = NULL;
+			sockaddr_in * sockaddr_ipv4 = NULL;
+			sockaddr_in6 * sockaddr_ipv6 = NULL;
+			DWORD ipbufferlength = 46;
+			wchar_t ipstringbuffer[46];
+			GetAddrInfo(m_HostName.c_str(), NULL, NULL, &ptr);
+			while (ptr != NULL)
+			{
+				switch (ptr->ai_family) {
+				case AF_UNSPEC:
+					fprintf(stdout, "Unspecified\n");
+					break;
+				case AF_INET:
+					printf("AF_INET (IPv4)");
+					sockaddr_ipv4 = (struct sockaddr_in *) ptr->ai_addr;
+					fprintf(stdout, "\tIPv4 address %S\n",
+						InetNtop(AF_INET, &sockaddr_ipv4->sin_addr, ipstringbuffer, ipbufferlength));
+					break;
+				case AF_INET6:
+					printf("AF_INET6 (IPv6)");
+					sockaddr_ipv6 = (struct sockaddr_in6 *) ptr->ai_addr;
+					printf("\tIPv6 address %S\n",
+						InetNtop(AF_INET6, &sockaddr_ipv6->sin6_addr, ipstringbuffer, ipbufferlength));
+					break;
+
+				}
+				ptr = ptr->ai_next;
+
+			}
+			WSAConnectByName(NetworkClient::m_SocketConnection, (LPWSTR)m_HostName.c_str(), (LPWSTR)m_HostPort.c_str(), NULL, NULL, NULL, NULL, &t, NULL);
+
+		}
+	}
+
 
 }
 
@@ -164,7 +208,7 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 			cshFQ.leave_early();
 		}
 
-		
+
 		auto cshBQ = critsec_helper::critsec_helper(&netClient->BackOutboundLock);
 		size_t buffersize = netClient->m_OutboundQueueBack.size() + 2;
 		bufs = new WSABUF[buffersize];
@@ -314,7 +358,7 @@ VOID CALLBACK NetworkClient::IoCompletionCallback(
 		try
 		{
 			SetEventWhenCallbackReturns(Instance, NetworkClient::DataReceived);
-			
+
 		}
 		catch (...)
 		{
@@ -328,7 +372,7 @@ VOID CALLBACK NetworkClient::IoCompletionCallback(
 		lpOverlapped->sendqueue->clear();
 		delete lpOverlapped->sendqueue;
 	}
-	
+
 
 }
 
