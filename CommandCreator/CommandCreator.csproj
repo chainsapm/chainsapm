@@ -71,6 +71,11 @@
       <DependentUpon>CommandGeneratorH.tt</DependentUpon>
     </Compile>
     <Compile Include="NetworkCommand.cs" />
+    <Compile Include="SnippetIncludes.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SnippetIncludes.tt</DependentUpon>
+    </Compile>
     <Compile Include="TemplateHPartial.cs" />
     <Compile Include="TemplateCppPartial.cs" />
     <Compile Include="TemplateCSPartial.cs" />
@@ -133,6 +138,10 @@
     <Content Include="CommandGeneratorH.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>CommandGeneratorH.cs</LastGenOutput>
+    </Content>
+    <Content Include="SnippetIncludes.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>SnippetIncludes.cs</LastGenOutput>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

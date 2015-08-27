@@ -437,6 +437,37 @@ namespace CommandCreator {
                 [DataMember]
                 public bool? IsArray { get; set; }
 
+
+                public string CppTypeName (Dictionary<string, string> typemap) {
+
+                        var transformedtype = TypeName;
+                        if ( typemap.ContainsKey(TypeName)) {
+                                transformedtype = typemap [TypeName];
+                        }
+
+                        if ( IsList == true ) {
+                                return string.Format ("std::vector<{0}>", transformedtype);
+                        }
+                        if ( IsArray == true ) {
+                                return string.Format ("{0}[]", transformedtype);
+                        }
+                        return string.Format ("{0}", transformedtype);
+                }
+
+                public string CsTypeName (Dictionary<string, string> typemap) {
+
+                        var transformedtype = TypeName;
+                        if ( typemap.ContainsKey (TypeName) ) {
+                                transformedtype = typemap [TypeName];
+                        }
+                        if ( IsList == true ) {
+                                return string.Format ("List<{0}>", transformedtype);
+                        }
+                        if ( IsArray == true ) {
+                                return string.Format ("{0}[]", transformedtype);
+                        }
+                        return string.Format ("{0}", transformedtype);
+                }
                 public override string ToString () {
                         if ( IsList == true ) {
                                 return string.Format ("List<{0}> {1}", TypeName, Name);

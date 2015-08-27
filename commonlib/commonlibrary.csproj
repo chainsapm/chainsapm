@@ -75,7 +75,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Agent\Agent.cs" />
-    <Compile Include="Commands\Agent\ByteListing.cs" />
     <Compile Include="Commands\Agent\StringList.cs" />
     <Compile Include="Commands\Locator.cs" />
     <Compile Include="Config\AgentConfig.cs" />

@@ -34,10 +34,10 @@ namespace ChainsAPM.Commands.<#= this.Namespace #>
 { #>
 <# if (enumn.Items.Last().Name != enumItem.Name)
 { #>
-            <#= enumItem.Name #> = <#= enumItem.Value.ToString("x8") #>,
+            <#= enumItem.Name #> = 0x<#= enumItem.Value.ToString("x8") #>,
 <#
 } else { #>
-            <#= enumItem.Name #> = <#= enumItem.Value.ToString("x8") #>
+            <#= enumItem.Name #> = 0x<#= enumItem.Value.ToString("x8") #>
 <# } #>
 <# } #>
         }
@@ -140,7 +140,7 @@ if (cpItem.IsList == true | cpItem.IsArray == true) { #>
                     {
                         throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
                     }
-                    return new <#= this.ClassName #>(timestamp, <# foreach (var cpItem in this.ClassProperties) { if(cpItem.IsList == true) { #>listOf<# } else if (cpItem.IsArray == true) { #>arayOf<# } else { #>decode<# } #><#= cpItem.Name #><# if (this.ClassProperties.Last().Name != cpItem.Name) { #>, <# } else { } } #>);
+                    return new <#= this.ClassName #>(timestamp, <# foreach (var cpItem in this.ClassProperties) { if(cpItem.IsList == true) { #>listOf<# } else if (cpItem.IsArray == true) { #>arrayOf<# } else { #>decode<# } #><#= cpItem.Name #><# if (this.ClassProperties.Last().Name != cpItem.Name) { #>, <# } else { } } #>);
                     }
                     else
                     {
@@ -170,25 +170,25 @@ if (cpItem.IsList == true) { #>
 <# if (cpItem.IsList == true) { #>
             foreach (var sItem in <#= cpItem.Name #>)
             {
-               byteSize += 4; // Length Bytes
-               byteSize += 4; // Hash Bytes
+               byteSize += sizeof(System.Int32); // Length Bytes
+               byteSize += sizeof(System.Int64); // Hash Bytes
                byteSize += sItem.Length; // StringLength Bytes
             }
 <# } else { #>
-            byteSize += 4; // Length Bytes
-            byteSize += 8; // Hash Bytes
-            byteSize += sizeof(<#= cpItem.Name #>).Length; // StringLength Bytes
+            byteSize += sizeof(System.Int32); // Length Bytes
+            byteSize += sizeof(System.Int64); // Hash Bytes
+            byteSize += <#= cpItem.Name #>.Length; // StringLength Bytes
 <# } #>
 <# } else if (typeName == typeof(Int32).FullName) { #>
-            byteSize += sizeof(<#= typeName #>)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Count<# } #>;
+            byteSize += sizeof(<#= typeName #>)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Length<# } #>;
 <# } else if (typeName == typeof(Int16).FullName) { #>
-            byteSize += sizeof(<#= typeName #>)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Count<# } #>;
+            byteSize += sizeof(<#= typeName #>)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Length<# } #>;
 <# } else if (typeName == typeof(Int64).FullName) { #>
-            byteSize += sizeof(<#= typeName #>)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Count<# } #>;
+            byteSize += sizeof(<#= typeName #>)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Length<# } #>;
 <# } else if (typeName == typeof(byte).FullName) { #>
-            byteSize += sizeof(<#= typeName #>)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Count<# } #>;
+            byteSize += sizeof(<#= typeName #>)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Length<# } #>;
 <# } else { #>
-            byteSize += sizeof(Int32)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Count<# } #>;
+            byteSize += sizeof(Int32)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Length<# } #>;
 <# } #>
 <# } #>
             var buffer = new List<byte>(byteSize);
@@ -198,11 +198,11 @@ if (cpItem.IsList == true) { #>
 <# foreach (var cpItem in this.ClassProperties) {
 string typeName = "";
 if (TypeMapping.ContainsKey(cpItem.TypeName)) { typeName = TypeMapping[cpItem.TypeName].ToString(); } else { typeName = cpItem.TypeName.ToString(); }
-if (cpItem.IsList == true | cpItem.IsArray == true) { #>
+if ((cpItem.IsList == true | cpItem.IsArray == true) && typeName != typeof(byte).FullName) { #>
 <# if (cpItem.IsList == true) { #>
-            buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>.Count)); // Length of Array
+            buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>.Count)); // Count of List
 <# } else { #>
-			buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>.Count)); // Length of Array
+			buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>.Length)); // Length of Array
 <# } #>
             foreach (var <#= cpItem.Name #>_item in <#= cpItem.Name #>)
             {
@@ -218,13 +218,6 @@ if (cpItem.IsList == true | cpItem.IsArray == true) { #>
 <# } else if (typeName == typeof(Int64).FullName) { #>
             buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>_item)); 
 <# } else if (typeName == typeof(byte).FullName) { #>
-<# if (cpItem.IsList == true) { #>
-            buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>_item));  // Length of Array
-<# } else { #>
-			buffer.AddRange(<#= cpItem.Name #>_item); // Length of Array
-			break;
-<# } #>
-            
 <# } else { #>
                 buffer.AddRange(BitConverter.GetBytes((int)<#= cpItem.Name #>_item)); 
 <# } #>
@@ -232,10 +225,10 @@ if (cpItem.IsList == true | cpItem.IsArray == true) { #>
 
 <# } else { #>
 <# if (typeName == typeof(string).FullName) { #>
-			var sBuffer<#= cpItem.Name #>_item = System.Text.UnicodeEncoding.Unicode.GetBytes(<#= cpItem.Name #>_item);
-            buffer.AddRange(BitConverter.GetBytes(sBuffer<#= cpItem.Name #>_item.Length));
-			buffer.AddRange(hashhelper.ComputeHash(sBuffer<#= cpItem.Name #>_item));
-			buffer.AddRange(sBuffer<#= cpItem.Name #>_item)); 
+			var sBuffer<#= cpItem.Name #> = System.Text.UnicodeEncoding.Unicode.GetBytes(<#= cpItem.Name #>);
+            buffer.AddRange(BitConverter.GetBytes(sBuffer<#= cpItem.Name #>.Length));
+			buffer.AddRange(hashhelper.ComputeHash(sBuffer<#= cpItem.Name #>));
+			buffer.AddRange(sBuffer<#= cpItem.Name #>); 
 <# } else if (typeName == typeof(Int32).FullName) { #>
             buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>)); 
 <# } else if (typeName == typeof(Int16).FullName) { #>
@@ -243,10 +236,17 @@ if (cpItem.IsList == true | cpItem.IsArray == true) { #>
 <# } else if (typeName == typeof(Int64).FullName) { #>
             buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>)); 
 <# } else if (typeName == typeof(byte).FullName) { #>
-            buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>)); 
+<# if (cpItem.IsArray == true) { #>
+			buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>.Length)); // Length of Array
+            buffer.AddRange(<#= cpItem.Name #>);  // Add raw bytes to stream
+<# } else { #>
+			buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>)); 
+<# } #>
+            
 <# } else { #>
 			buffer.AddRange(BitConverter.GetBytes((int)<#= cpItem.Name #>)); 
 <# } #>
+
 <# } #>
 <# } #>
             buffer.AddRange(BitConverter.GetBytes((short)0));
