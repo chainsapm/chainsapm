@@ -18,7 +18,7 @@ namespace CommandCreator
     /// Class to produce the template output
     /// </summary>
     
-    #line 1 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+    #line 1 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "14.0.0.0")]
     public partial class CommandGeneratorCpp : CommandGeneratorCppBase
     {
@@ -28,6 +28,8 @@ namespace CommandCreator
         /// </summary>
         public virtual string TransformText()
         {
+            this.Write(" \r\n");
+            this.Write(" \r\n");
             this.Write(@"
 /****************************************************************************************
 *
@@ -39,138 +41,84 @@ namespace CommandCreator
 #include ""stdafx.h""
 #include """);
             
-            #line 15 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 15 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.ClassName));
             
             #line default
             #line hidden
             this.Write(".h\"\r\n \r\n\r\nnamespace Commands\r\n{\r\n\t");
             
-            #line 20 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 20 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.ClassName));
             
             #line default
             #line hidden
             this.Write("::");
             
-            #line 20 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 20 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.ClassName));
             
             #line default
             #line hidden
             this.Write("(__int64 timestamp, ");
             
-            #line 20 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
- foreach (var cpItem in this.ClassProperties) { 
+            #line 20 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+ foreach (var cpItem in this.ClassProperties) { CreateCppSignature(cpItem, TypeMapping, this.ClassProperties.Last().Name != cpItem.Name); } 
             
             #line default
             #line hidden
+            this.Write(")\r\n\t\t: timestamp(timestamp), ");
             
-            #line 20 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.CppTypeName(TypeMapping)));
-            
-            #line default
-            #line hidden
-            this.Write(" ");
-            
-            #line 20 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name.ToLower()));
+            #line 21 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+ foreach (var cpItem in this.ClassProperties) { CreateCppInitializers(cpItem, this.ClassProperties.Last().Name != cpItem.Name); } 
             
             #line default
             #line hidden
+            this.Write(" \r\n\t{\r\n\t}\r\n\r\n\t");
             
-            #line 20 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-  if (this.ClassProperties.Last().Name != cpItem.Name) { 
-            
-            #line default
-            #line hidden
-            this.Write(", ");
-            
-            #line 20 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
- } else { } } 
-            
-            #line default
-            #line hidden
-            this.Write(")\r\n\t\t: m_timestamp(timestamp), ");
-            
-            #line 21 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
- foreach (var cpItem in this.ClassProperties) { 
-            
-            #line default
-            #line hidden
-            this.Write(" m_");
-            
-            #line 21 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write("(");
-            
-            #line 21 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name.ToLower()));
-            
-            #line default
-            #line hidden
-            this.Write(") ");
-            
-            #line 21 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-  if (this.ClassProperties.Last().Name != cpItem.Name) { 
-            
-            #line default
-            #line hidden
-            this.Write(", ");
-            
-            #line 21 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
- } else { } } 
-            
-            #line default
-            #line hidden
-            this.Write("\t{\r\n\t}\r\n\r\n\t");
-            
-            #line 25 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 25 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.ClassName));
             
             #line default
             #line hidden
             this.Write("::~");
             
-            #line 25 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 25 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.ClassName));
             
             #line default
             #line hidden
             this.Write("()\r\n\t{\r\n\t}\r\n\r\n\tstd::wstring ");
             
-            #line 29 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 29 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.ClassName));
             
             #line default
             #line hidden
             this.Write("::Name()\r\n\t{\r\n\t\treturn L\"");
             
-            #line 31 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 31 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.Name));
             
             #line default
             #line hidden
             this.Write("\";\r\n\t}\r\n\r\n\tstd::wstring ");
             
-            #line 34 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 34 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.ClassName));
             
             #line default
             #line hidden
             this.Write("::Description()\r\n\t{\r\n\t\treturn L\"");
             
-            #line 36 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 36 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.Description));
             
             #line default
             #line hidden
             this.Write("\";\r\n\t}\r\n\r\n\tstd::shared_ptr<std::vector<char>> ");
             
-            #line 39 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 39 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.ClassName));
             
             #line default
@@ -192,12 +140,12 @@ namespace CommandCreator
 			// Begin the dynamically generated sizes
 ");
             
-            #line 54 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 54 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
  PushIndent("			");
 foreach (var cpItem in this.ClassProperties)
 { 
 	if (cpItem.IsList == true | cpItem.IsArray == true) {
-			CreateCppLengthListOrArray(cpItem, TypeMapping); 
+			CreateCppLengthListOrArray(cpItem, TypeMapping);  
 	} else { 
 			CreateCppLength(cpItem, TypeMapping);  
 	} 
@@ -218,13 +166,13 @@ PopIndent();
 			v2 += sizeof(__int32); 
 			memcpy(v2, &code, sizeof(short));
 			v2 += sizeof(short);
-			memcpy(v2, &m_timestamp, sizeof(__int64));
+			memcpy(v2, &timestamp, sizeof(__int64));
 			v2 += sizeof(__int64);
 
 			// Begin the dynamically generated byte copies   
 ");
             
-            #line 80 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 80 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
  PushIndent("			");
 foreach (var cpItem in this.ClassProperties)
 { 
@@ -235,114 +183,46 @@ foreach (var cpItem in this.ClassProperties)
 	}
 }
 PopIndent(); 
+            
+            #line default
+            #line hidden
+            this.Write(@"			// End the dynamically generated byte copies
 
+			// Terminator
+			memcpy(v2, &term, sizeof(short));
+			v2 += sizeof(short);
+
+			hasEncoded = true;
+
+			internalvector = std::make_shared<std::vector<char>>(vector, v2);
+		}
+		return internalvector;
+	}
+
+	std::shared_ptr<ICommand> ");
             
-            #line default
-            #line hidden
-            this.Write("\t\t\t// End the dynamically generated byte copies\r\n");
-            
-            #line 92 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
- foreach (var cpItem in this.ClassProperties)
-{ 
-string typeName = "";
-if (TypeMapping.ContainsKey(cpItem.TypeName)) { typeName = TypeMapping[cpItem.TypeName].ToString(); } else { typeName = cpItem.TypeName.ToString(); } 
-if (typeName.ToLower() == "std::wstring")
-{
-            
-            #line default
-            #line hidden
-            this.Write(" \r\n\t\t\t// Regenerate the string information\r\n\t\t\thashout = hash(m_");
-            
-            #line 99 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(");\r\n\r\n\t\t\tmemcpy(v2, &strlen_");
-            
-            #line 101 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(", sizeof(__int32));\r\n\t\t\tv2 += sizeof(__int32);\r\n\t\t\tmemcpy(v2, &hashout, sizeof(si" +
-                    "ze_t));\r\n\t\t\tv2 += sizeof(__int64);\r\n\t\t\tmemcpy(v2, m_");
-            
-            #line 105 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(".data(), strbytes_");
-            
-            #line 105 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(");\r\n\t\t\tv2 += strbytes_");
-            
-            #line 106 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(";\r\n\r\n");
-            
-            #line 108 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
- } else { 
-            
-            #line default
-            #line hidden
-            this.Write("\t\t\tmemcpy(v2, &m_");
-            
-            #line 109 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(", sizeof(");
-            
-            #line 109 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
-            
-            #line default
-            #line hidden
-            this.Write("));\r\n\t\t\tv2 += sizeof(");
-            
-            #line 110 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
-            
-            #line default
-            #line hidden
-            this.Write(");\r\n\r\n");
-            
-            #line 112 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
- } 
-            
-            #line default
-            #line hidden
-            
-            #line 113 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
- } 
-            
-            #line default
-            #line hidden
-            this.Write("\t\t\t// Terminator\r\n\t\t\tmemcpy(v2, &term, sizeof(short));\r\n\t\t\tv2 += sizeof(short);\r\n" +
-                    "\r\n\t\t\thasEncoded = true;\r\n\r\n\t\t\tm_internalvector = std::make_shared<std::vector<ch" +
-                    "ar>>(vector, v2);\r\n\t\t}\r\n\t\treturn m_internalvector;\r\n\t}\r\n\r\n\tstd::shared_ptr<IComm" +
-                    "and> ");
-            
-            #line 125 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 103 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.ClassName));
             
             #line default
             #line hidden
-            this.Write("::Decode(std::shared_ptr<std::vector<char>> &data)\r\n\t{\r\n\t// \r\n\r\n\t\tauto ptr = data" +
-                    "->data();\r\n\r\n\t\tauto len = *(unsigned int*)ptr;\r\n\t\tptr += sizeof(unsigned int);\r\n" +
-                    "\r\n\t\tauto code = (char)ptr;\r\n\t\tptr += sizeof(short);\r\n\r\n");
+            this.Write(@"::Decode(std::shared_ptr<std::vector<char>> &data)
+	{
+	// 
+
+		auto hash = std::hash<std::wstring>();
+
+		auto ptr = data->data();
+
+		auto len = *(unsigned int*)ptr;  
+		ptr += sizeof(unsigned int);
+
+		auto code = (char)ptr;
+		ptr += sizeof(short);
+
+");
             
-            #line 137 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 117 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
  foreach (var cpItem in this.ClassProperties)
 { 
 string typeName = "";
@@ -353,118 +233,118 @@ if (typeName.ToLower() == "std::wstring") {
             #line hidden
             this.Write(" \r\n\t\t\t// Regenerate the string information\r\n\r\n\t\t\tauto strlen_");
             
-            #line 144 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 124 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(" = *(__int32*)ptr;\r\n\t\t\tptr += sizeof(__int32);\r\n\r\n\t\t\tauto hash_");
             
-            #line 147 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 127 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write(" = *(__int64*)ptr;\r\n\t\t\tptr += sizeof(__int64);\r\n\r\n\t\t\tauto local_");
+            this.Write(" = *(__int64*)ptr;\r\n\t\t\tptr += sizeof(__int64); \r\n\r\n\t\t\tauto local_");
             
-            #line 150 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 130 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(" = (wchar_t*)ptr;\r\n\t\t\tptr += strlen_");
             
-            #line 151 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 131 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write(" * 2;\r\n\r\n\t\t\thashout = hash(m_");
+            this.Write(" * 2;\r\n\r\n\t\t\thashout = hash(");
             
-            #line 153 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 133 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(");\r\n\r\n");
             
-            #line 155 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 135 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
  } else if (typeName.ToLower() == "std::string") {
             
             #line default
             #line hidden
             this.Write(" \r\n\t\t\t// Regenerate the string information\r\n\r\n\t\t\tauto strlen_");
             
-            #line 158 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 138 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(" = *(__int32*)ptr;\r\n\t\t\tptr += sizeof(__int32);\r\n\r\n\t\t\tauto hash_");
             
-            #line 161 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 141 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(" = *(__int64*)ptr;\r\n\t\t\tptr += sizeof(__int64);\r\n\r\n\t\t\tauto local_");
             
-            #line 164 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 144 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(" = (char*)ptr;\r\n\t\t\tptr += strlen_");
             
-            #line 165 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 145 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write(";\r\n\r\n\t\t\thashout = hash(m_");
+            this.Write(";\r\n\r\n\t\t\thashout = hash(");
             
-            #line 167 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 147 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(");\r\n\r\n");
             
-            #line 169 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 149 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
  } else { 
             
             #line default
             #line hidden
             this.Write("\r\n\t\t\tauto local_");
             
-            #line 171 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 151 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(" = *(");
             
-            #line 171 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 151 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
             
             #line default
             #line hidden
             this.Write("*)ptr;\r\n\t\t\tptr += sizeof(");
             
-            #line 172 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 152 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
             
             #line default
             #line hidden
             this.Write(");\r\n");
             
-            #line 173 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 153 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
  } 
             
             #line default
             #line hidden
             
-            #line 174 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 154 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
  } 
             
             #line default
@@ -472,35 +352,35 @@ if (typeName.ToLower() == "std::wstring") {
             this.Write("\t\t\t// Terminator\r\n\t\tauto term = *(short*)ptr;\r\n\t\tptr += sizeof(short);\r\n\t\treturn " +
                     "std::make_shared<");
             
-            #line 178 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 158 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.ClassName));
             
             #line default
             #line hidden
             this.Write(">(local_timestamp, ");
             
-            #line 178 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 158 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
  foreach (var cpItem in this.ClassProperties) { 
             
             #line default
             #line hidden
             this.Write(" local_");
             
-            #line 178 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 158 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(" ");
             
-            #line 178 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 158 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
   if (this.ClassProperties.Last().Name != cpItem.Name) { 
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 178 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
+            #line 158 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCpp.tt"
  } else { } } 
             
             #line default
@@ -509,7 +389,7 @@ if (typeName.ToLower() == "std::wstring") {
             return this.GenerationEnvironment.ToString();
         }
         
-        #line 3 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 3 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 
 protected string TypeMapper(string typeName, Dictionary<string, string> TypeMapping) {
 
@@ -519,91 +399,43 @@ protected string TypeMapper(string typeName, Dictionary<string, string> TypeMapp
 	return typeName; 
 }
 
-private void CreateStringListing(string varName){
+private void CreateStringListing(string varName, bool isForLoop) 
+{
+	var szt = isForLoop ? string.Empty : "size_t ";
+	varName = isForLoop ? varName + "item" : varName;
+	if (isForLoop)
+		WriteLine("{0}strlen_{1} = item.length();", szt, varName);
+	else
+		WriteLine("{0}strlen_{1} = {1}.length();", szt, varName);
+	WriteLine("{0}strbytes_{1} = (strlen_{1} * sizeof(wchar_t)) + sizeof(wchar_t);", szt, varName);
 
         
         #line default
         #line hidden
         
-        #line 13 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write("size_t strlen_");
+        #line 21 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+this.Write("size += sizeof(__int32); // String Length \r\nsize += sizeof(__int64); // String Ha" +
+        "sh\r\nsize += strbytes_");
 
         
         #line default
         #line hidden
         
-        #line 14 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 24 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(varName));
 
         
         #line default
         #line hidden
         
-        #line 14 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(" = (m_");
-
-        
-        #line default
-        #line hidden
-        
-        #line 14 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(this.ToStringHelper.ToStringWithCulture(varName));
-
-        
-        #line default
-        #line hidden
-        
-        #line 14 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(".length());\r\nsize_t strbytes_");
-
-        
-        #line default
-        #line hidden
-        
-        #line 15 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(this.ToStringHelper.ToStringWithCulture(varName));
-
-        
-        #line default
-        #line hidden
-        
-        #line 15 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(" = strlen_");
-
-        
-        #line default
-        #line hidden
-        
-        #line 15 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(this.ToStringHelper.ToStringWithCulture(varName));
-
-        
-        #line default
-        #line hidden
-        
-        #line 15 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(" * sizeof(wchar_t) + sizeof(wchar_t);\r\nsize += sizeof(__int32); // String Length " +
-        "\r\nsize += sizeof(__int64); // String Hash\r\nsize += strbytes_");
-
-        
-        #line default
-        #line hidden
-        
-        #line 18 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(this.ToStringHelper.ToStringWithCulture(varName));
-
-        
-        #line default
-        #line hidden
-        
-        #line 18 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 24 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write("; // String Bytes\r\n");
 
         
         #line default
         #line hidden
         
-        #line 19 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 25 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 
 }
 
@@ -613,7 +445,7 @@ protected void CreateCppLength(ClassProperty cpItem, Dictionary<string, string> 
 	
 	if (typeName.ToLower() == "std::wstring")
 	{ 	
-		CreateStringListing(cpItem.Name);
+		CreateStringListing(cpItem.Name, false);
 		WriteLine("");
 	} else { 
 
@@ -621,42 +453,42 @@ protected void CreateCppLength(ClassProperty cpItem, Dictionary<string, string> 
         #line default
         #line hidden
         
-        #line 31 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 37 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write("size += sizeof(");
 
         
         #line default
         #line hidden
         
-        #line 32 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 38 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
 
         
         #line default
         #line hidden
         
-        #line 32 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 38 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write("); // Size of ");
 
         
         #line default
         #line hidden
         
-        #line 32 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 38 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
 
         
         #line default
         #line hidden
         
-        #line 32 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 38 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write("\r\n\r\n");
 
         
         #line default
         #line hidden
         
-        #line 34 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 40 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 
 	}
 }
@@ -667,28 +499,56 @@ protected void CreateForLoopForString(string varName) {
         #line default
         #line hidden
         
-        #line 39 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write("\r\nsize_t strlen_item = 0;\r\nsize_t strbytes_item = 0;\r\nfor (auto item& : ");
+        #line 45 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+this.Write("\r\nsize_t strlen_");
 
         
         #line default
         #line hidden
         
-        #line 43 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 47 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(varName));
 
         
         #line default
         #line hidden
         
-        #line 43 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 47 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+this.Write("item = 0;\r\nsize_t strbytes_");
+
+        
+        #line default
+        #line hidden
+        
+        #line 48 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+this.Write(this.ToStringHelper.ToStringWithCulture(varName));
+
+        
+        #line default
+        #line hidden
+        
+        #line 48 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+this.Write("item = 0;\r\nfor (auto item : ");
+
+        
+        #line default
+        #line hidden
+        
+        #line 49 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+this.Write(this.ToStringHelper.ToStringWithCulture(varName));
+
+        
+        #line default
+        #line hidden
+        
+        #line 49 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(") {\r\n");
 
         
         #line default
         #line hidden
         
-        #line 44 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 50 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 
 }
 
@@ -699,32 +559,32 @@ protected void CreateForLoopForTypeData(string varName) {
         #line default
         #line hidden
         
-        #line 49 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write("\r\nfor (auto item& : ");
+        #line 55 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+this.Write("\r\nfor (auto item : ");
 
         
         #line default
         #line hidden
         
-        #line 51 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 57 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(varName));
 
         
         #line default
         #line hidden
         
-        #line 51 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 57 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(") {\r\n");
 
         
         #line default
         #line hidden
         
-        #line 52 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 58 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 
 }
 
-protected void CreateCppLengthListOrArray(ClassProperty cpItem, Dictionary<string, string> TypeMapping)
+protected void CreateCppLengthListOrArray(ClassProperty cpItem, Dictionary<string, string> TypeMapping) 
 {
 	string typeName = TypeMapper(cpItem.TypeName, TypeMapping);
 
@@ -732,7 +592,7 @@ protected void CreateCppLengthListOrArray(ClassProperty cpItem, Dictionary<strin
 	{ 	
 		CreateForLoopForString(cpItem.Name);
 		PushIndent("    "); 
-		CreateStringListing("item");
+		CreateStringListing(cpItem.Name, true);
 		PopIndent(); 
 		WriteLine("}"); // Terminating brace for for loop
 		WriteLine(""); // Extra space for clarity
@@ -742,248 +602,134 @@ protected void CreateCppLengthListOrArray(ClassProperty cpItem, Dictionary<strin
         #line default
         #line hidden
         
-        #line 68 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 74 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write("size += sizeof(");
 
         
         #line default
         #line hidden
         
-        #line 69 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 75 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
 
         
         #line default
         #line hidden
         
-        #line 69 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 75 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(") * ");
 
         
         #line default
         #line hidden
         
-        #line 69 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 75 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
 
         
         #line default
         #line hidden
         
-        #line 69 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 75 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(".size(); // Size of ");
 
         
         #line default
         #line hidden
         
-        #line 69 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 75 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
 
         
         #line default
         #line hidden
         
-        #line 69 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 75 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(" vector\r\n\r\n");
 
         
         #line default
         #line hidden
         
-        #line 71 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 77 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 
 	}
 }
 
 protected void CreateCppStringData(string varName, bool isForLoop)
 {
+	var szt = isForLoop ? string.Empty : "size_t ";
+	varName = isForLoop ? varName + "item" : varName;
 	if (isForLoop)
-	{
+		WriteLine("{0}strlen_{1} = item.length();", szt, varName);
+	else
+		WriteLine("{0}strlen_{1} = {1}.length();", szt, varName);
+	Write("{0}strbytes_{1} = (strlen_{1} * sizeof(wchar_t)) + sizeof(wchar_t);", szt, varName);
+
+	if (isForLoop)
+		WriteLine("hashout = hash(item);");
+	else
+		WriteLine("hashout = hash({0});", varName);
 
         
         #line default
         #line hidden
         
-        #line 79 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(" \r\n// Regenerate the string information\r\nhashout = hash(");
+        #line 95 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+this.Write(" \r\n\r\nmemcpy(v2, &strlen_");
 
         
         #line default
         #line hidden
         
-        #line 81 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 97 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(varName));
 
         
         #line default
         #line hidden
         
-        #line 81 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(");\r\n");
-
-        
-        #line default
-        #line hidden
-        
-        #line 82 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-
-	} else {
-
-        
-        #line default
-        #line hidden
-        
-        #line 84 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(" \r\n// Regenerate the string information\r\nhashout = hash(m_");
-
-        
-        #line default
-        #line hidden
-        
-        #line 86 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(this.ToStringHelper.ToStringWithCulture(varName));
-
-        
-        #line default
-        #line hidden
-        
-        #line 86 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(");\r\n");
-
-        
-        #line default
-        #line hidden
-        
-        #line 87 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-
-	}
-
-        
-        #line default
-        #line hidden
-        
-        #line 89 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(" \r\nsize_t strlen_");
-
-        
-        #line default
-        #line hidden
-        
-        #line 90 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(this.ToStringHelper.ToStringWithCulture(varName));
-
-        
-        #line default
-        #line hidden
-        
-        #line 90 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(" = (");
-
-        
-        #line default
-        #line hidden
-        
-        #line 90 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(this.ToStringHelper.ToStringWithCulture(varName));
-
-        
-        #line default
-        #line hidden
-        
-        #line 90 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(".length());\r\nsize_t strbytes_");
-
-        
-        #line default
-        #line hidden
-        
-        #line 91 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(this.ToStringHelper.ToStringWithCulture(varName));
-
-        
-        #line default
-        #line hidden
-        
-        #line 91 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(" = strlen_");
-
-        
-        #line default
-        #line hidden
-        
-        #line 91 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(this.ToStringHelper.ToStringWithCulture(varName));
-
-        
-        #line default
-        #line hidden
-        
-        #line 91 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(" * sizeof(wchar_t) + sizeof(wchar_t);\r\n\r\nmemcpy(v2, &strlen_");
-
-        
-        #line default
-        #line hidden
-        
-        #line 93 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(this.ToStringHelper.ToStringWithCulture(varName));
-
-        
-        #line default
-        #line hidden
-        
-        #line 93 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 97 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(", sizeof(__int32));\r\nv2 += sizeof(__int32);\r\nmemcpy(v2, &hashout, sizeof(size_t))" +
-        ";\r\nv2 += sizeof(__int64);\r\nmemcpy(v2, m_");
+        ";\r\nv2 += sizeof(__int64);\r\n");
 
         
         #line default
         #line hidden
         
-        #line 97 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 101 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+
+if (isForLoop)
+		WriteLine("memcpy(v2, item.data(), strbytes_{0});", varName);
+	else
+		WriteLine("memcpy(v2, {0}.data(), strbytes_{0});", varName);
+
+        
+        #line default
+        #line hidden
+        
+        #line 106 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+this.Write("v2 += strbytes_");
+
+        
+        #line default
+        #line hidden
+        
+        #line 107 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(varName));
 
         
         #line default
         #line hidden
         
-        #line 97 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(".data(), strbytes_");
-
-        
-        #line default
-        #line hidden
-        
-        #line 97 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(this.ToStringHelper.ToStringWithCulture(varName));
-
-        
-        #line default
-        #line hidden
-        
-        #line 97 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(");\r\nv2 += strbytes_");
-
-        
-        #line default
-        #line hidden
-        
-        #line 98 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write(this.ToStringHelper.ToStringWithCulture(varName));
-
-        
-        #line default
-        #line hidden
-        
-        #line 98 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 107 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(";\r\n");
 
         
         #line default
         #line hidden
         
-        #line 99 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 108 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 
 }
 
@@ -995,42 +741,42 @@ if (isForLoop)
         #line default
         #line hidden
         
-        #line 105 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 114 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(" \r\nmemcpy(v2, &");
 
         
         #line default
         #line hidden
         
-        #line 106 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 115 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(varName));
 
         
         #line default
         #line hidden
         
-        #line 106 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 115 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(", sizeof(");
 
         
         #line default
         #line hidden
         
-        #line 106 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 115 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
 
         
         #line default
         #line hidden
         
-        #line 106 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 115 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write("));\r\n");
 
         
         #line default
         #line hidden
         
-        #line 107 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 116 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 
 	} else {
 
@@ -1038,42 +784,42 @@ this.Write("));\r\n");
         #line default
         #line hidden
         
-        #line 109 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
-this.Write("memcpy(v2, &m_");
+        #line 118 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+this.Write("memcpy(v2, &");
 
         
         #line default
         #line hidden
         
-        #line 110 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 119 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(varName));
 
         
         #line default
         #line hidden
         
-        #line 110 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 119 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(", sizeof(");
 
         
         #line default
         #line hidden
         
-        #line 110 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 119 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
 
         
         #line default
         #line hidden
         
-        #line 110 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 119 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write("));\r\n");
 
         
         #line default
         #line hidden
         
-        #line 111 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 120 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 
 	}
 
@@ -1081,28 +827,28 @@ this.Write("));\r\n");
         #line default
         #line hidden
         
-        #line 113 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 122 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(" \r\nv2 += sizeof(");
 
         
         #line default
         #line hidden
         
-        #line 114 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 123 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
 
         
         #line default
         #line hidden
         
-        #line 114 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 123 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 this.Write(");\r\n");
 
         
         #line default
         #line hidden
         
-        #line 115 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
+        #line 124 "C:\Users\James\Source\Repos\chainsapm\CommandCreator\SnippetIncludes.tt"
 
 }
 
@@ -1122,7 +868,7 @@ protected void CreateCppDataInsertForList(ClassProperty cpItem, Dictionary<strin
 	if (typeName.ToLower() == "std::wstring") {
 		CreateForLoopForString(cpItem.Name);
 		PushIndent("    "); 
-		CreateCppStringData("item", true);
+		CreateCppStringData(cpItem.Name, true);
 	} else { 
 		
 		CreateForLoopForTypeData(cpItem.Name);
@@ -1137,10 +883,8 @@ protected void CreateCppDataInsertForList(ClassProperty cpItem, Dictionary<strin
 protected void CreateCppSignature(ClassProperty cpItem, Dictionary<string, string> TypeMapping, bool isNotLast) 
 {
 	string typeName = TypeMapper(cpItem.TypeName, TypeMapping);
-	if (cpItem.IsList == true) {
-		CreateCppVariable(string.Format("std:vector<{0}>", typeName), cpItem.Name.ToLower());
-	} else if (cpItem.IsArray == true) {
-		CreateCppVariable(typeName, string.Format("{0}[]",cpItem.Name.ToLower()));
+	if (cpItem.IsList == true | cpItem.IsArray == true) {
+		CreateCppVariable(string.Format("std::vector<{0}>", typeName), cpItem.Name.ToLower());
 	} else {
 		CreateCppVariable(typeName, cpItem.Name.ToLower());
 	}
@@ -1152,20 +896,23 @@ protected void CreateCppSignature(ClassProperty cpItem, Dictionary<string, strin
 protected void CreateCppDeclaration(ClassProperty cpItem, Dictionary<string, string> TypeMapping) 
 {
 	string typeName = TypeMapper(cpItem.TypeName, TypeMapping);
-	if (cpItem.IsList == true) {
-		CreateCppVariable(string.Format("std:vector<{0}>", typeName), cpItem.Name.ToLower());
-		
-	} else if (cpItem.IsArray == true) {
-		CreateCppVariable(typeName, string.Format("m_{0}[]",cpItem.Name));
+	if (cpItem.IsList == true | cpItem.IsArray == true) {
+		CreateCppVariable(string.Format("std::vector<{0}>", typeName), cpItem.Name); 
 	} else {
-		CreateCppVariable(typeName, cpItem.Name.ToLower());
+		CreateCppVariable(typeName, cpItem.Name);
 	}
-	Write(";");
+	WriteLine(";");
 }
 
 protected void CreateCppVariable(string typeName, string varName) 
 {
 	Write (string.Format("{0} {1}", typeName, varName)); 
+}
+
+protected void CreateCppInitializers(ClassProperty cpItem, bool isNotLast) {
+	Write("{0}({1})", cpItem.Name, cpItem.Name.ToLower());
+	if (isNotLast)
+		Write(", ");
 }
 
         
