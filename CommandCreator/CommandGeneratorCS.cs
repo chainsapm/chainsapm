@@ -54,8 +54,8 @@ namespace ChainsAPM.Commands.");
             
             #line default
             #line hidden
-            this.Write(" : Interfaces.ICommand<byte>\r\n    {\r\n\r\n\t\t private Helpers.Fnv1a64 hashhelper;\r\n\r\n" +
-                    "         public DateTime TimeStamp { get; set; }\r\n");
+            this.Write(" : Interfaces.ICommand<byte>\r\n    {\r\n\r\n         private Helpers.Fnv1a64 hashhelpe" +
+                    "r;\r\n\r\n         public DateTime TimeStamp { get; set; }\r\n");
             
             #line 26 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  foreach (var enumn in this.EnumerationList)
@@ -69,7 +69,7 @@ namespace ChainsAPM.Commands.");
             
             #line default
             #line hidden
-            this.Write("\t\t[Flags]\r\n");
+            this.Write("        [Flags]\r\n");
             
             #line 30 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
 }
@@ -280,7 +280,8 @@ if(cpItem.IsArray == true){
             
             #line default
             #line hidden
-            this.Write("()\r\n        {\r\n\r\n        }\r\n\r\n        public ");
+            this.Write("()\r\n        {\r\n            hashhelper = new Helpers.Fnv1a64();\r\n        }\r\n\r\n    " +
+                    "    public ");
             
             #line 56 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(this.ClassName));
@@ -404,7 +405,8 @@ if(cpItem.IsArray == true){
             
             #line default
             #line hidden
-            this.Write(")\r\n        {\r\n            TimeStamp = DateTime.FromFileTimeUtc(timestamp);\r\n");
+            this.Write(") : this()\r\n        {\r\n                TimeStamp = timestamp == null ? DateTime.N" +
+                    "ow : DateTime.FromFileTimeUtc(timestamp);\r\n");
             
             #line 59 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  foreach (var cpItem in this.ClassProperties)
@@ -489,7 +491,7 @@ if (cpItem.IsList == true | cpItem.IsArray == true) {
             
             #line default
             #line hidden
-            this.Write("\r\n\t\t\t\t\tvar numberOf");
+            this.Write("\r\n                    var numberOf");
             
             #line 99 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
@@ -503,7 +505,7 @@ if (cpItem.IsList == true | cpItem.IsArray == true) {
             
             #line default
             #line hidden
-            this.Write("\t\t\t\t\tvar listOf");
+            this.Write("                    var listOf");
             
             #line 101 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
@@ -524,7 +526,7 @@ if (cpItem.IsList == true | cpItem.IsArray == true) {
             
             #line default
             #line hidden
-            this.Write("\t\t\t\t\tvar arrayOf");
+            this.Write("                    var arrayOf");
             
             #line 103 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
@@ -593,21 +595,21 @@ if (cpItem.IsList == true | cpItem.IsArray == true) {
             
             #line default
             #line hidden
-            this.Write("\t\t\t\t\tvar stringlen");
+            this.Write("                    var stringlen");
             
             #line 109 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write(" = segstream.GetInt32();\r\n\t\t\t\t\tvar decode");
+            this.Write(" = segstream.GetInt32();\r\n                    var decode");
             
             #line 110 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write("Hash = segstream.GetInt64();\r\n\t\t\t\t\tvar decode");
+            this.Write("Hash = segstream.GetInt64();\r\n                    var decode");
             
             #line 111 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
@@ -711,7 +713,7 @@ if (cpItem.IsList == true | cpItem.IsArray == true) {
             
             #line default
             #line hidden
-            this.Write("\t\t\t\t\tlistOf");
+            this.Write("                    listOf");
             
             #line 130 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
@@ -732,7 +734,7 @@ if (cpItem.IsList == true | cpItem.IsArray == true) {
             
             #line default
             #line hidden
-            this.Write("\t\t\t\t\tarrayOf");
+            this.Write("                    arrayOf");
             
             #line 133 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
@@ -848,9 +850,14 @@ if (cpItem.IsList == true | cpItem.IsArray == true) {
         public byte[] Encode()
         {
             int byteSize = 0;
+
+             byteSize += sizeof (Int32); // Length Of Command
+             byteSize += sizeof (Int16); // Length Of Code
+             byteSize += sizeof (Int64); // Length Of Timestamp
+
 ");
             
-            #line 163 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 168 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  foreach (var cpItem in this.ClassProperties) { 
 string typeName = "";			 
 if (TypeMapping.ContainsKey(cpItem.TypeName)) { typeName = TypeMapping[cpItem.TypeName].ToString(); } else { typeName = cpItem.TypeName.ToString(); }
@@ -860,35 +867,40 @@ if (cpItem.IsList == true) {
             #line hidden
             this.Write("            byteSize += 4; // Length of Array\r\n");
             
-            #line 168 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 173 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } 
             
             #line default
             #line hidden
             
-            #line 169 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 174 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  if (typeName == typeof(string).FullName) { 
             
             #line default
             #line hidden
             
-            #line 170 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 175 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  if (cpItem.IsList == true) { 
             
             #line default
             #line hidden
             this.Write("            foreach (var sItem in ");
             
-            #line 171 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 176 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write(")\r\n            {\r\n               byteSize += sizeof(System.Int32); // Length Byte" +
-                    "s\r\n               byteSize += sizeof(System.Int64); // Hash Bytes\r\n             " +
-                    "  byteSize += sItem.Length; // StringLength Bytes\r\n            }\r\n");
+            this.Write(@")
+            {
+               var sBufferListOfMethods_item = System.Text.UnicodeEncoding.Unicode.GetBytes (sItem);
+               byteSize += sizeof(System.Int32); // Length Bytes
+               byteSize += sizeof(System.Int64); // Hash Bytes
+               byteSize += sBufferListOfMethods_item.Length + 1; // StringLength Bytes
+            }
+");
             
-            #line 177 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 183 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } else { 
             
             #line default
@@ -896,186 +908,21 @@ if (cpItem.IsList == true) {
             this.Write("            byteSize += sizeof(System.Int32); // Length Bytes\r\n            byteSi" +
                     "ze += sizeof(System.Int64); // Hash Bytes\r\n            byteSize += ");
             
-            #line 180 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 186 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(".Length; // StringLength Bytes\r\n");
             
-            #line 181 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } 
-            
-            #line default
-            #line hidden
-            
-            #line 182 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } else if (typeName == typeof(Int32).FullName) { 
-            
-            #line default
-            #line hidden
-            this.Write("            byteSize += sizeof(");
-            
-            #line 183 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
-            
-            #line default
-            #line hidden
-            this.Write(")");
-            
-            #line 183 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- if (cpItem.IsList == true) { 
-            
-            #line default
-            #line hidden
-            this.Write(" * ");
-            
-            #line 183 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(".Count");
-            
-            #line 183 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } 
-            
-            #line default
-            #line hidden
-            
-            #line 183 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- if (cpItem.IsArray == true) { 
-            
-            #line default
-            #line hidden
-            this.Write(" * ");
-            
-            #line 183 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(".Length");
-            
-            #line 183 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } 
-            
-            #line default
-            #line hidden
-            this.Write(";\r\n");
-            
-            #line 184 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } else if (typeName == typeof(Int16).FullName) { 
-            
-            #line default
-            #line hidden
-            this.Write("            byteSize += sizeof(");
-            
-            #line 185 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
-            
-            #line default
-            #line hidden
-            this.Write(")");
-            
-            #line 185 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- if (cpItem.IsList == true) { 
-            
-            #line default
-            #line hidden
-            this.Write(" * ");
-            
-            #line 185 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(".Count");
-            
-            #line 185 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } 
-            
-            #line default
-            #line hidden
-            
-            #line 185 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- if (cpItem.IsArray == true) { 
-            
-            #line default
-            #line hidden
-            this.Write(" * ");
-            
-            #line 185 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(".Length");
-            
-            #line 185 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } 
-            
-            #line default
-            #line hidden
-            this.Write(";\r\n");
-            
-            #line 186 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } else if (typeName == typeof(Int64).FullName) { 
-            
-            #line default
-            #line hidden
-            this.Write("            byteSize += sizeof(");
-            
-            #line 187 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
-            
-            #line default
-            #line hidden
-            this.Write(")");
-            
-            #line 187 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- if (cpItem.IsList == true) { 
-            
-            #line default
-            #line hidden
-            this.Write(" * ");
-            
-            #line 187 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(".Count");
-            
             #line 187 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } 
             
             #line default
             #line hidden
-            
-            #line 187 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- if (cpItem.IsArray == true) { 
-            
-            #line default
-            #line hidden
-            this.Write(" * ");
-            
-            #line 187 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(".Length");
-            
-            #line 187 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } 
-            
-            #line default
-            #line hidden
-            this.Write(";\r\n");
             
             #line 188 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } else if (typeName == typeof(byte).FullName) { 
+ } else if (typeName == typeof(Int32).FullName) { 
             
             #line default
             #line hidden
@@ -1130,11 +977,18 @@ if (cpItem.IsList == true) {
             this.Write(";\r\n");
             
             #line 190 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } else { 
+ } else if (typeName == typeof(Int16).FullName) { 
             
             #line default
             #line hidden
-            this.Write("            byteSize += sizeof(Int32)");
+            this.Write("            byteSize += sizeof(");
+            
+            #line 191 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
+            
+            #line default
+            #line hidden
+            this.Write(")");
             
             #line 191 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  if (cpItem.IsList == true) { 
@@ -1178,23 +1032,182 @@ if (cpItem.IsList == true) {
             this.Write(";\r\n");
             
             #line 192 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } 
+ } else if (typeName == typeof(Int64).FullName) { 
             
             #line default
             #line hidden
+            this.Write("            byteSize += sizeof(");
+            
+            #line 193 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
+            
+            #line default
+            #line hidden
+            this.Write(")");
+            
+            #line 193 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ if (cpItem.IsList == true) { 
+            
+            #line default
+            #line hidden
+            this.Write(" * ");
+            
+            #line 193 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write(".Count");
             
             #line 193 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } 
             
             #line default
             #line hidden
-            this.Write(@"            var buffer = new List<byte>(byteSize);
+            
+            #line 193 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ if (cpItem.IsArray == true) { 
+            
+            #line default
+            #line hidden
+            this.Write(" * ");
+            
+            #line 193 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write(".Length");
+            
+            #line 193 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } 
+            
+            #line default
+            #line hidden
+            this.Write(";\r\n");
+            
+            #line 194 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } else if (typeName == typeof(byte).FullName) { 
+            
+            #line default
+            #line hidden
+            this.Write("            byteSize += sizeof(");
+            
+            #line 195 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(typeName));
+            
+            #line default
+            #line hidden
+            this.Write(")");
+            
+            #line 195 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ if (cpItem.IsList == true) { 
+            
+            #line default
+            #line hidden
+            this.Write(" * ");
+            
+            #line 195 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write(".Count");
+            
+            #line 195 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } 
+            
+            #line default
+            #line hidden
+            
+            #line 195 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ if (cpItem.IsArray == true) { 
+            
+            #line default
+            #line hidden
+            this.Write(" * ");
+            
+            #line 195 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write(".Length");
+            
+            #line 195 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } 
+            
+            #line default
+            #line hidden
+            this.Write(";\r\n");
+            
+            #line 196 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } else { 
+            
+            #line default
+            #line hidden
+            this.Write("            byteSize += sizeof(Int32)");
+            
+            #line 197 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ if (cpItem.IsList == true) { 
+            
+            #line default
+            #line hidden
+            this.Write(" * ");
+            
+            #line 197 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write(".Count");
+            
+            #line 197 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } 
+            
+            #line default
+            #line hidden
+            
+            #line 197 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ if (cpItem.IsArray == true) { 
+            
+            #line default
+            #line hidden
+            this.Write(" * ");
+            
+            #line 197 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write(".Length");
+            
+            #line 197 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } 
+            
+            #line default
+            #line hidden
+            this.Write(";\r\n");
+            
+            #line 198 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } 
+            
+            #line default
+            #line hidden
+            
+            #line 199 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } 
+            
+            #line default
+            #line hidden
+            this.Write(@"            byteSize += sizeof (short); // Length Of Terminator
+            var buffer = new List<byte>(byteSize);
             buffer.AddRange(BitConverter.GetBytes(byteSize)); // 4 bytes for size, 2 byte for code, 8 bytes for data, 8 bytes for data, 8 bytes for TS, 2 bytes for term
             buffer.AddRange(BitConverter.GetBytes(Code));
             buffer.AddRange(BitConverter.GetBytes(TimeStamp.ToFileTimeUtc()));
 ");
             
-            #line 198 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 205 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  foreach (var cpItem in this.ClassProperties) {
 string typeName = "";
 if (TypeMapping.ContainsKey(cpItem.TypeName)) { typeName = TypeMapping[cpItem.TypeName].ToString(); } else { typeName = cpItem.TypeName.ToString(); }
@@ -1203,338 +1216,332 @@ if ((cpItem.IsList == true | cpItem.IsArray == true) && typeName != typeof(byte)
             #line default
             #line hidden
             
-            #line 202 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 209 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  if (cpItem.IsList == true) { 
             
             #line default
             #line hidden
             this.Write("            buffer.AddRange(BitConverter.GetBytes(");
             
-            #line 203 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 210 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(".Count)); // Count of List\r\n");
             
-            #line 204 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 211 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } else { 
             
             #line default
             #line hidden
-            this.Write("\t\t\tbuffer.AddRange(BitConverter.GetBytes(");
-            
-            #line 205 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(".Length)); // Length of Array\r\n");
-            
-            #line 206 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } 
-            
-            #line default
-            #line hidden
-            this.Write("            foreach (var ");
-            
-            #line 207 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write("_item in ");
-            
-            #line 207 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(")\r\n            {\r\n");
-            
-            #line 209 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- if (typeName == typeof(string).FullName) { 
-            
-            #line default
-            #line hidden
-            this.Write("\t\t\t\tvar sBuffer");
-            
-            #line 210 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write("_item = System.Text.UnicodeEncoding.Unicode.GetBytes(");
-            
-            #line 210 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write("_item);\r\n                buffer.AddRange(BitConverter.GetBytes(sBuffer");
-            
-            #line 211 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write("_item.Length));\r\n\t\t\t\tbuffer.AddRange(hashhelper.ComputeHash(sBuffer");
+            this.Write("            buffer.AddRange(BitConverter.GetBytes(");
             
             #line 212 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write("_item));\r\n\t\t\t\tbuffer.AddRange(sBuffer");
+            this.Write(".Length)); // Length of Array\r\n");
             
             #line 213 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+ } 
             
             #line default
             #line hidden
-            this.Write("_item); \r\n");
+            this.Write("            foreach (var ");
             
             #line 214 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } else if (typeName == typeof(Int32).FullName) { 
-            
-            #line default
-            #line hidden
-            this.Write("            buffer.AddRange(BitConverter.GetBytes(");
-            
-            #line 215 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write("_item)); \r\n");
+            this.Write("_item in ");
             
-            #line 216 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } else if (typeName == typeof(Int16).FullName) { 
+            #line 214 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write("            buffer.AddRange(BitConverter.GetBytes(");
+            this.Write(")\r\n            {\r\n");
+            
+            #line 216 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ if (typeName == typeof(string).FullName) { 
+            
+            #line default
+            #line hidden
+            this.Write("                var sBuffer");
             
             #line 217 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write("_item)); \r\n");
+            this.Write("_item = System.Text.UnicodeEncoding.Unicode.GetBytes(");
             
-            #line 218 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } else if (typeName == typeof(Int64).FullName) { 
+            #line 217 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write("            buffer.AddRange(BitConverter.GetBytes(");
+            this.Write("_item);\r\n                buffer.AddRange(BitConverter.GetBytes(ListOfMethods_item" +
+                    ".Length));\r\n                buffer.AddRange(hashhelper.ComputeHash(sBuffer");
             
             #line 219 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write("_item)); \r\n");
+            this.Write("_item));\r\n                buffer.AddRange(sBuffer");
             
             #line 220 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } else if (typeName == typeof(byte).FullName) { 
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            
-            #line 221 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } else { 
-            
-            #line default
-            #line hidden
-            this.Write("                buffer.AddRange(BitConverter.GetBytes((int)");
+            this.Write("_item);\r\n                buffer.AddRange(BitConverter.GetBytes((short)0));\r\n");
             
             #line 222 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write("_item)); \r\n");
-            
-            #line 223 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } 
-            
-            #line default
-            #line hidden
-            this.Write("            }\r\n\r\n");
-            
-            #line 226 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- } else { 
-            
-            #line default
-            #line hidden
-            
-            #line 227 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
- if (typeName == typeof(string).FullName) { 
-            
-            #line default
-            #line hidden
-            this.Write("\t\t\tvar sBuffer");
-            
-            #line 228 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(" = System.Text.UnicodeEncoding.Unicode.GetBytes(");
-            
-            #line 228 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(");\r\n            buffer.AddRange(BitConverter.GetBytes(sBuffer");
-            
-            #line 229 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write(".Length));\r\n\t\t\tbuffer.AddRange(hashhelper.ComputeHash(sBuffer");
-            
-            #line 230 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write("));\r\n\t\t\tbuffer.AddRange(sBuffer");
-            
-            #line 231 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
-            
-            #line default
-            #line hidden
-            this.Write("); \r\n");
-            
-            #line 232 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } else if (typeName == typeof(Int32).FullName) { 
             
             #line default
             #line hidden
             this.Write("            buffer.AddRange(BitConverter.GetBytes(");
             
-            #line 233 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 223 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write(")); \r\n");
+            this.Write("_item)); \r\n");
             
-            #line 234 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 224 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } else if (typeName == typeof(Int16).FullName) { 
             
             #line default
             #line hidden
             this.Write("            buffer.AddRange(BitConverter.GetBytes(");
             
-            #line 235 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 225 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
-            this.Write(")); \r\n");
+            this.Write("_item)); \r\n");
             
-            #line 236 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 226 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } else if (typeName == typeof(Int64).FullName) { 
             
             #line default
             #line hidden
             this.Write("            buffer.AddRange(BitConverter.GetBytes(");
             
+            #line 227 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write("_item)); \r\n");
+            
+            #line 228 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } else if (typeName == typeof(byte).FullName) { 
+            
+            #line default
+            #line hidden
+            
+            #line 229 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } else { 
+            
+            #line default
+            #line hidden
+            this.Write("                buffer.AddRange(BitConverter.GetBytes((int)");
+            
+            #line 230 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write("_item)); \r\n");
+            
+            #line 231 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } 
+            
+            #line default
+            #line hidden
+            this.Write("            }\r\n\r\n");
+            
+            #line 234 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } else { 
+            
+            #line default
+            #line hidden
+            
+            #line 235 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ if (typeName == typeof(string).FullName) { 
+            
+            #line default
+            #line hidden
+            this.Write("            var sBuffer");
+            
+            #line 236 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write(" = System.Text.UnicodeEncoding.Unicode.GetBytes(");
+            
+            #line 236 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write(");\r\n            buffer.AddRange(BitConverter.GetBytes(");
+            
             #line 237 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write(".Length + 1));\r\n            buffer.AddRange(hashhelper.ComputeHash(sBuffer");
+            
+            #line 238 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write("));\r\n            buffer.AddRange(sBuffer");
+            
+            #line 239 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write(");\r\n            buffer.AddRange(BitConverter.GetBytes((short)0));\r\n");
+            
+            #line 241 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } else if (typeName == typeof(Int32).FullName) { 
+            
+            #line default
+            #line hidden
+            this.Write("            buffer.AddRange(BitConverter.GetBytes(");
+            
+            #line 242 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(")); \r\n");
             
-            #line 238 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 243 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } else if (typeName == typeof(Int16).FullName) { 
+            
+            #line default
+            #line hidden
+            this.Write("            buffer.AddRange(BitConverter.GetBytes(");
+            
+            #line 244 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write(")); \r\n");
+            
+            #line 245 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+ } else if (typeName == typeof(Int64).FullName) { 
+            
+            #line default
+            #line hidden
+            this.Write("            buffer.AddRange(BitConverter.GetBytes(");
+            
+            #line 246 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
+            
+            #line default
+            #line hidden
+            this.Write(")); \r\n");
+            
+            #line 247 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } else if (typeName == typeof(byte).FullName) { 
             
             #line default
             #line hidden
             
-            #line 239 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 248 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  if (cpItem.IsArray == true) { 
             
             #line default
             #line hidden
-            this.Write("\t\t\tbuffer.AddRange(BitConverter.GetBytes(");
+            this.Write("            buffer.AddRange(BitConverter.GetBytes(");
             
-            #line 240 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 249 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(".Length)); // Length of Array\r\n            buffer.AddRange(");
             
-            #line 241 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 250 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(");  // Add raw bytes to stream\r\n");
             
-            #line 242 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 251 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } else { 
             
             #line default
             #line hidden
-            this.Write("\t\t\tbuffer.AddRange(BitConverter.GetBytes(");
+            this.Write("            buffer.AddRange(BitConverter.GetBytes(");
             
-            #line 243 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 252 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(")); \r\n");
             
-            #line 244 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 253 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } 
             
             #line default
             #line hidden
             this.Write("            \r\n");
             
-            #line 246 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 255 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } else { 
             
             #line default
             #line hidden
-            this.Write("\t\t\tbuffer.AddRange(BitConverter.GetBytes((int)");
+            this.Write("            buffer.AddRange(BitConverter.GetBytes((int)");
             
-            #line 247 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 256 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(cpItem.Name));
             
             #line default
             #line hidden
             this.Write(")); \r\n");
             
-            #line 248 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 257 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } 
             
             #line default
             #line hidden
             this.Write("\r\n");
             
-            #line 250 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 259 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } 
             
             #line default
             #line hidden
             
-            #line 251 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
+            #line 260 "C:\Users\pjld\Source\Repos\chainsapm\CommandCreator\CommandGeneratorCS.tt"
  } 
             
             #line default
             #line hidden
             this.Write("            buffer.AddRange(BitConverter.GetBytes((short)0));\r\n            return" +
-                    " buffer.ToArray();\r\n        }\r\n    }\r\n\t\r\n}\r\n\r\n");
+                    " buffer.ToArray();\r\n        }\r\n    }\r\n    \r\n}\r\n\r\n");
             return this.GenerationEnvironment.ToString();
         }
     }

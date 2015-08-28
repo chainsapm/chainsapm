@@ -20,13 +20,13 @@ namespace ChainsAPM.Commands.<#= this.Namespace #>
     public class <#= this.ClassName #> : Interfaces.ICommand<byte>
     {
 
-		 private Helpers.Fnv1a64 hashhelper;
+         private Helpers.Fnv1a64 hashhelper;
 
          public DateTime TimeStamp { get; set; }
 <# foreach (var enumn in this.EnumerationList)
 { #>
 <# if (enumn.Flags){#>
-		[Flags]
+        [Flags]
 <#}#>
         public enum <#= enumn.EnumerationName #>
         {
@@ -50,12 +50,12 @@ namespace ChainsAPM.Commands.<#= this.Namespace #>
 
         public <#= this.ClassName #>()
         {
-
+            hashhelper = new Helpers.Fnv1a64();
         }
 
-        public <#= this.ClassName #>(System.Int64 timestamp, <# foreach (var cpItem in this.ClassProperties) { if (TypeMapping.ContainsKey(cpItem.TypeName)) { if(cpItem.IsList == true) { #>List<<#}#><#=TypeMapping[cpItem.TypeName].ToString()#><#if(cpItem.IsList == true) { #>><#}#><#if(cpItem.IsArray == true){#>[]<#}#><# } else { if(cpItem.IsList == true) { #>List<<#}#><#= cpItem.TypeName.ToString()#><#if(cpItem.IsList == true) { #>><#}#><#if(cpItem.IsArray == true){#>[]<#}#><#}#> _<#= cpItem.Name.ToLower() #><#  if (this.ClassProperties.Last().Name != cpItem.Name) { #>, <# } else { } } #>)
+        public <#= this.ClassName #>(System.Int64 timestamp, <# foreach (var cpItem in this.ClassProperties) { if (TypeMapping.ContainsKey(cpItem.TypeName)) { if(cpItem.IsList == true) { #>List<<#}#><#=TypeMapping[cpItem.TypeName].ToString()#><#if(cpItem.IsList == true) { #>><#}#><#if(cpItem.IsArray == true){#>[]<#}#><# } else { if(cpItem.IsList == true) { #>List<<#}#><#= cpItem.TypeName.ToString()#><#if(cpItem.IsList == true) { #>><#}#><#if(cpItem.IsArray == true){#>[]<#}#><#}#> _<#= cpItem.Name.ToLower() #><#  if (this.ClassProperties.Last().Name != cpItem.Name) { #>, <# } else { } } #>) : this()
         {
-            TimeStamp = DateTime.FromFileTimeUtc(timestamp);
+                TimeStamp = timestamp == null ? DateTime.Now : DateTime.FromFileTimeUtc(timestamp);
 <# foreach (var cpItem in this.ClassProperties)
 { #>
             <#= cpItem.Name #> = _<#= cpItem.Name.ToLower() #>;
@@ -96,19 +96,19 @@ string typeName = "";
 if (TypeMapping.ContainsKey(cpItem.TypeName)) { typeName = TypeMapping[cpItem.TypeName].ToString(); } else { typeName = cpItem.TypeName.ToString(); }
 if (cpItem.IsList == true | cpItem.IsArray == true) { #>
 
-					var numberOf<#= cpItem.Name #> = segstream.GetInt32();
+                    var numberOf<#= cpItem.Name #> = segstream.GetInt32();
   <# if (cpItem.IsList == true) { #>
-					var listOf<#= cpItem.Name #> = new List<<#=typeName#>>();
+                    var listOf<#= cpItem.Name #> = new List<<#=typeName#>>();
   <# } else { #>
-					var arrayOf<#= cpItem.Name #> = new <#=typeName#>[numberOf<#= cpItem.Name #>];
+                    var arrayOf<#= cpItem.Name #> = new <#=typeName#>[numberOf<#= cpItem.Name #>];
   <# } #>
                     for (int i<#= cpItem.Name #> = 0; i<#= cpItem.Name #> < numberOf<#= cpItem.Name #>; i<#= cpItem.Name #>++)
                     {
 <# } #>
 <# if (typeName == typeof(string).FullName) { #>
-					var stringlen<#= cpItem.Name #> = segstream.GetInt32();
-					var decode<#= cpItem.Name #>Hash = segstream.GetInt64();
-					var decode<#= cpItem.Name #> = segstream.GetUnicode(stringlen<#= cpItem.Name #>);
+                    var stringlen<#= cpItem.Name #> = segstream.GetInt32();
+                    var decode<#= cpItem.Name #>Hash = segstream.GetInt64();
+                    var decode<#= cpItem.Name #> = segstream.GetUnicode(stringlen<#= cpItem.Name #>);
 
 <# } else if (typeName == typeof(Int32).FullName) { #>
                     var decode<#= cpItem.Name #> = segstream.GetInt32();
@@ -127,10 +127,10 @@ if (cpItem.IsList == true | cpItem.IsArray == true) { #>
 
 <# } #>
 <# if (cpItem.IsList == true) { #>
-					listOf<#= cpItem.Name #>.Add(decode<#= cpItem.Name #>);
+                    listOf<#= cpItem.Name #>.Add(decode<#= cpItem.Name #>);
                     }
 <# } else if (cpItem.IsArray == true) { #>
-					arrayOf<#= cpItem.Name #>[i<#= cpItem.Name #>] = decode<#= cpItem.Name #>;
+                    arrayOf<#= cpItem.Name #>[i<#= cpItem.Name #>] = decode<#= cpItem.Name #>;
                     }
 <# } #>     
 <# } #>                       
@@ -160,6 +160,11 @@ if (cpItem.IsList == true | cpItem.IsArray == true) { #>
         public byte[] Encode()
         {
             int byteSize = 0;
+
+             byteSize += sizeof (Int32); // Length Of Command
+             byteSize += sizeof (Int16); // Length Of Code
+             byteSize += sizeof (Int64); // Length Of Timestamp
+
 <# foreach (var cpItem in this.ClassProperties) { 
 string typeName = "";			 
 if (TypeMapping.ContainsKey(cpItem.TypeName)) { typeName = TypeMapping[cpItem.TypeName].ToString(); } else { typeName = cpItem.TypeName.ToString(); }
@@ -170,9 +175,10 @@ if (cpItem.IsList == true) { #>
 <# if (cpItem.IsList == true) { #>
             foreach (var sItem in <#= cpItem.Name #>)
             {
+               var sBufferListOfMethods_item = System.Text.UnicodeEncoding.Unicode.GetBytes (sItem);
                byteSize += sizeof(System.Int32); // Length Bytes
                byteSize += sizeof(System.Int64); // Hash Bytes
-               byteSize += sItem.Length; // StringLength Bytes
+               byteSize += sBufferListOfMethods_item.Length + 1; // StringLength Bytes
             }
 <# } else { #>
             byteSize += sizeof(System.Int32); // Length Bytes
@@ -191,6 +197,7 @@ if (cpItem.IsList == true) { #>
             byteSize += sizeof(Int32)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Length<# } #>;
 <# } #>
 <# } #>
+            byteSize += sizeof (short); // Length Of Terminator
             var buffer = new List<byte>(byteSize);
             buffer.AddRange(BitConverter.GetBytes(byteSize)); // 4 bytes for size, 2 byte for code, 8 bytes for data, 8 bytes for data, 8 bytes for TS, 2 bytes for term
             buffer.AddRange(BitConverter.GetBytes(Code));
@@ -202,15 +209,16 @@ if ((cpItem.IsList == true | cpItem.IsArray == true) && typeName != typeof(byte)
 <# if (cpItem.IsList == true) { #>
             buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>.Count)); // Count of List
 <# } else { #>
-			buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>.Length)); // Length of Array
+            buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>.Length)); // Length of Array
 <# } #>
             foreach (var <#= cpItem.Name #>_item in <#= cpItem.Name #>)
             {
 <# if (typeName == typeof(string).FullName) { #>
-				var sBuffer<#= cpItem.Name #>_item = System.Text.UnicodeEncoding.Unicode.GetBytes(<#= cpItem.Name #>_item);
-                buffer.AddRange(BitConverter.GetBytes(sBuffer<#= cpItem.Name #>_item.Length));
-				buffer.AddRange(hashhelper.ComputeHash(sBuffer<#= cpItem.Name #>_item));
-				buffer.AddRange(sBuffer<#= cpItem.Name #>_item); 
+                var sBuffer<#= cpItem.Name #>_item = System.Text.UnicodeEncoding.Unicode.GetBytes(<#= cpItem.Name #>_item);
+                buffer.AddRange(BitConverter.GetBytes(ListOfMethods_item.Length));
+                buffer.AddRange(hashhelper.ComputeHash(sBuffer<#= cpItem.Name #>_item));
+                buffer.AddRange(sBuffer<#= cpItem.Name #>_item);
+                buffer.AddRange(BitConverter.GetBytes((short)0));
 <# } else if (typeName == typeof(Int32).FullName) { #>
             buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>_item)); 
 <# } else if (typeName == typeof(Int16).FullName) { #>
@@ -225,10 +233,11 @@ if ((cpItem.IsList == true | cpItem.IsArray == true) && typeName != typeof(byte)
 
 <# } else { #>
 <# if (typeName == typeof(string).FullName) { #>
-			var sBuffer<#= cpItem.Name #> = System.Text.UnicodeEncoding.Unicode.GetBytes(<#= cpItem.Name #>);
-            buffer.AddRange(BitConverter.GetBytes(sBuffer<#= cpItem.Name #>.Length));
-			buffer.AddRange(hashhelper.ComputeHash(sBuffer<#= cpItem.Name #>));
-			buffer.AddRange(sBuffer<#= cpItem.Name #>); 
+            var sBuffer<#= cpItem.Name #> = System.Text.UnicodeEncoding.Unicode.GetBytes(<#= cpItem.Name #>);
+            buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>.Length + 1));
+            buffer.AddRange(hashhelper.ComputeHash(sBuffer<#= cpItem.Name #>));
+            buffer.AddRange(sBuffer<#= cpItem.Name #>);
+            buffer.AddRange(BitConverter.GetBytes((short)0));
 <# } else if (typeName == typeof(Int32).FullName) { #>
             buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>)); 
 <# } else if (typeName == typeof(Int16).FullName) { #>
@@ -237,14 +246,14 @@ if ((cpItem.IsList == true | cpItem.IsArray == true) && typeName != typeof(byte)
             buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>)); 
 <# } else if (typeName == typeof(byte).FullName) { #>
 <# if (cpItem.IsArray == true) { #>
-			buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>.Length)); // Length of Array
+            buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>.Length)); // Length of Array
             buffer.AddRange(<#= cpItem.Name #>);  // Add raw bytes to stream
 <# } else { #>
-			buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>)); 
+            buffer.AddRange(BitConverter.GetBytes(<#= cpItem.Name #>)); 
 <# } #>
             
 <# } else { #>
-			buffer.AddRange(BitConverter.GetBytes((int)<#= cpItem.Name #>)); 
+            buffer.AddRange(BitConverter.GetBytes((int)<#= cpItem.Name #>)); 
 <# } #>
 
 <# } #>
@@ -253,6 +262,6 @@ if ((cpItem.IsList == true | cpItem.IsArray == true) && typeName != typeof(byte)
             return buffer.ToArray();
         }
     }
-	
+    
 }
 

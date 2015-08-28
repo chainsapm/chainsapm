@@ -295,14 +295,14 @@ void Cprofilermain::SetUpAgent()
 	tp->CreateNetworkIoThreadPool(m_NetworkClient);
 
 	auto cmd1 = std::make_shared<Commands::SendString>(L"");
-	auto df = new Commands::DefineFunction(0, 0, L"", 0);
-	std::shared_ptr<Commands::DefineFunction> def(df);
+	auto def = std::make_shared<Commands::DefineFunction>(0, 0, L"", 0);
+	auto listOfCommands = std::make_shared<Commands::SendListOfMethods>(0, std::vector<Commands::SendListOfMethods::MethodSettings>(), std::vector<std::wstring>());
+	auto funcQuick = std::make_shared<Commands::FunctionEnterQuick>(0, 0, 0);
+
 	m_NetworkClient->m_CommandList.emplace(cmd1->Code(), cmd1);
 	m_NetworkClient->m_CommandList.emplace(def->Code(), def);
-
-
-	auto sz = sizeof(Commands::FunctionEnterQuick);
-	auto defp = new Commands::FunctionEnterQuick(0, 0, 0);
+	m_NetworkClient->m_CommandList.emplace(listOfCommands->Code(), listOfCommands);
+	m_NetworkClient->m_CommandList.emplace(funcQuick->Code(), funcQuick);
 
 	m_NetworkClient->Start(); // Ready for normal unblocked operation
 
@@ -339,8 +339,6 @@ void Cprofilermain::SendAgentInformation()
 	m_NetworkClient->SendCommand<Commands::SendPackedStructure>(std::make_shared<Commands::SendPackedStructure>(ainfo));
 	if (WaitForSingleObject(NetworkClient::DataReceived, 10000) == 0)
 	{
-		auto cmd = std::dynamic_pointer_cast<Commands::SendString>(m_NetworkClient->ReceiveCommand());
-		auto s = cmd->m_wstring;
 	}
 
 }
@@ -380,18 +378,20 @@ Cprofilermain::~Cprofilermain()
 void Cprofilermain::AddCommonFunctions()
 {
 
-	//// TODO Ask network client to give me data
-	//m_NetworkClient->SendCommand<Commands::GetFunctionsToInstrument>(
-	//	std::make_shared<Commands::GetFunctionsToInstrument>(
-	//		Commands::GetFunctionsToInstrument()));
+	auto cmd = std::dynamic_pointer_cast<Commands::SendListOfMethods>(m_NetworkClient->ReceiveCommand());
 
-	//auto cmd = std::dynamic_pointer_cast<Commands::GetString>(m_NetworkClient->ReceiveCommand());
-
-	auto newMapping2 = ItemMapping();
-
-	newMapping2.FunctionName = TEXT("AddNumbers");
-	newMapping2.Match = ItemMapping::MatchType::FunctionOnly;
-	this->m_Container->g_FullyQualifiedMethodsToProfile->insert(newMapping2);
+	if (cmd->ListOfMethods.size() == cmd->ListOfMethodSettings.size())
+	{
+		for (size_t i = 0; i < cmd->ListOfMethods.size(); i++)
+		{
+			auto newMapping = ItemMapping();
+			newMapping.FunctionName = cmd->ListOfMethods[i];
+			newMapping.Match = ItemMapping::MatchType::FunctionOnly;
+			this->m_Container->g_FullyQualifiedMethodsToProfile->insert(newMapping);
+		}
+	}
+	
+	
 
 }
 

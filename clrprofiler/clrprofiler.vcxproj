@@ -415,6 +415,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\commands\GetFunctionsToInstrument.cpp" />
+    <ClCompile Include="src\commands\SendListOfMethods.cpp" />
     <ClCompile Include="src\helpers\bit_converter.cpp" />
     <ClCompile Include="src\commands\DefineAssembly.cpp" />
     <ClCompile Include="src\commands\DefineClass.cpp" />
@@ -555,6 +556,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="inc\ParameterInfo.h" />
     <ClInclude Include="inc\profilermain.h" />
     <ClInclude Include="inc\Resource.h" />
+    <ClInclude Include="inc\SendListOfMethods.h" />
     <ClInclude Include="inc\SendString.h" />
     <ClInclude Include="inc\SetFunctionsToMonitor.h" />
     <ClInclude Include="inc\srw_helper.h" />

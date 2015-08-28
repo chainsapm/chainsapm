@@ -137,12 +137,15 @@ std::shared_ptr<Commands::ICommand> NetworkClient::ReceiveCommand()
 				m_InboundQueueFront.swap(m_InboundQueueBack); // Swap the back buffer with the front to allow uninterrupted data flow
 			csback.leave_early(); // Done with the back buffer, bail early
 
-			auto itemtodecodeout = m_InboundQueueFront.front();
-			auto cmdnumber = itemtodecodeout->at(4);
-			if (m_CommandList[cmdnumber] != nullptr)
+			if (!m_InboundQueueFront.empty())
 			{
-				auto itemout = m_CommandList[cmdnumber]->Decode(itemtodecodeout);
-				return itemout;
+				auto itemtodecodeout = m_InboundQueueFront.front();
+				auto cmdnumber = *(short*)(itemtodecodeout->data()+4);
+				if (m_CommandList[cmdnumber] != nullptr)
+				{
+					itemout = m_CommandList[cmdnumber]->Decode(itemtodecodeout);
+					return itemout;
+				}
 			}
 
 		}

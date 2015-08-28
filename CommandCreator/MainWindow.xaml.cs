@@ -281,21 +281,26 @@ namespace CommandCreator {
 
 
                 private void ProcessSingleCommand_click (object sender, RoutedEventArgs e) {
-                        var json = Newtonsoft.Json.JsonConvert.SerializeObject (CommandVM, Newtonsoft.Json.Formatting.Indented);
-                        CommandVM.SelectedCommand.TypeMapping = CommandVM.CSharpTypeMapping;
-                        var tt = new CommandGeneratorCS (CommandVM.SelectedCommand);
-                        using ( var sw = new System.IO.StreamWriter (string.Format ("C:\\Logfiles\\{0}.cs", tt.ClassName)) ) {
-                                sw.Write (tt.TransformText ());
-                        }
-                        CommandVM.SelectedCommand.TypeMapping = CommandVM.CppTypeMapping;
-                        var ttCpp = new CommandGeneratorCpp (CommandVM.SelectedCommand);
-                        var ttH = new CommandGeneratorH (CommandVM.SelectedCommand);
+                        if ( CommandVM.SelectedCommand != null ) {
 
-                        using ( var sw = new System.IO.StreamWriter (string.Format ("C:\\Logfiles\\{0}.cpp", ttCpp.ClassName)) ) {
-                                sw.Write (ttCpp.TransformText ());
-                        }
-                        using ( var sw = new System.IO.StreamWriter (string.Format ("C:\\Logfiles\\{0}.h", ttH.ClassName)) ) {
-                                sw.Write (ttH.TransformText ());
+                                var json = Newtonsoft.Json.JsonConvert.SerializeObject (CommandVM, Newtonsoft.Json.Formatting.Indented);
+                                CommandVM.SelectedCommand.TypeMapping = CommandVM.CSharpTypeMapping;
+                                var tt = new CommandGeneratorCS (CommandVM.SelectedCommand);
+                                using ( var sw = new System.IO.StreamWriter (string.Format ("C:\\Logfiles\\{0}.cs", tt.ClassName)) ) {
+                                        sw.Write (tt.TransformText ());
+                                }
+                                CommandVM.SelectedCommand.TypeMapping = CommandVM.CppTypeMapping;
+                                var ttCpp = new CommandGeneratorCpp (CommandVM.SelectedCommand);
+                                var ttH = new CommandGeneratorH (CommandVM.SelectedCommand);
+
+                                using ( var sw = new System.IO.StreamWriter (string.Format ("C:\\Logfiles\\{0}.cpp", ttCpp.ClassName)) ) {
+                                        sw.Write (ttCpp.TransformText ());
+                                }
+                                using ( var sw = new System.IO.StreamWriter (string.Format ("C:\\Logfiles\\{0}.h", ttH.ClassName)) ) {
+                                        sw.Write (ttH.TransformText ());
+                                } 
+                        } else {
+                                MessageBox.Show ("You must select a command from the list to your left.");
                         }
 
 

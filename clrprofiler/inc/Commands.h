@@ -14,3 +14,4 @@
 #include "SendString.h"
 #include "SendPackedStructure.h"
 #include "GetFunctionsToInstrument.h"
+#include "SendListOfMethods.h"

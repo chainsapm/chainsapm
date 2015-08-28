@@ -190,6 +190,9 @@
     <ClCompile Include="src\infoclasses\FunctionInfo.cpp">
       <Filter>Common Classes\Info Classes</Filter>
     </ClCompile>
+    <ClCompile Include="src\commands\SendListOfMethods.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\clrprofiler_i.h">
@@ -313,6 +316,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inc\GetFunctionsToInstrument.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\SendListOfMethods.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -21,7 +21,7 @@ namespace Commands
 
 
     public:
-	<# foreach (var enumn in this.EnumerationList) { #>
+    <# foreach (var enumn in this.EnumerationList) { #>
         enum class <#= enumn.EnumerationName #>
         {
 <# foreach (var enumItem in enumn.Items) { #>
@@ -49,7 +49,7 @@ namespace Commands
 PushIndent("        ");
 foreach (var cpItem in this.ClassProperties)
 {
-	CreateCppDeclaration(cpItem, TypeMapping);
+    CreateCppDeclaration(cpItem, TypeMapping);
 } PopIndent(); #>
         __int64 timestamp; // Always use a 64bit so the message doesn't change
         std::shared_ptr<std::vector<char>> internalvector;
