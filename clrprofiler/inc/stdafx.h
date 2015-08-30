@@ -22,13 +22,17 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "resource.h"
+// Debug ASSERT
 #include <assert.h>
+// ATL LIbraries
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlctl.h>
+
 // Cor Profiling Libraries
 #include <cor.h>
 #include <corprof.h>
+
 // STL Libraries
 #include <map>
 #include <unordered_map>
@@ -44,11 +48,7 @@
 #include <memory>
 #include <allocators>
 
-// Boost Libraries
-//#include <boost/date_time.hpp>
-//#include <boost/format.hpp>
-
-
+// Statically linked libs
 #pragma comment(lib, "corguids.lib")
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "metadatastaticlib.lib")

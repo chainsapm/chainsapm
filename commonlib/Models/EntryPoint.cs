@@ -10,7 +10,6 @@
 
             if (stackitem.Type == ItemType.Entry)
                 ++CurrentDepth;
-
             stackitem.Depth = CurrentDepth;
             try
             {

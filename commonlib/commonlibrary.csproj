@@ -49,6 +49,22 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mono.Cecil.Mdb, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.Mdb.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mono.Cecil.Pdb, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.Pdb.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mono.Cecil.Rocks, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.Rocks.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -75,9 +91,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Agent\Agent.cs" />
-    <Compile Include="Commands\Agent\SendListOfMethods.cs" />
-    <Compile Include="Commands\Agent\StringList.cs" />
+    <Compile Include="Agent\AgentProcessorImpl.cs" />
+    <Compile Include="Commands\Agent\ACK.cs" />
+    <Compile Include="Commands\Agent\AgentInformation.cs" />
+    <Compile Include="Commands\Agent\DefineMethod.cs" />
+    <Compile Include="Commands\Agent\DefineModule.cs" />
+    <Compile Include="Commands\Agent\MethodEnter.cs" />
+    <Compile Include="Commands\Agent\MethodExit.cs" />
+    <Compile Include="Commands\Agent\MethodsToInstrument.cs" />
     <Compile Include="Commands\Locator.cs" />
+    <Compile Include="Interfaces\ICommandProcessor.cs" />
     <Compile Include="Config\AgentConfig.cs" />
     <Compile Include="Config\AgentGroupConfig.cs" />
     <Compile Include="Config\AggregatorConfig.cs" />
@@ -101,12 +124,6 @@
     <Compile Include="Models\Resource.cs" />
     <Compile Include="Models\Signature.cs" />
     <Compile Include="Models\StackItem.cs" />
-    <Compile Include="Commands\Agent\AgentInformation.cs" />
-    <Compile Include="Commands\Agent\DefineFunction.cs" />
-    <Compile Include="Commands\Agent\FunctionTailQuick.cs" />
-    <Compile Include="Commands\Agent\FunctionLeaveQuick.cs" />
-    <Compile Include="Commands\Agent\FunctionEnterQuick.cs" />
-    <Compile Include="Commands\Agent\FunctionsToProfile.cs" />
     <Compile Include="Commands\Common\SendString.cs" />
     <Compile Include="Commands\Common\GetString.cs" />
     <Compile Include="Helpers\ArraySegmentStream.cs" />

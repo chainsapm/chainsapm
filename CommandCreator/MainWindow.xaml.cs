@@ -21,6 +21,8 @@ namespace CommandCreator {
         /// </summary>
         public partial class MainWindow : Window {
                 public NetworkCommandViewModel NetworkCommands { get; set; }
+
+                
                 public MainWindow () {
                         InitializeComponent ();
                         CreateCSharpTypeMap ();
@@ -136,7 +138,6 @@ namespace CommandCreator {
                         csTypeMap.Add (new TypeMap (typeof (double).FullName, "double"));
                         csTypeMap.Add (new TypeMap (typeof (string).FullName, "std::wstring"));
 
-                        CreateDummyCommands ();
                 }
 
 
@@ -283,27 +284,40 @@ namespace CommandCreator {
                 private void ProcessSingleCommand_click (object sender, RoutedEventArgs e) {
                         if ( CommandVM.SelectedCommand != null ) {
 
-                                var json = Newtonsoft.Json.JsonConvert.SerializeObject (CommandVM, Newtonsoft.Json.Formatting.Indented);
-                                CommandVM.SelectedCommand.TypeMapping = CommandVM.CSharpTypeMapping;
-                                var tt = new CommandGeneratorCS (CommandVM.SelectedCommand);
-                                using ( var sw = new System.IO.StreamWriter (string.Format ("C:\\Logfiles\\{0}.cs", tt.ClassName)) ) {
-                                        sw.Write (tt.TransformText ());
-                                }
-                                CommandVM.SelectedCommand.TypeMapping = CommandVM.CppTypeMapping;
-                                var ttCpp = new CommandGeneratorCpp (CommandVM.SelectedCommand);
-                                var ttH = new CommandGeneratorH (CommandVM.SelectedCommand);
-
-                                using ( var sw = new System.IO.StreamWriter (string.Format ("C:\\Logfiles\\{0}.cpp", ttCpp.ClassName)) ) {
-                                        sw.Write (ttCpp.TransformText ());
-                                }
-                                using ( var sw = new System.IO.StreamWriter (string.Format ("C:\\Logfiles\\{0}.h", ttH.ClassName)) ) {
-                                        sw.Write (ttH.TransformText ());
-                                } 
+                                ProcessCommand (CommandVM.SelectedCommand, CommandVM.ProjectRoot);
                         } else {
                                 MessageBox.Show ("You must select a command from the list to your left.");
                         }
 
 
+                }
+
+                private void ProcessCommand(NetworkCommand nc, string RootFolder) {
+
+                        if ( !System.IO.Directory.Exists(string.Format (@"{0}\commonlib\Commands\{1}\", RootFolder, nc.Namespace)) ) 
+                                System.IO.Directory.CreateDirectory (string.Format (@"{0}\commonlib\Commands\{1}\", RootFolder, nc.Namespace));
+
+                        if ( !System.IO.Directory.Exists (string.Format (@"{0}\clrprofiler\src\commands\", RootFolder)) )
+                                System.IO.Directory.CreateDirectory (string.Format (@"{0}\clrprofiler\src\commands\", RootFolder));
+
+                        if ( !System.IO.Directory.Exists (string.Format (@"{0}\clrprofiler\inc\commands\", RootFolder)) )
+                                System.IO.Directory.CreateDirectory (string.Format (@"{0}\clrprofiler\inc\commands\", RootFolder));
+
+                        nc.TypeMapping = CommandVM.CSharpTypeMapping;
+                        var tt = new CommandGeneratorCS (nc);
+                        using ( var sw = new System.IO.StreamWriter (string.Format (@"{0}\commonlib\Commands\{1}\{2}.cs", RootFolder, nc.Namespace, nc.ClassName)) ) {
+                                sw.Write (tt.TransformText ());
+                        }
+                        nc.TypeMapping = CommandVM.CppTypeMapping;
+                        var ttCpp = new CommandGeneratorCpp (nc);
+                        var ttH = new CommandGeneratorH (nc);
+                        //C:\Users\James\Source\Repos\chainsapm\clrprofiler\src\commands
+                        using ( var sw = new System.IO.StreamWriter (string.Format (@"{0}\clrprofiler\src\commands\{1}.cpp", RootFolder, ttCpp.ClassName)) ) {
+                                sw.Write (ttCpp.TransformText ());
+                        }
+                        using ( var sw = new System.IO.StreamWriter (string.Format (@"{0}\clrprofiler\inc\commands\{1}.h", RootFolder, ttH.ClassName)) ) {
+                                sw.Write (ttH.TransformText ());
+                        }
                 }
 
                 private void CommandBinding_CanExecute_1 (object sender, CanExecuteRoutedEventArgs e) {
@@ -329,6 +343,7 @@ namespace CommandCreator {
                 }
 
                 private void ProcessAllCommands_Click (object sender, RoutedEventArgs e) {
+                        
                         int [] commandNumbers = new int [CommandVM.NetworkCommands.Count];
                         for ( int i = 0; i < CommandVM.NetworkCommands.Count; i++ ) {
                                 commandNumbers [i] = CommandVM.NetworkCommands [i].NetworkCommand.Code;
@@ -337,12 +352,13 @@ namespace CommandCreator {
                                 MessageBox.Show ("You have a duplicate number in your commands. Please verify.");
                         } else {
                                 foreach ( var item in CommandVM.NetworkCommands ) {
-                                        item.NetworkCommand.TypeMapping = CommandVM.CSharpTypeMapping;
-                                        var tt = new CommandGeneratorCS (item.NetworkCommand);
-                                        using ( var sw = new System.IO.StreamWriter (string.Format ("C:\\Logfiles\\{0}.cs", tt.ClassName)) ) {
-                                                sw.Write (tt.TransformText ());
-                                        }
+                                        ProcessCommand (item.NetworkCommand, CommandVM.ProjectRoot);
                                 }
+                                using ( var sw = new System.IO.StreamWriter (string.Format (@"{0}\commonlib\Interfaces\ICommandProcessor.cs", CommandVM.ProjectRoot)) ) {
+                                        var tic = new CommandInterface (CommandVM.NetworkCommands.ToList ());
+                                        sw.Write (tic.TransformText ());
+                                }
+                                
                         }
 
                 }

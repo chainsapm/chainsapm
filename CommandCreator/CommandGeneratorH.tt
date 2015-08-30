@@ -42,15 +42,13 @@ namespace Commands
         virtual std::wstring Name();
         virtual std::wstring Description();
         virtual short Code() { return code; }
-
-    private:
-
 <# 
 PushIndent("        ");
 foreach (var cpItem in this.ClassProperties)
 {
     CreateCppDeclaration(cpItem, TypeMapping);
 } PopIndent(); #>
+      private:
         __int64 timestamp; // Always use a 64bit so the message doesn't change
         std::shared_ptr<std::vector<char>> internalvector;
         bool hasEncoded;

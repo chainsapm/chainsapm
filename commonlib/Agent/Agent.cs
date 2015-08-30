@@ -1,18 +1,18 @@
-﻿using ChainsAPM.Commands;
-using ChainsAPM.Commands.Agent;
-using ChainsAPM.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ChainsAPM.Server;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Text;
+using System.Threading.Tasks;
+using ChainsAPM.Commands;
+using ChainsAPM.Commands.Agent;
+using ChainsAPM.Interfaces;
 using ChainsAPM.Models;
+using ChainsAPM.Server;
 
 namespace ChainsAPM.Agent {
-        public class Agent : IAgentEvents {
+        public partial class Agent : IAgentEvents {
                 public Config.AgentConfig AgentConfig { get; private set; }
                 public IConnectionHandler ConnectionHandler { get; set; }
                 public IServerEvents ServerEvents { get; set; }
@@ -55,10 +55,12 @@ namespace ChainsAPM.Agent {
                         ServerEvents = serverEvents;
                         ConnectionHandler.SetProcessor (CommandProcessor);
                         ConnectionHandler.HasData += HasData;
-
-                        //ConnectionHandler.Disconnected += tcbah_Disconnected;
+                        ConnectionHandler.Disconnected += Disconnected;
                         ConnectionHandler.Start ();
 
+                }
+
+                private void Disconnected (object sender) {
                 }
 
                 public void HasData (object sender) {
@@ -70,95 +72,30 @@ namespace ChainsAPM.Agent {
 
                                         System.Threading.Interlocked.Increment (ref messagesRecvd);
                                         if ( item != null ) {
-                                                if ( item is ChainsAPM.Commands.Agent.DefineFunction ) {
-                                                        var DefFunc = item as ChainsAPM.Commands.Agent.DefineFunction;
-                                                        //TODO RELPACE WITH METHOD LIST
-                                                        MethodList.Add (DefFunc.FunctionID, new Method ()
-                                                        {
-                                                                MethodName = DefFunc.FunctionName
-                                                        });
+
+                                                if ( item is ChainsAPM.Commands.Agent.DefineMethod ) {
+                                                        Process (item as ChainsAPM.Commands.Agent.DefineMethod);
                                                 }
 
                                                 if ( item is ChainsAPM.Commands.Agent.AgentInformation ) {
-                                                        AgentInfo = item as ChainsAPM.Commands.Agent.AgentInformation;
-                                                        ConnectedTime = DateTime.Now;
-                                                        AgentSubscription.OnNext (this);
-                                                        
-                                                        var ListOfMethods = new List<string> ();
-                                                        var ListOfMethodSettings = new List<SendListOfMethods.MethodSettings> ();
-                                                        var commandsList = new ChainsAPM.Commands.Agent.SendListOfMethods (DateTime.Now.ToFileTimeUtc(), ListOfMethodSettings, ListOfMethods);
-                                                        commandsList.ListOfMethods.Add ("mscorlib!System.Data::Open()");
-                                                        commandsList.ListOfMethodSettings.Add (SendListOfMethods.MethodSettings.Method | SendListOfMethods.MethodSettings.Public);
-                                                        commandsList.ListOfMethods.Add ("mscorlib!System.Data::Close()");
-                                                        commandsList.ListOfMethodSettings.Add (SendListOfMethods.MethodSettings.Method | SendListOfMethods.MethodSettings.Public);
-                                                        commandsList.ListOfMethods.Add ("mscorlib!System.Return::Reset()");
-                                                        commandsList.ListOfMethodSettings.Add (SendListOfMethods.MethodSettings.Method | SendListOfMethods.MethodSettings.Private | SendListOfMethods.MethodSettings.Protected);
-                                                        commandsList.ListOfMethods.Add ("mscorlib!BlahBlahBlah.Data::Hahah()");
-                                                        commandsList.ListOfMethodSettings.Add (SendListOfMethods.MethodSettings.Method | SendListOfMethods.MethodSettings.Public | SendListOfMethods.MethodSettings.Assembly);
-                                                        commandsList.ListOfMethods.Add ("mscorlib!System.Custom::Open()");
-                                                        commandsList.ListOfMethodSettings.Add (SendListOfMethods.MethodSettings.Method);
-                                                        ConnectionHandler.SendCommand (commandsList);
+                                                        Process (item as ChainsAPM.Commands.Agent.AgentInformation);
                                                 }
 
-                                                if ( item is ChainsAPM.Commands.Agent.FunctionEnterQuick ) {
-                                                        var feq = item as ChainsAPM.Commands.Agent.FunctionEnterQuick;
-                                                        if ( !ThreadDepth.ContainsKey (feq.ThreadID) )
-                                                                ThreadDepth.Add (feq.ThreadID, 0);
+                                                if ( item is ChainsAPM.Commands.Agent.MethodEnter ) {
+                                                        Process (item as ChainsAPM.Commands.Agent.MethodEnter);
+                                                }
 
-                                                        if ( !ThreadEntryPointStack.ContainsKey (feq.ThreadID) )
-                                                                ThreadEntryPointStack.Add (feq.ThreadID,
-                                                                    new Stack<ChainsAPM.Models.EntryPoint> ());
-                                                        else {
-                                                                if ( ThreadDepth [feq.ThreadID] > 0 ) {
-                                                                        ThreadEntryPointStack [feq.ThreadID].Last ().UpdateStack (new Models.StackItem ()
-                                                                        {
-                                                                                Id = feq.FunctionID,
-                                                                                OriginalTimeStamp = feq.TimeStamp.ToFileTimeUtc (),
-                                                                                Name = MethodList.ContainsKey (feq.FunctionID) ? MethodList [feq.FunctionID].MethodName : feq.FunctionID.ToString ("X"),
-                                                                                Type = Models.StackItem.ItemType.Entry
-                                                                        });
-                                                                }
-                                                                ThreadEntryPointStack [feq.ThreadID].Push (
-                                                                    new ChainsAPM.Models.EntryPoint ()
-                                                                    {
-                                                                            CurrentDepth = 0,
-                                                                            Id = feq.FunctionID,
-                                                                            OriginalTimeStamp = feq.TimeStamp.ToFileTimeUtc (),
-                                                                            Name = MethodList.ContainsKey (feq.FunctionID) ? MethodList [feq.FunctionID].MethodName : feq.FunctionID.ToString ("X"),
-                                                                            Type = Models.StackItem.ItemType.Entry
-
-                                                                    });
+                                                if ( item is ChainsAPM.Commands.Agent.MethodExit ) {
+                                                        Process (item as ChainsAPM.Commands.Agent.MethodExit);
+                                                }
+                                                if ( item is ChainsAPM.Commands.Common.SendString ) {
+                                                        var it = item as ChainsAPM.Commands.Common.SendString;
+                                                        Console.WriteLine ("Agent {0} has sent string {1}", AgentInfo.AgentName, it.StringData);
+                                                        if ( ((ChainsAPM.Commands.Common.SendString)item).StringData == "Done!" ) {
+                                                                //TODO add in proper shutdown commands
+                                                                //ConnectionHandler.SendCommand(stringCmd);
+                                                                ConnectionHandler.Dispose ();
                                                         }
-                                                }
-                                        }
-
-                                        if ( item is ChainsAPM.Commands.Agent.FunctionLeaveQuick ) {
-                                                var feq = item as ChainsAPM.Commands.Agent.FunctionLeaveQuick;
-                                                if ( !ThreadDepth.ContainsKey (feq.ThreadID) )
-                                                        ThreadDepth.Add (feq.ThreadID, 0);
-
-                                                if ( ThreadDepth [feq.ThreadID] > 0 ) {
-                                                        ThreadDepth [feq.ThreadID]--;
-                                                }
-
-                                                if ( ThreadDepth [feq.ThreadID] == 0 ) {
-                                                        using ( var fw = new System.IO.StreamWriter (string.Format (@"C:\LogFiles\{0}_T{1}.txt", DateTime.Now.Ticks, feq.ThreadID)) ) {
-                                                                foreach ( var StackItem in ThreadEntryPointStack [feq.ThreadID] ) {
-                                                                        // TODO FIX THIS TO PROPERLY UPDATE THE EXIT
-                                                                        //fw.WriteLine("{0}{1}", "".PadLeft((int)StackItem.Item1, ' '), StackItem.Item2);
-                                                                }
-                                                        }
-                                                        ThreadDepth.Remove (feq.ThreadID);
-                                                }
-
-                                        }
-                                        if ( item is ChainsAPM.Commands.Common.SendString ) {
-                                                var it = item as ChainsAPM.Commands.Common.SendString;
-                                                Console.WriteLine ("Agent {0} has sent string {1}", AgentInfo.AgentName, it.StringData);
-                                                if ( ((ChainsAPM.Commands.Common.SendString)item).StringData == "Done!" ) {
-                                                        //TODO add in proper shutdown commands
-                                                        //ConnectionHandler.SendCommand(stringCmd);
-                                                        ConnectionHandler.Dispose ();
                                                 }
                                         }
                                 }

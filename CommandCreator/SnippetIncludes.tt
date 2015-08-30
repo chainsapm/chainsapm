@@ -178,8 +178,8 @@ ptr += sizeof(__int64);
 if (isForLoop) {
 #>
 auto str = (wchar_t*)ptr;
-ptr += strlen<#= varName #> * 2;
 local_<#= varName #>.emplace_back(str);
+ptr += strlen<#= varName #> * 2;
 <#+
 } else {
 #>

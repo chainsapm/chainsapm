@@ -150,6 +150,25 @@ namespace CommandCreator {
                         }
                 }
 
+                private string m_ProjectRoot;
+
+
+
+                public string ProjectRoot {
+                        get {
+                                if ( string.IsNullOrEmpty (m_ProjectRoot) ) {
+                                        return @"C:\Users\James\Source\Repos\chainsapm";
+                                }
+                                return m_ProjectRoot;
+                        }
+                        set {
+                                m_ProjectRoot = value;
+
+                                if ( PropertyChanged != null ) {
+                                        PropertyChanged (this, new PropertyChangedEventArgs ("ProjectRoot"));
+                                }
+                        }
+                }
 
                 public NetworkCommandViewModel () {
                         TypeHelp = new TypeHelper ();
@@ -165,7 +184,7 @@ namespace CommandCreator {
         public class NetworkCommandTreeItemModel : INotifyPropertyChanged {
 
                 private bool cmdNameRegister = false;
-
+                // C:\Users\James\Source\Repos\chainsapm\clrprofiler\src\commands
                 private NetworkCommand m_Command;
                 public NetworkCommand NetworkCommand {
                         get { return m_Command; }
@@ -269,10 +288,10 @@ namespace CommandCreator {
                                 if ( string.IsNullOrEmpty (m_ClassName) ) {
                                         return m_Name.Replace (" ", "").Replace ("!", "").Replace (":", "").Replace (".", "");
                                 }
-                                return m_Name;
+                                return m_ClassName;
                         }
                         set {
-                                m_ClassName = value;
+                                m_ClassName = value.Replace (" ", "").Replace ("!", "").Replace (":", "").Replace (".", ""); ;
                                 if ( PropertyChanged != null ) {
                                         PropertyChanged (this, new PropertyChangedEventArgs ("ClassName"));
                                 }

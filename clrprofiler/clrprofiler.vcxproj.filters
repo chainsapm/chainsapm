@@ -73,30 +73,6 @@
     <ClCompile Include="src\xdlldata.c">
       <Filter>Generated Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\commands\FunctionEnterLong.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\FunctionEnterQuick.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\FunctionLeaveLong.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\FunctionLeaveQuick.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\FunctionStackItem.cpp">
-      <Filter>Common Classes\Stack Items</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\FunctionTailQuick.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\AssemblyDefinition.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\ClassDefinition.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
     <ClCompile Include="src\infoclasses\AgentInfo.cpp">
       <Filter>Common Classes\Agent Info Classes</Filter>
     </ClCompile>
@@ -112,27 +88,6 @@
     <ClCompile Include="src\helpers\critsec_helper.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
-    <ClCompile Include="src\commands\DefineAssembly.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\DefineClass.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\DefineFunction.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\DefineModule.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\GarbageCollectionFinished.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\GarbageCollectionStarted.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\GetString.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
     <ClCompile Include="src\infoclasses\ParameterInfo.cpp">
       <Filter>Common Classes\Info Classes</Filter>
     </ClCompile>
@@ -141,15 +96,6 @@
     </ClCompile>
     <ClCompile Include="src\infoclasses\ProcessInfo.cpp">
       <Filter>Common Classes\Agent Info Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\SendPackedStructure.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\SendString.cpp">
-      <Filter>Commands</Filter>
-    </ClCompile>
-    <ClCompile Include="src\commands\SetFunctionsToMonitor.cpp">
-      <Filter>Commands</Filter>
     </ClCompile>
     <ClCompile Include="src\dllmain\clrprofiler.cpp">
       <Filter>DLLMain</Filter>
@@ -184,13 +130,28 @@
     <ClCompile Include="src\profiler\CorProfilerCallbackImplementation.cpp">
       <Filter>CorProfilerCallback</Filter>
     </ClCompile>
-    <ClCompile Include="src\commands\GetFunctionsToInstrument.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\infoclasses\FunctionInfo.cpp">
       <Filter>Common Classes\Info Classes</Filter>
     </ClCompile>
-    <ClCompile Include="src\commands\SendListOfMethods.cpp">
+    <ClCompile Include="src\commands\ACK.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\AgentInformation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\DefineMethod.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\DefineModule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\MethodEnter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\MethodExit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\commands\MethodsToInstrument.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -243,41 +204,11 @@
     <ClInclude Include="inc\ContainerClass.h">
       <Filter>Common Classes\Main Container</Filter>
     </ClInclude>
-    <ClInclude Include="inc\SendString.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
     <ClInclude Include="inc\Commands.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\FunctionEnterQuick.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\FunctionEnterLong.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\FunctionLeaveLong.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\AssemblyDefinition.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\ClassDefinition.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\GarbageCollectionFinished.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\GarbageCollectionStarted.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\GetString.h">
       <Filter>Commands</Filter>
     </ClInclude>
     <ClInclude Include="inc\ICommand.h">
       <Filter>Commands\Interface</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\SetFunctionsToMonitor.h">
-      <Filter>Commands</Filter>
     </ClInclude>
     <ClInclude Include="inc\AssemblyInfo.h">
       <Filter>Common Classes\Info Classes</Filter>
@@ -288,37 +219,31 @@
     <ClInclude Include="inc\ClassInfo.h">
       <Filter>Common Classes\Info Classes</Filter>
     </ClInclude>
-    <ClInclude Include="inc\SendPackedStructure.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\FunctionTailQuick.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\FunctionLeaveQuick.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\DefineAssembly.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\DefineClass.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\DefineFunction.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\DefineModule.h">
-      <Filter>Commands</Filter>
-    </ClInclude>
     <ClInclude Include="inc\bit_converter.h">
       <Filter>Helpers</Filter>
     </ClInclude>
     <ClInclude Include="inc\INetworkClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\GetFunctionsToInstrument.h">
+    <ClInclude Include="inc\commands\ACK.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\SendListOfMethods.h">
+    <ClInclude Include="inc\commands\AgentInformation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\commands\DefineMethod.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\commands\DefineModule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\commands\MethodEnter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\commands\MethodExit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\commands\MethodsToInstrument.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,4 +1,4 @@
-struct ItemMapping
+struct ItemMapping                                      
 {
 	enum class MatchType
 	{

@@ -262,15 +262,15 @@ EXTERN_C void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Cprofilermain::Cprofilermain() :
-m_fInstrumentationHooksInSeparateAssembly(FALSE),
-m_mdIntPtrExplicitCast(mdTokenNil),
-m_mdEnterPInvoke(mdTokenNil),
-m_mdExitPInvoke(mdTokenNil),
-m_mdEnter(mdTokenNil),
-m_mdExit(mdTokenNil),
-m_modidMscorlib(NULL),
-m_refCount(0),
-m_dwShadowStackTlsIndex(0)
+	m_fInstrumentationHooksInSeparateAssembly(FALSE),
+	m_mdIntPtrExplicitCast(mdTokenNil),
+	m_mdEnterPInvoke(mdTokenNil),
+	m_mdExitPInvoke(mdTokenNil),
+	m_mdEnter(mdTokenNil),
+	m_mdExit(mdTokenNil),
+	m_modidMscorlib(NULL),
+	m_refCount(0),
+	m_dwShadowStackTlsIndex(0)
 {
 
 
@@ -281,9 +281,6 @@ m_dwShadowStackTlsIndex(0)
 	else {
 		LeaveCriticalSection(&Cprofilermain::g_StaticContainerClassCritSec);
 	}
-	auto shrp = std::make_shared<Commands::FunctionEnterQuick>(0, 0, 0);
-	shrp.reset();
-	auto shrp2 = std::make_shared<Commands::FunctionEnterQuick>(0, 0, 0);
 }
 
 void Cprofilermain::SetUpAgent()
@@ -294,15 +291,15 @@ void Cprofilermain::SetUpAgent()
 	tp = new tp_helper(this, 1, 1);
 	tp->CreateNetworkIoThreadPool(m_NetworkClient);
 
-	auto cmd1 = std::make_shared<Commands::SendString>(L"");
-	auto def = std::make_shared<Commands::DefineFunction>(0, 0, L"", 0);
-	auto listOfCommands = std::make_shared<Commands::SendListOfMethods>(0, std::vector<Commands::SendListOfMethods::MethodSettings>(), std::vector<std::wstring>());
-	auto funcQuick = std::make_shared<Commands::FunctionEnterQuick>(0, 0, 0);
+	auto def = std::make_shared<Commands::DefineMethod>(0, 0, 0, 0, 0, L"");
+	auto listOfCommands = std::make_shared<Commands::MethodsToInstrument>(0, std::vector<Commands::MethodsToInstrument::MethodProperties>(), std::vector<std::wstring>(), std::vector<std::wstring>());
+	auto methodEnter = std::make_shared<Commands::MethodEnter>(0, 0, 0, 0);
+	auto methodExit = std::make_shared<Commands::MethodExit>(0, 0, 0, 0);
 
-	m_NetworkClient->m_CommandList.emplace(cmd1->Code(), cmd1);
 	m_NetworkClient->m_CommandList.emplace(def->Code(), def);
 	m_NetworkClient->m_CommandList.emplace(listOfCommands->Code(), listOfCommands);
-	m_NetworkClient->m_CommandList.emplace(funcQuick->Code(), funcQuick);
+	m_NetworkClient->m_CommandList.emplace(methodEnter->Code(), methodEnter);
+	m_NetworkClient->m_CommandList.emplace(methodExit->Code(), methodExit);
 
 	m_NetworkClient->Start(); // Ready for normal unblocked operation
 
@@ -336,8 +333,11 @@ void Cprofilermain::SendAgentInformation()
 	ainfo->Code = 5;
 
 	ResetEvent(NetworkClient::DataReceived);
-	m_NetworkClient->SendCommand<Commands::SendPackedStructure>(std::make_shared<Commands::SendPackedStructure>(ainfo));
-	if (WaitForSingleObject(NetworkClient::DataReceived, 10000) == 0)
+
+	m_NetworkClient->SendCommand<Commands::AgentInformation>(std::make_shared<Commands::AgentInformation>(
+		0, m_AgentName, m_ComputerName, L"C:\\", L"Command Line", L"test.exe", 3000, L"4.0"
+		));
+	if (WaitForSingleObject(NetworkClient::DataReceived, 5000) == 0)
 	{
 	}
 
@@ -378,21 +378,19 @@ Cprofilermain::~Cprofilermain()
 void Cprofilermain::AddCommonFunctions()
 {
 
-	auto cmd = std::dynamic_pointer_cast<Commands::SendListOfMethods>(m_NetworkClient->ReceiveCommand());
+	auto cmd = std::dynamic_pointer_cast<Commands::MethodsToInstrument>(m_NetworkClient->ReceiveCommand());
 
-	if (cmd->ListOfMethods.size() == cmd->ListOfMethodSettings.size())
+	if (cmd->MethodList.size() == cmd->MethodPropList.size() && cmd->MethodList.size() == cmd->MethodClassList.size())
 	{
-		for (size_t i = 0; i < cmd->ListOfMethods.size(); i++)
+		for (size_t i = 0; i < cmd->MethodList.size(); i++)
 		{
 			auto newMapping = ItemMapping();
-			newMapping.FunctionName = cmd->ListOfMethods[i];
+			newMapping.FunctionName = cmd->MethodList[i];
+			newMapping.ClassName = cmd->MethodClassList[i];
 			newMapping.Match = ItemMapping::MatchType::FunctionOnly;
 			this->m_Container->g_FullyQualifiedMethodsToProfile->insert(newMapping);
 		}
 	}
-	
-	
-
 }
 
 void Cprofilermain::SetProcessName()
@@ -473,11 +471,11 @@ STDMETHODIMP Cprofilermain::SetMask()
 		| COR_PRF_MONITOR_SUSPENDS
 		| COR_PRF_MONITOR_EXCEPTIONS
 		| COR_PRF_MONITOR_CLR_EXCEPTIONS
-		| COR_PRF_MONITOR_CLASS_LOADS
+		//| COR_PRF_MONITOR_CLASS_LOADS
 		| COR_PRF_MONITOR_MODULE_LOADS
-		| COR_PRF_MONITOR_ASSEMBLY_LOADS
+		//| COR_PRF_MONITOR_ASSEMBLY_LOADS
 		| COR_PRF_MONITOR_APPDOMAIN_LOADS
-		| COR_PRF_MONITOR_CODE_TRANSITIONS
+		//| COR_PRF_MONITOR_CODE_TRANSITIONS
 		| COR_PRF_DISABLE_INLINING
 		| COR_PRF_ENABLE_REJIT
 		| COR_PRF_DISABLE_ALL_NGEN_IMAGES
@@ -981,8 +979,6 @@ STDMETHODIMP Cprofilermain::RuntimeResumeFinished(void)
 
 STDMETHODIMP Cprofilermain::Shutdown(void)
 {
-	m_NetworkClient->SendCommand<Commands::SendString>(
-		std::make_shared<Commands::SendString>(std::wstring(L"Done!")));
 	WaitForSingleObject(m_NetworkClient->DataSent, 5000); // Wait for data to be sent or 5 seconds
 	return S_OK;
 }
@@ -1036,8 +1032,8 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
 		//csh.leave_early();
 	}
-
-	tp->SendEvent<Commands::FunctionEnterQuick>(new Commands::FunctionEnterQuick(funcId, threadId, timestamp));
+	// Send no commands for now.
+	// tp->SendEvent<Commands::MethodEnter>(new Commands::MethodEnter(funcId, threadId, timestamp));
 }
 
 
@@ -1058,7 +1054,8 @@ void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 	GetSystemTimeAsFileTime(&HighPrecisionFileTime);
 	__int64 timestamp = (((__int64)HighPrecisionFileTime.dwHighDateTime) << 32) + HighPrecisionFileTime.dwLowDateTime;
 
-	tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId, threadId, timestamp));
+	// Send no commands for now
+	//tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(funcId, threadId, timestamp));
 
 }
 
@@ -1078,7 +1075,8 @@ void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 	GetSystemTimeAsFileTime(&HighPrecisionFileTime);
 	__int64 timestamp = (((__int64)HighPrecisionFileTime.dwHighDateTime) << 32) + HighPrecisionFileTime.dwLowDateTime;
 
-	tp->SendEvent<Commands::FunctionTailQuick>(new Commands::FunctionTailQuick(funcId, threadId, timestamp));
+	// Send no commands for now
+	//tp->SendEvent<Commands::FunctionTailQuick>(new Commands::FunctionTailQuick(funcId, threadId, timestamp));
 	// TODO extract argument 
 }
 
@@ -1420,7 +1418,7 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 
 		ModuleIDToInfoMap::Const_Iterator iterator;
 		for (iterator = m_moduleIDToInfoMap.Begin();
-			iterator != m_moduleIDToInfoMap.End();
+		iterator != m_moduleIDToInfoMap.End();
 			++iterator)
 		{
 			// Skip the entry we just added for this module
@@ -1442,7 +1440,7 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 			// The module is a match!
 			MethodDefToLatestVersionMap::Const_Iterator iterMethodDef;
 			for (iterMethodDef = pModInfo->m_pMethodDefToLatestVersionMap->Begin();
-				iterMethodDef != pModInfo->m_pMethodDefToLatestVersionMap->End();
+			iterMethodDef != pModInfo->m_pMethodDefToLatestVersionMap->End();
 				iterMethodDef++)
 			{
 				if (iterMethodDef->second == 0)
@@ -1539,16 +1537,12 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 
 		moduleInfo.m_pMethodDefToLatestVersionMap->LookupIfExists(methodDef, &nVersion);
 
-		GetClassAndFunctionNamesFromMethodDef(
-			moduleInfo.m_pImport,
-			moduleID,
-			methodDef,
-			wszTypeDefName,
-			_countof(wszTypeDefName),
-			wszMethodDefName,
-			_countof(wszMethodDefName));
+		auto im = ItemMapping();
+		im.FunctionName = wszMethodDefName;
+		im.ClassName = wszTypeDefName;
+		this->m_Container->g_FullyQualifiedMethodsToProfile->find(im);
 
-		if (StrCmpW(wszMethodDefName, L"Recursive") == 0)
+		if (this->m_Container->g_FullyQualifiedMethodsToProfile->find(im) != this->m_Container->g_FullyQualifiedMethodsToProfile->end())
 		{
 			hr = RewriteIL(
 				m_pICorProfilerInfo.get(),
@@ -1568,25 +1562,10 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 			mifm.m_ModuleID = moduleID;
 			m_ModFuncMap.emplace(mifm, functionID);
 
-			auto defp = new Commands::DefineFunction(functionID, classID, wszMethodDefName, timestamp);
-			tp->SendEvent<Commands::DefineFunction>(defp);
+			auto defp = new Commands::DefineMethod(timestamp, moduleID, classID, methodDef, functionID, wszMethodDefName);
+			tp->SendEvent<Commands::DefineMethod>(defp);
 
 		}
-
-		/*hr = RewriteIL(
-			m_pICorProfilerInfo.get(),
-			NULL,
-			moduleID,
-			methodDef,
-			nVersion,
-			moduleInfo.m_mdEnterProbeRef,
-			moduleInfo.m_mdExitProbeRef);*/
-
-
-
-
-
-
 
 	}
 
@@ -2215,10 +2194,7 @@ void Cprofilermain::NtvEnteredFunction(unsigned __int64 moduleIDCur, mdMethodDef
 	mifm.m_ClassDef = mdCur;
 	mifm.m_ModuleID = moduleIDCur;
 	auto id = m_ModFuncMap.find(mifm);
-	if (id != m_ModFuncMap.end())
-	{
-		tp->SendEvent<Commands::FunctionEnterQuick>(new Commands::FunctionEnterQuick(id->second, threadId, timestamp));
-	}
+	tp->SendEvent<Commands::MethodEnter>(new Commands::MethodEnter(timestamp, threadId, moduleIDCur, mdCur));
 }
 
 // [public] Instrumented code eventually calls into here (when function is exited)
@@ -2227,17 +2203,6 @@ void Cprofilermain::NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, i
 {
 	UNREFERENCED_PARAMETER(nVersionCur);
 	ModuleInfo moduleInfo = m_moduleIDToInfoMap.Lookup(moduleIDCur);
-	/*WCHAR wszTypeDefName[512];
-	WCHAR wszMethodDefName[512];*/
-	/*GetClassAndFunctionNamesFromMethodDef(
-		moduleInfo.m_pImport,
-		moduleIDCur,
-		mdCur,
-		wszTypeDefName,
-		_countof(wszTypeDefName),
-		wszMethodDefName,
-		_countof(wszMethodDefName));*/
-
 	ThreadID threadId = 0;
 	{
 		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
@@ -2256,7 +2221,7 @@ void Cprofilermain::NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, i
 	mifm.m_ModuleID = moduleIDCur;
 	auto id = m_ModFuncMap.find(mifm);
 
-		tp->SendEvent<Commands::FunctionLeaveQuick>(new Commands::FunctionLeaveQuick(id->second, threadId, timestamp));
+	tp->SendEvent<Commands::MethodExit>(new Commands::MethodExit(timestamp, threadId, moduleIDCur, mdCur));
 
 
 

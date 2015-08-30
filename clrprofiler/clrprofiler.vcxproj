@@ -414,20 +414,16 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\commands\GetFunctionsToInstrument.cpp" />
-    <ClCompile Include="src\commands\SendListOfMethods.cpp" />
-    <ClCompile Include="src\helpers\bit_converter.cpp" />
-    <ClCompile Include="src\commands\DefineAssembly.cpp" />
-    <ClCompile Include="src\commands\DefineClass.cpp" />
-    <ClCompile Include="src\commands\DefineFunction.cpp" />
+    <ClCompile Include="src\commands\ACK.cpp" />
+    <ClCompile Include="src\commands\AgentInformation.cpp" />
+    <ClCompile Include="src\commands\DefineMethod.cpp" />
     <ClCompile Include="src\commands\DefineModule.cpp" />
-    <ClCompile Include="src\commands\FunctionLeaveQuick.cpp" />
-    <ClCompile Include="src\commands\FunctionTailQuick.cpp" />
-    <ClCompile Include="src\commands\SendPackedStructure.cpp" />
+    <ClCompile Include="src\commands\MethodEnter.cpp" />
+    <ClCompile Include="src\commands\MethodExit.cpp" />
+    <ClCompile Include="src\commands\MethodsToInstrument.cpp" />
+    <ClCompile Include="src\helpers\bit_converter.cpp" />
     <ClCompile Include="src\infoclasses\AgentInfo.cpp" />
-    <ClCompile Include="src\commands\AssemblyDefinition.cpp" />
     <ClCompile Include="src\infoclasses\AssemblyInfo.cpp" />
-    <ClCompile Include="src\commands\ClassDefinition.cpp" />
     <ClCompile Include="src\infoclasses\ClassInfo.cpp" />
     <ClCompile Include="src\dllmain\clrprofiler.cpp" />
     <ClCompile Include="src\clrprofiler_i.c">
@@ -473,23 +469,14 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\commands\FunctionEnterLong.cpp" />
-    <ClCompile Include="src\commands\FunctionEnterQuick.cpp" />
     <ClCompile Include="src\infoclasses\FunctionInfo.cpp" />
-    <ClCompile Include="src\commands\FunctionLeaveLong.cpp" />
-    <ClCompile Include="src\commands\FunctionStackItem.cpp" />
-    <ClCompile Include="src\commands\GarbageCollectionFinished.cpp" />
     <ClCompile Include="src\common\GarbageCollectionStackItem.cpp" />
-    <ClCompile Include="src\commands\GarbageCollectionStarted.cpp" />
-    <ClCompile Include="src\commands\GetString.cpp" />
     <ClCompile Include="src\infoclasses\ModuleInfo.cpp" />
     <ClCompile Include="src\network\networkclient.cpp" />
     <ClCompile Include="src\infoclasses\ParameterInfo.cpp" />
     <ClCompile Include="src\infoclasses\ProcessInfo.cpp" />
     <ClCompile Include="src\profiler\profilermain.cpp" />
     <ClCompile Include="src\common\RuntimeSuspensionStackItem.cpp" />
-    <ClCompile Include="src\commands\SendString.cpp" />
-    <ClCompile Include="src\commands\SetFunctionsToMonitor.cpp" />
     <ClCompile Include="src\helpers\srw_helper.cpp" />
     <ClCompile Include="src\common\StackItemBase.cpp" />
     <ClCompile Include="src\stdafx.cpp">
@@ -523,32 +510,24 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="inc\AssemblyDefinition.h" />
     <ClInclude Include="inc\AssemblyInfo.h" />
     <ClInclude Include="inc\bit_converter.h" />
-    <ClInclude Include="inc\ClassDefinition.h" />
     <ClInclude Include="inc\ClassInfo.h" />
     <ClInclude Include="inc\clrprofiler_i.h" />
     <ClInclude Include="inc\Commands.h" />
+    <ClInclude Include="inc\commands\ACK.h" />
+    <ClInclude Include="inc\commands\AgentInformation.h" />
+    <ClInclude Include="inc\commands\DefineMethod.h" />
+    <ClInclude Include="inc\commands\DefineModule.h" />
+    <ClInclude Include="inc\commands\MethodEnter.h" />
+    <ClInclude Include="inc\commands\MethodExit.h" />
+    <ClInclude Include="inc\commands\MethodsToInstrument.h" />
     <ClInclude Include="inc\commonstructures.h" />
     <ClInclude Include="inc\ContainerClass.h" />
     <ClInclude Include="inc\CorProfilerCallbackImplementation.h" />
     <ClInclude Include="inc\critsec_helper.h" />
-    <ClInclude Include="inc\DefineAssembly.h" />
-    <ClInclude Include="inc\DefineClass.h" />
-    <ClInclude Include="inc\DefineFunction.h" />
-    <ClInclude Include="inc\DefineModule.h" />
     <ClInclude Include="inc\dllmain.h" />
-    <ClInclude Include="inc\FunctionEnterLong.h" />
-    <ClInclude Include="inc\FunctionEnterQuick.h" />
     <ClInclude Include="inc\FunctionInfo.h" />
-    <ClInclude Include="inc\FunctionLeaveLong.h" />
-    <ClInclude Include="inc\FunctionLeaveQuick.h" />
-    <ClInclude Include="inc\FunctionTailQuick.h" />
-    <ClInclude Include="inc\GarbageCollectionFinished.h" />
-    <ClInclude Include="inc\GarbageCollectionStarted.h" />
-    <ClInclude Include="inc\GetFunctionsToInstrument.h" />
-    <ClInclude Include="inc\GetString.h" />
     <ClInclude Include="inc\ICommand.h" />
     <ClInclude Include="inc\INetworkClient.h" />
     <ClInclude Include="inc\ModuleInfo.h" />
@@ -556,15 +535,11 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="inc\ParameterInfo.h" />
     <ClInclude Include="inc\profilermain.h" />
     <ClInclude Include="inc\Resource.h" />
-    <ClInclude Include="inc\SendListOfMethods.h" />
-    <ClInclude Include="inc\SendString.h" />
-    <ClInclude Include="inc\SetFunctionsToMonitor.h" />
     <ClInclude Include="inc\srw_helper.h" />
     <ClInclude Include="inc\stdafx.h" />
     <ClInclude Include="inc\targetver.h" />
     <ClInclude Include="inc\stackitems.h" />
     <ClInclude Include="inc\xdlldata.h" />
-    <ClInclude Include="inc\SendPackedStructure.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="rsrc\clrprofiler.rc" />
