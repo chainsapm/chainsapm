@@ -112,7 +112,10 @@
     <Compile Include="Commands\Agent\MethodExit.cs" />
     <Compile Include="Commands\Agent\MethodsToInstrument.cs" />
     <Compile Include="Commands\Locator.cs" />
+    <Compile Include="Data\InMemoryStorageAdapter.cs" />
+    <Compile Include="Data\MongoConfigDataAdapter.cs" />
     <Compile Include="Data\MongoDataStorageAdapter.cs" />
+    <Compile Include="Interfaces\Data\IConfigDataAdapter.cs" />
     <Compile Include="Interfaces\ICommandProcessor.cs" />
     <Compile Include="Config\AgentConfig.cs" />
     <Compile Include="Config\AgentGroupConfig.cs" />
@@ -125,8 +128,11 @@
     <Compile Include="Config\ResourceGroupConfig.cs" />
     <Compile Include="Config\ServerConfig.cs" />
     <Compile Include="Interfaces\IAgentEvents.cs" />
-    <Compile Include="Interfaces\IDocumentDBDataAdapter.cs" />
+    <Compile Include="Interfaces\IConnectedObject.cs" />
+    <Compile Include="Interfaces\Data\IDataAdapter.cs" />
     <Compile Include="Interfaces\IServerEvents.cs" />
+    <Compile Include="Interfaces\IStackItem.cs" />
+    <Compile Include="Interfaces\IUniqueID.cs" />
     <Compile Include="Models\Application.cs" />
     <Compile Include="Models\Assembly.cs" />
     <Compile Include="Models\Class.cs" />
@@ -137,7 +143,7 @@
     <Compile Include="Models\Parameter.cs" />
     <Compile Include="Models\Resource.cs" />
     <Compile Include="Models\Signature.cs" />
-    <Compile Include="Models\StackItem.cs" />
+    <Compile Include="Models\StackItemBase.cs" />
     <Compile Include="Commands\Common\SendString.cs" />
     <Compile Include="Commands\Common\GetString.cs" />
     <Compile Include="Helpers\ArraySegmentStream.cs" />

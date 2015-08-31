@@ -8,17 +8,18 @@ using System.Threading.Tasks;
 using ChainsAPM.Commands;
 using ChainsAPM.Commands.Agent;
 using ChainsAPM.Interfaces;
+using ChainsAPM.Interfaces.Data;
 using ChainsAPM.Models;
 using ChainsAPM.Server;
 
 namespace ChainsAPM.Agent {
-        public partial class Agent : IAgentEvents {
+        public partial class Agent : IAgentEvents, IConnectedObject {
                 public Config.AgentConfig AgentConfig { get; private set; }
                 public IConnectionHandler ConnectionHandler { get; set; }
                 public IServerEvents ServerEvents { get; set; }
                 public AgentInformation AgentInfo { get; set; }
 
-                private IDocumentDBDataAdapter DataStorage { get; set; }
+                private IDataAdapter DataStorage { get; set; }
 
                 public Dictionary<long, long> ThreadDepth { get; set; }
                 public Dictionary<long, Stack<ChainsAPM.Models.EntryPoint>> ThreadEntryPointStack { get; set; }
@@ -50,10 +51,9 @@ namespace ChainsAPM.Agent {
                         ClassList = new Dictionary<long, Class> (); // TODO set by agent cache
                         AssemblyList = new Dictionary<long, Assembly> (); // TODO set by agent cache
                         ModuleList = new Dictionary<long, Module> (); // TODO set by agent cache
-                        DataStorage = new Data.MongoDataStorageAdapter ();
                 }
 
-                public Agent (IConnectionHandler connectionHandler, IServerEvents serverEvents) : this () {
+                public Agent (IConnectionHandler connectionHandler, IServerEvents serverEvents, IDataAdapter documentdb, IConfigDataAdapter configdata) : this () {
                         ConnectionHandler = connectionHandler;
                         ServerEvents = serverEvents;
                         ConnectionHandler.SetProcessor (CommandProcessor);

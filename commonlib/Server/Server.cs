@@ -9,14 +9,17 @@ using System.Reactive.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
+using ChainsAPM.Agent;
+using System.Net.Sockets;
+using ChainsAPM.Interfaces.Data;
 
 namespace ChainsAPM.Server {
         public delegate void ConnectionEvent (string ConnectionName, System.Net.EndPoint endpoint);
 
-        public class Server : IServerEvents, IAgentEvents {
+        public abstract class Server : IServerEvents, IAgentEvents {
                 object lockConsole = new object ();
 
-                private System.Collections.Concurrent.ConcurrentDictionary<long, Agent.Agent> concurrentAgentHandlerList;
+                protected System.Collections.Concurrent.ConcurrentDictionary<long, IConnectedObject> concurrentAgentHandlerList;
 
 
                 long clientsConnected = 0;
@@ -33,13 +36,13 @@ namespace ChainsAPM.Server {
 
 
 
-                private System.Net.Sockets.TcpListener tcpListen;
+                protected System.Net.Sockets.TcpListener tcpListen;
 
                 System.Threading.WaitCallback wCb;
 
-                private Server () {
+                protected Server () {
                         wCb = new System.Threading.WaitCallback (TimerCallback);
-                        concurrentAgentHandlerList = new System.Collections.Concurrent.ConcurrentDictionary<long, Agent.Agent> ();
+                        concurrentAgentHandlerList = new System.Collections.Concurrent.ConcurrentDictionary<long, IConnectedObject> ();
                         System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.LowLatency;
                 }
 
@@ -65,11 +68,21 @@ namespace ChainsAPM.Server {
 
                 public void Stop () {
                         tcpListen.Stop ();
+                }
 
+                protected Agent.Agent CreateAgent (TcpClient client, IDataAdapter dataadapter, IConfigDataAdapter configadapter) {
+                                return new Agent.Agent (
+                                new TcpByteAgentHandler (
+                                        new TcpByteTransport (client),
+                                        TcpByteAgentHandler.HandlerType.ReceiveHeavy),
+                                this,
+                                dataadapter,
+                                configadapter);
+                        throw new NotImplementedException ("");
 
                 }
 
-                private void TurnOnGCNotification () {
+                protected void TurnOnGCNotification () {
                         //GC.RegisterForFullGCNotification(30, 50);
                         //var timerCheck = new System.Threading.Thread(new System.Threading.ThreadStart(() =>
                         //{
@@ -142,7 +155,7 @@ namespace ChainsAPM.Server {
                         ////timerCheck.Start();
                 }
 
-                async private void TimerCallback (object objt) {
+                async protected void TimerCallback (object objt) {
                         var tcpListen = objt as System.Net.Sockets.TcpListener;
                         tcpListen.Server.UseOnlyOverlappedIO = true;
                         while ( true ) {
@@ -151,16 +164,20 @@ namespace ChainsAPM.Server {
                                         await tcpListen.AcceptTcpClientAsync ()
                                             .ContinueWith (async (tClient) =>
                                          {
-                                                var client = await tClient;
-                                                System.Threading.Interlocked.Increment (ref clientsConnected);
-                                                Agent.Agent agent = new Agent.Agent (new TcpByteAgentHandler (new TcpByteTransport (client), TcpByteAgentHandler.HandlerType.ReceiveHeavy), this);
-                                                concurrentAgentHandlerList.GetOrAdd (agent.GetHashCode (), agent);
-                                                agent.AgentSubscription.Subscribe (ag =>
-                             {
-                                                    ag = ag as Agent.Agent;
-                                                    Console.WriteLine ("Agent {0} Connected from {1}.", ag.AgentInfo.AgentName, ag.AgentInfo.MachineName);
-                                            });
-                                        });
+                                                 var client = await tClient;
+                                                 System.Threading.Interlocked.Increment (ref clientsConnected);
+
+                                                 var agent = CreateAgent (client, 
+                                                         new ChainsAPM.Data.InMemoryStorageAdapter (),
+                                                         new ChainsAPM.Data.MongoConfigDataAdapter());
+                                                 concurrentAgentHandlerList.GetOrAdd (agent.GetHashCode (), agent);
+                                                 agent.AgentSubscription.Subscribe (ag =>
+                                                 {
+                                                         ag = ag as Agent.Agent;
+                                                         Console.WriteLine ("Agent {0} Connected from {1}.", ag.AgentInfo.AgentName, ag.AgentInfo.MachineName);
+                                                 });
+
+                                         });
 
                                 }
                                 catch ( Exception ) {

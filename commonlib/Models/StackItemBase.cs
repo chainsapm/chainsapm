@@ -1,28 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ChainsAPM.Interfaces;
 
 namespace ChainsAPM.Models {
-        public class StackItem {
-                public enum ItemType {
-                        Entry,
-                        Exit,
-                        Informational
-                }
+        public enum ItemType {
+                Entry,
+                Exit,
+                Informational
+        }
+        public class StackItemBase : IStackItem {
+               
                 public ItemType Type { get; set; }
                 public int Depth { get; set; }
                 public string Name { get; set; }
-                public long MethodDef { get; set; }
                 public long OriginalTimeStamp { get; set; }
                 public List<KeyValuePair<string, string>> Properties { get; set; }
                 public DateTime Started { get; set; }
                 public DateTime Finished { get; set; }
                 public long Elapsed { get; set; }
-                public Queue<StackItem> Children { get; set; }
-                public StackItem CurrentChild { get; set; }
-                public virtual bool UpdateStack (StackItem stackitem) {
+                public Queue<IStackItem> Children { get; set; }
+                public IStackItem CurrentChild { get; set; }
+                public long StackItemIdentifier { get; set; }
+                public long MethodDef { get; set; }
+
+                public virtual bool UpdateStack (IStackItem stackitem) {
                         if ( Children == null )
-                                Children = new Queue<StackItem> ();
+                                Children = new Queue<IStackItem> ();
 
                         if ( stackitem.Depth == Depth + 1 ) {
                                 switch ( stackitem.Type ) {
@@ -41,7 +45,7 @@ namespace ChainsAPM.Models {
                                                 // TODO add in logic to handle a corruption
                                                 return false;
                                         case ItemType.Exit:
-                                                if ( stackitem.MethodDef == MethodDef ) {
+                                                if ( stackitem.StackItemIdentifier == MethodDef ) {
                                                         Elapsed = stackitem.OriginalTimeStamp - OriginalTimeStamp;
                                                         Finished = DateTime.FromFileTimeUtc (stackitem.OriginalTimeStamp);
                                                 }
