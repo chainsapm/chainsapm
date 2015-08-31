@@ -18,6 +18,8 @@ namespace ChainsAPM.Agent {
                 public IServerEvents ServerEvents { get; set; }
                 public AgentInformation AgentInfo { get; set; }
 
+                private IDocumentDBDataAdapter DataStorage { get; set; }
+
                 public Dictionary<long, long> ThreadDepth { get; set; }
                 public Dictionary<long, Stack<ChainsAPM.Models.EntryPoint>> ThreadEntryPointStack { get; set; }
 
@@ -48,6 +50,7 @@ namespace ChainsAPM.Agent {
                         ClassList = new Dictionary<long, Class> (); // TODO set by agent cache
                         AssemblyList = new Dictionary<long, Assembly> (); // TODO set by agent cache
                         ModuleList = new Dictionary<long, Module> (); // TODO set by agent cache
+                        DataStorage = new Data.MongoDataStorageAdapter ();
                 }
 
                 public Agent (IConnectionHandler connectionHandler, IServerEvents serverEvents) : this () {

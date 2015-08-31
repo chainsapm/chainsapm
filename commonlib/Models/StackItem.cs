@@ -12,7 +12,7 @@ namespace ChainsAPM.Models {
                 public ItemType Type { get; set; }
                 public int Depth { get; set; }
                 public string Name { get; set; }
-                public long Id { get; set; }
+                public long MethodDef { get; set; }
                 public long OriginalTimeStamp { get; set; }
                 public List<KeyValuePair<string, string>> Properties { get; set; }
                 public DateTime Started { get; set; }
@@ -41,7 +41,7 @@ namespace ChainsAPM.Models {
                                                 // TODO add in logic to handle a corruption
                                                 return false;
                                         case ItemType.Exit:
-                                                if ( stackitem.Id == Id ) {
+                                                if ( stackitem.MethodDef == MethodDef ) {
                                                         Elapsed = stackitem.OriginalTimeStamp - OriginalTimeStamp;
                                                         Finished = DateTime.FromFileTimeUtc (stackitem.OriginalTimeStamp);
                                                 }

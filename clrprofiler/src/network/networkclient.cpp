@@ -11,6 +11,7 @@
 SOCKET NetworkClient::m_SocketConnection = NULL;
 HANDLE NetworkClient::DataReceived = NULL;
 HANDLE NetworkClient::DataSent = NULL;
+HANDLE NetworkClient::DataToBeSent = NULL;
 
 NetworkClient::NetworkClient(std::wstring hostName, std::wstring port)
 {
@@ -28,6 +29,7 @@ NetworkClient::NetworkClient(std::wstring hostName, std::wstring port)
 
 	DataSent = CreateEvent(NULL, TRUE, FALSE, TEXT("DataSentEvent"));
 	DataReceived = CreateEvent(NULL, TRUE, FALSE, TEXT("DataReceivedEvent"));
+	DataToBeSent = CreateEvent(NULL, TRUE, FALSE, TEXT("DataToBeSent"));
 
 	// Select the highest socket version 2.2
 	WORD wVersionRequested = MAKEWORD(2, 2);
@@ -120,6 +122,7 @@ HRESULT NetworkClient::SendCommand(Commands::ICommand* packet)
 {
 	auto csh = critsec_helper::critsec_helper(&FrontOutboundLock);
 	m_OutboundQueueFront.emplace(packet);
+	ResetEvent(&NetworkClient::DataToBeSent);
 	csh.leave_early();
 	return S_OK;
 };
@@ -161,6 +164,7 @@ HRESULT NetworkClient::SendCommands(std::vector<Commands::ICommand*> &packet)
 	{
 		m_OutboundQueueFront.emplace(x);
 	}
+	ResetEvent(&NetworkClient::DataToBeSent);
 	csh.leave_early();
 	return S_OK;
 }
@@ -199,6 +203,7 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 	auto netClient = static_cast<NetworkClient*>(pvContext);
 	if (!netClient->insideSendLock)
 	{
+		ResetEvent(&NetworkClient::DataSent);
 		std::vector<std::shared_ptr<std::vector<char>>> * m_Passable = new std::vector<std::shared_ptr<std::vector<char>>>();
 		netClient->insideSendLock = true;
 		WSABUF *bufs = NULL;
@@ -207,6 +212,7 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 			auto cshFQ = critsec_helper::critsec_helper(&netClient->FrontOutboundLock);
 			auto cshBQ = critsec_helper::critsec_helper(&netClient->BackOutboundLock);
 			netClient->m_OutboundQueueBack.swap(netClient->m_OutboundQueueFront);
+			
 			cshBQ.leave_early();
 			cshFQ.leave_early();
 		}
@@ -265,6 +271,7 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 			}
 		}
 		//WaitForThreadpoolIoCallbacks(netClient->m_ptpIO, FALSE);
+		SetEvent(&NetworkClient::DataToBeSent); // Let any waiters know that the data was sent to the completion port
 		netClient->insideSendLock = false;
 	}
 }
@@ -277,6 +284,7 @@ VOID CALLBACK NetworkClient::ReceiveTimerCallback(
 	auto netClient = static_cast<NetworkClient*>(pvContext);
 	if (!netClient->insideReceiveLock)
 	{
+		ResetEvent(&NetworkClient::DataReceived);
 		netClient->insideReceiveLock = true;
 		auto bigBufferChars = new char[10 * 1024];
 		LPWSABUF bigBuffer = new WSABUF;
@@ -370,7 +378,8 @@ VOID CALLBACK NetworkClient::IoCompletionCallback(
 		delete lpOverlapped->queue;
 	}
 	else {
-		SetEventWhenCallbackReturns(Instance, NetworkClient::DataSent);; // Signal to the event processor that we have data.
+		SetEventWhenCallbackReturns(Instance, NetworkClient::DataSent);; // Signal to the event processor that we have sent the data.
+
 		// Get rid of all of the vector<char> we sent
 		lpOverlapped->sendqueue->clear();
 		delete lpOverlapped->sendqueue;

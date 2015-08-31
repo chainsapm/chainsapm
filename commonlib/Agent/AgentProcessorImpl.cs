@@ -32,24 +32,26 @@ namespace ChainsAPM.Agent {
                         if ( ThreadDepth [cmd.ThreadID] > 0 ) {
                                 ThreadEntryPointStack [cmd.ThreadID].Last ().UpdateStack (new Models.StackItem ()
                                 {
-                                        Id = cmd.MethodDef,
+                                        MethodDef = cmd.MethodDef,
                                         OriginalTimeStamp = cmd.TimeStamp.ToFileTimeUtc (),
                                         Started = cmd.TimeStamp,
                                         Name = MethodList.ContainsKey (cmd.MethodDef) ? MethodList [cmd.MethodDef].MethodName : cmd.MethodDef.ToString ("X"),
                                         Type = Models.StackItem.ItemType.Entry
                                 });
                         } else {
-                                ThreadEntryPointStack [cmd.ThreadID].Push (
+                                var entry =
                                     new ChainsAPM.Models.EntryPoint ()
                                     {
                                             CurrentDepth = 0,
-                                            Id = cmd.MethodDef,
+                                            MethodDef = cmd.MethodDef,
                                             OriginalTimeStamp = cmd.TimeStamp.ToFileTimeUtc (),
                                             Started = cmd.TimeStamp,
                                             Name = MethodList.ContainsKey (cmd.MethodDef) ? MethodList [cmd.MethodDef].MethodName : cmd.MethodDef.ToString ("X"),
                                             Type = Models.StackItem.ItemType.Entry
 
-                                    });
+                                    };
+                                DataStorage.InsertEntryPoint (entry);
+                                ThreadEntryPointStack [cmd.ThreadID].Push (entry);
                         }
                         ThreadDepth [cmd.ThreadID]++;
                 }
@@ -67,7 +69,7 @@ namespace ChainsAPM.Agent {
 
                                 ThreadEntryPointStack [cmd.ThreadID].Last ().UpdateStack (new Models.StackItem ()
                                 {
-                                        Id = cmd.MethodDef,
+                                        MethodDef = cmd.MethodDef,
                                         OriginalTimeStamp = cmd.TimeStamp.ToFileTimeUtc (),
                                         Name = MethodList.ContainsKey (cmd.MethodDef) ? MethodList [cmd.MethodDef].MethodName : cmd.MethodDef.ToString ("X"),
                                         Type = Models.StackItem.ItemType.Exit
@@ -78,6 +80,10 @@ namespace ChainsAPM.Agent {
                                 ThreadDepth [cmd.ThreadID]--;
 
                         if ( ThreadDepth [cmd.ThreadID] == 0 ) {
+
+                                foreach ( var StackItem in ThreadEntryPointStack [cmd.ThreadID] ) {
+                                        DataStorage.UpdateEntryPoint(StackItem);
+                                }
                                 using ( var fw = new System.IO.StreamWriter (string.Format (@"C:\LogFiles\{0}_T{1}.txt", DateTime.Now.Ticks, cmd.ThreadID)) ) {
                                         foreach ( var StackItem in ThreadEntryPointStack [cmd.ThreadID] ) {
                                                 RecursiveWrite (StackItem, fw);

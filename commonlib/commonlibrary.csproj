@@ -49,6 +49,18 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MongoDB.Bson, Version=2.0.1.27, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MongoDB.Bson.2.0.1\lib\net45\MongoDB.Bson.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="MongoDB.Driver, Version=2.0.1.27, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MongoDB.Driver.2.0.1\lib\net45\MongoDB.Driver.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="MongoDB.Driver.Core, Version=2.0.1.27, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MongoDB.Driver.Core.2.0.1\lib\net45\MongoDB.Driver.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.dll</HintPath>
       <Private>True</Private>
@@ -100,6 +112,7 @@
     <Compile Include="Commands\Agent\MethodExit.cs" />
     <Compile Include="Commands\Agent\MethodsToInstrument.cs" />
     <Compile Include="Commands\Locator.cs" />
+    <Compile Include="Data\MongoDataStorageAdapter.cs" />
     <Compile Include="Interfaces\ICommandProcessor.cs" />
     <Compile Include="Config\AgentConfig.cs" />
     <Compile Include="Config\AgentGroupConfig.cs" />
@@ -112,6 +125,7 @@
     <Compile Include="Config\ResourceGroupConfig.cs" />
     <Compile Include="Config\ServerConfig.cs" />
     <Compile Include="Interfaces\IAgentEvents.cs" />
+    <Compile Include="Interfaces\IDocumentDBDataAdapter.cs" />
     <Compile Include="Interfaces\IServerEvents.cs" />
     <Compile Include="Models\Application.cs" />
     <Compile Include="Models\Assembly.cs" />
@@ -141,7 +155,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Commands\Aggregator\" />
-    <Folder Include="Commands\Processors\" />
     <Folder Include="Commands\Server\" />
   </ItemGroup>
   <ItemGroup>

@@ -110,6 +110,7 @@ public:
 
 	static HANDLE DataReceived;
 	static HANDLE DataSent;
+	static HANDLE DataToBeSent;
 
 
 	static VOID CALLBACK IoCompletionCallback(

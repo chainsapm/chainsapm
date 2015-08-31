@@ -479,7 +479,7 @@ STDMETHODIMP Cprofilermain::SetMask()
 		| COR_PRF_DISABLE_INLINING
 		| COR_PRF_ENABLE_REJIT
 		| COR_PRF_DISABLE_ALL_NGEN_IMAGES
-		| COR_PRF_MONITOR_JIT_COMPILATION); // I will turn this back on when the IL Rewrite is ready
+		| COR_PRF_MONITOR_JIT_COMPILATION);
 	switch (this->m_HighestProfileInfo)
 	{
 	case 1:
@@ -979,7 +979,10 @@ STDMETHODIMP Cprofilermain::RuntimeResumeFinished(void)
 
 STDMETHODIMP Cprofilermain::Shutdown(void)
 {
-	WaitForSingleObject(m_NetworkClient->DataSent, 5000); // Wait for data to be sent or 5 seconds
+
+	WaitForSingleObject(&NetworkClient::DataToBeSent, 5000); // Wait for data to be sent or 5 seconds
+	WaitForSingleObject(&NetworkClient::DataSent, 5000); // Wait for data to be sent or 5 seconds
+	m_NetworkClient->Shutdown();
 	return S_OK;
 }
 
