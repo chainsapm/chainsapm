@@ -31,6 +31,9 @@ namespace ChainsAPM.Server {
                 public event ConnectionEvent AgentConnected;
                 public event ConnectionEvent AgentDisconnected;
 
+                IDataAdapter StorageAdapter { get; set; }
+                IConfigDataAdapter ConfigAdapter{ get; set; }
+
                 public long ClientsConnected { get { return clientsConnected; } }
                 public long MessagesReceived { get { return messagesRecvd; } }
 
@@ -44,8 +47,14 @@ namespace ChainsAPM.Server {
                         wCb = new System.Threading.WaitCallback (TimerCallback);
                         concurrentAgentHandlerList = new System.Collections.Concurrent.ConcurrentDictionary<long, IConnectedObject> ();
                         System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.LowLatency;
+                        StorageAdapter = new ChainsAPM.Data.InMemoryStorageAdapter ();
+                        ConfigAdapter = new ChainsAPM.Data.MongoConfigDataAdapter ();
                 }
 
+                public Server (Config.ServerConfig config) : this () {
+
+                        // Create server from CONFIG file
+                }
 
                 public Server (int port) : this (System.Net.IPAddress.Any, port) {
                 }
@@ -71,13 +80,13 @@ namespace ChainsAPM.Server {
                 }
 
                 protected Agent.Agent CreateAgent (TcpClient client, IDataAdapter dataadapter, IConfigDataAdapter configadapter) {
-                                return new Agent.Agent (
-                                new TcpByteAgentHandler (
-                                        new TcpByteTransport (client),
-                                        TcpByteAgentHandler.HandlerType.ReceiveHeavy),
-                                this,
-                                dataadapter,
-                                configadapter);
+                        return new Agent.Agent (
+                        new TcpByteAgentHandler (
+                                new TcpByteTransport (client),
+                                TcpByteAgentHandler.HandlerType.ReceiveHeavy),
+                        this,
+                        dataadapter,
+                        configadapter);
                         throw new NotImplementedException ("");
 
                 }
@@ -167,9 +176,9 @@ namespace ChainsAPM.Server {
                                                  var client = await tClient;
                                                  System.Threading.Interlocked.Increment (ref clientsConnected);
 
-                                                 var agent = CreateAgent (client, 
+                                                 var agent = CreateAgent (client,
                                                          new ChainsAPM.Data.InMemoryStorageAdapter (),
-                                                         new ChainsAPM.Data.MongoConfigDataAdapter());
+                                                         new ChainsAPM.Data.MongoConfigDataAdapter ());
                                                  concurrentAgentHandlerList.GetOrAdd (agent.GetHashCode (), agent);
                                                  agent.AgentSubscription.Subscribe (ag =>
                                                  {

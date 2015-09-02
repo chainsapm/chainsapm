@@ -77,6 +77,10 @@
       <HintPath>..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.Rocks.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -112,6 +116,13 @@
     <Compile Include="Commands\Agent\MethodExit.cs" />
     <Compile Include="Commands\Agent\MethodsToInstrument.cs" />
     <Compile Include="Commands\Locator.cs" />
+    <Compile Include="Data\DefaultConfigAdapter.cs" />
+    <Compile Include="Interfaces\Config\IInstrumentationMethodConfig.cs" />
+    <Compile Include="Interfaces\Config\IInstrumentationMethodGroupConfig.cs" />
+    <Compile Include="Interfaces\Config\IInstrumentationPointConfig.cs" />
+    <Compile Include="Models\Instrumentation\InstrumentationGroup.cs" />
+    <Compile Include="Models\Instrumentation\InstrumentationMethod.cs" />
+    <Compile Include="Models\Instrumentation\InstrumentationPoint.cs" />
     <Compile Include="Data\InMemoryStorageAdapter.cs" />
     <Compile Include="Data\MongoConfigDataAdapter.cs" />
     <Compile Include="Data\MongoDataStorageAdapter.cs" />
@@ -133,16 +144,18 @@
     <Compile Include="Interfaces\IServerEvents.cs" />
     <Compile Include="Interfaces\IStackItem.cs" />
     <Compile Include="Interfaces\IUniqueID.cs" />
-    <Compile Include="Models\Application.cs" />
-    <Compile Include="Models\Assembly.cs" />
-    <Compile Include="Models\Class.cs" />
+    <Compile Include="Models\Application\Application.cs" />
+    <Compile Include="Models\Definitions\Assembly.cs" />
+    <Compile Include="Models\Definitions\Class.cs" />
     <Compile Include="Models\EntryPoint.cs" />
-    <Compile Include="Models\Machine.cs" />
-    <Compile Include="Models\Method.cs" />
-    <Compile Include="Models\Module.cs" />
-    <Compile Include="Models\Parameter.cs" />
-    <Compile Include="Models\Resource.cs" />
-    <Compile Include="Models\Signature.cs" />
+    <Compile Include="Models\Instrumentation\TokenReplacement.cs" />
+    <Compile Include="Models\Resource\Machine.cs" />
+    <Compile Include="Models\Definitions\Method.cs" />
+    <Compile Include="Models\Definitions\Module.cs" />
+    <Compile Include="Models\Definitions\Parameter.cs" />
+    <Compile Include="Models\Resource\Resource.cs" />
+    <Compile Include="Models\Definitions\Signature.cs" />
+    <Compile Include="Models\Resource\ResourceGroup.cs" />
     <Compile Include="Models\StackItemBase.cs" />
     <Compile Include="Commands\Common\SendString.cs" />
     <Compile Include="Commands\Common\GetString.cs" />
@@ -162,6 +175,7 @@
   <ItemGroup>
     <Folder Include="Commands\Aggregator\" />
     <Folder Include="Commands\Server\" />
+    <Folder Include="Models\Agent\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

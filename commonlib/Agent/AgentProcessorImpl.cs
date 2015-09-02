@@ -9,6 +9,7 @@ using ChainsAPM.Commands;
 using ChainsAPM.Commands.Agent;
 using ChainsAPM.Interfaces;
 using ChainsAPM.Models;
+using ChainsAPM.Models.Definitions;
 using ChainsAPM.Server;
 
 namespace ChainsAPM.Agent {

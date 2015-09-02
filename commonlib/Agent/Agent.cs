@@ -9,10 +9,13 @@ using ChainsAPM.Commands;
 using ChainsAPM.Commands.Agent;
 using ChainsAPM.Interfaces;
 using ChainsAPM.Interfaces.Data;
-using ChainsAPM.Models;
+using ChainsAPM.Models.Definitions;
 using ChainsAPM.Server;
 
 namespace ChainsAPM.Agent {
+        /// <summary>
+        /// The Agent class is the in memory representation of our remote agent. This class will handle all commands to and from the Agent. This class is responsible for creating the callstacks, processing events, thread tracking, etc...
+        /// </summary>
         public partial class Agent : IAgentEvents, IConnectedObject {
                 public Config.AgentConfig AgentConfig { get; private set; }
                 public IConnectionHandler ConnectionHandler { get; set; }
@@ -27,10 +30,10 @@ namespace ChainsAPM.Agent {
                 public DateTime ConnectedTime { get; set; }
                 public DateTime DisconnectedTime { get; set; }
 
-                public Dictionary<long, Models.Method> MethodList { get; set; }
-                public Dictionary<long, Models.Class> ClassList { get; set; }
-                public Dictionary<long, Models.Assembly> AssemblyList { get; set; }
-                public Dictionary<long, Models.Module> ModuleList { get; set; }
+                public Dictionary<long, Method> MethodList { get; set; }
+                public Dictionary<long, Class> ClassList { get; set; }
+                public Dictionary<long, Assembly> AssemblyList { get; set; }
+                public Dictionary<long, Module> ModuleList { get; set; }
 
                 private long messagesRecvd;
 
@@ -53,7 +56,7 @@ namespace ChainsAPM.Agent {
                         ModuleList = new Dictionary<long, Module> (); // TODO set by agent cache
                 }
 
-                public Agent (IConnectionHandler connectionHandler, IServerEvents serverEvents, IDataAdapter documentdb, IConfigDataAdapter configdata) : this () {
+                public Agent (IConnectionHandler connectionHandler, IServerEvents serverEvents, IDataAdapter dataadapter, IConfigDataAdapter configdata) : this () {
                         ConnectionHandler = connectionHandler;
                         ServerEvents = serverEvents;
                         ConnectionHandler.SetProcessor (CommandProcessor);

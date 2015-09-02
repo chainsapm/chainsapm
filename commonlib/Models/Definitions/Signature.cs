@@ -2,8 +2,7 @@
 using System.Linq;
 using System.Text;
 
-namespace ChainsAPM.Models
-{
+namespace ChainsAPM.Models.Definitions {
     public class Signature
     {
         public List<Parameter> Parameters { get; set; }

@@ -7,19 +7,37 @@ namespace server {
                 static ConsoleServer.ConsoleServer s, sIPV6;
                 static void Main (string [] args) {
 
-                        
+
                         var options = new server.CommandLineParser.CommandLineParse ();
                         var parser = new CommandLine.Parser ();
                         if ( parser.ParseArguments (args, options) ) {
                                 if ( options.StartConsole ) {
+                                        var ip = System.Net.IPAddress.Any;
+                                        System.Net.IPAddress outip = null;
+                                        var parsed = System.Net.IPAddress.TryParse (options.IPAddress, out outip);
+                                        if (parsed && outip != System.Net.IPAddress.Loopback) {
+                                                ip = outip;
+                                        }
+                                        int useport = options.Port;
                                         AppDomain.CurrentDomain.ProcessExit += ConsoleServerExit;
-                                        StartDefaultServer (out s, out sIPV6);
+                                        StartServer (ip, useport);
+                                        if ( options.UseIPV6 ) {
+                                                var ipv6 = System.Net.IPAddress.IPv6Any;
+                                                parsed = System.Net.IPAddress.TryParse (options.IPAddress, out outip);
+                                                if ( parsed && outip != System.Net.IPAddress.IPv6Loopback ) {
+                                                        ipv6 = outip;
+                                                }
+                                                StartServer (ipv6, useport);
+                                        }
+                                        char cmd = ' ';
+                                        while ( cmd != 'x' | cmd != 'q' ) {
+                                                cmd = (char)Console.Read ();
+                                        }
                                 } else if ( options.Install ) {
-                                        AppDomain.CurrentDomain.ProcessExit += ConsoleServerExit;
-                                        StartDefaultServer (out s, out sIPV6);
+
 
                                 } else {
-                                        Console.WriteLine(options.GetUsage ());
+                                        Console.WriteLine (options.GetUsage ());
                                 }
                         } else {
                                 Console.WriteLine ("There was a problem using the commandline parser. Please contact support.");
@@ -32,17 +50,12 @@ namespace server {
                         sIPV6.Stop ();
                 }
 
-                private static void StartDefaultServer (out ConsoleServer.ConsoleServer s, out ConsoleServer.ConsoleServer sIPV6) {
-                       
-                        s = new server.ConsoleServer.ConsoleServer (System.Net.IPAddress.Any, 8080);
+                private static void StartServer (System.Net.IPAddress ip, int port) {
+
+                        s = new server.ConsoleServer.ConsoleServer (ip, port);
                         s.Start ();
-                        sIPV6 = new server.ConsoleServer.ConsoleServer(System.Net.IPAddress.IPv6Any, 8080);
-                        sIPV6.Start ();
-                        char cmd = ' ';
-                        while ( cmd != 'x' | cmd != 'q' ) {
-                                cmd = (char)Console.Read ();
-                        }
                 }
+
 
         }
 }

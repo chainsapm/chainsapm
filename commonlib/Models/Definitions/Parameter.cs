@@ -1,5 +1,4 @@
-﻿namespace ChainsAPM.Models
-{
+﻿namespace ChainsAPM.Models.Definitions {
     public class Parameter
     {
         public enum RefOrVal
