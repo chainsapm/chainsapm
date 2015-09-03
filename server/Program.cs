@@ -7,6 +7,8 @@ namespace server {
                 static ConsoleServer.ConsoleServer s, sIPV6;
                 static void Main (string [] args) {
 
+                        var typ = typeof (ConsoleServer.ConsoleServer);
+                        var subc = typ.IsSubclassOf (typeof (ChainsAPM.Server.Server));
 
                         var options = new server.CommandLineParser.CommandLineParse ();
                         var parser = new CommandLine.Parser ();

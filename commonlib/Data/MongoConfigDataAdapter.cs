@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ChainsAPM.Commands.Agent;
 using ChainsAPM.Config;
 using ChainsAPM.Interfaces.Data;
+using ChainsAPM.Models.Resource;
 
 namespace ChainsAPM.Data {
         class MongoConfigDataAdapter : IConfigDataAdapter {
@@ -13,7 +14,7 @@ namespace ChainsAPM.Data {
                         throw new NotImplementedException ();
                 }
 
-                public AgentConfig ReadAgentGroupConfig (AgentGroupConfig AgentConfig, string AgentGroup) {
+                public AgentGroupConfig ReadAgentGroupConfig (AgentConfig AgentConfig) {
                         throw new NotImplementedException ();
                 }
 
@@ -21,27 +22,27 @@ namespace ChainsAPM.Data {
                         throw new NotImplementedException ();
                 }
 
-                public AgentGroupConfig ReadApplicationConfig (ApplicationGroupConfig ApplicationGroupConfig, string Application) {
+                public ApplicationConfig ReadApplicationConfig (AgentGroupConfig AgentGroupConfig) {
                         throw new NotImplementedException ();
                 }
 
-                public ApplicationGroupConfig ReadApplicationGroupConfig (GlobalConfig GlobalConfig, string ApplicationGroup) {
+                public ApplicationGroupConfig ReadApplicationGroupConfig (ApplicationConfig ApplicationConfig) {
                         throw new NotImplementedException ();
                 }
 
-                public GlobalConfig ReadGlobalConfig (string GlobalName) {
+                public GlobalConfig ReadGlobalConfig () {
                         throw new NotImplementedException ();
                 }
 
-                public MachineConfig ReadMachineConfig (ResourceConfig ResourceConfig, string Machine) {
+                public MachineConfig ReadMachineConfig (Machine Machine) {
                         throw new NotImplementedException ();
                 }
 
-                public ResourceConfig ReadResourceConfig (AgentConfig ResourceGroupConfig, string Resource) {
+                public ResourceConfig ReadResourceConfig (Resource Resource) {
                         throw new NotImplementedException ();
                 }
 
-                public ResourceGroupConfig ReadResourceGroupConfig (GlobalConfig GlobalConfig, string ResourceGroup) {
+                public ResourceGroupConfig ReadResourceGroupConfig (ResourceConfig ResourceConfig) {
                         throw new NotImplementedException ();
                 }
 

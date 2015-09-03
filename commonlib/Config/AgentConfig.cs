@@ -12,9 +12,8 @@ namespace ChainsAPM.Config {
 
                 public IDictionary<Method, InstrumentationPoint> InstrumentationPointCollection { get; set; }
 
-                
 
-                public bool IsMethodEntryPoint (Models.Definitions.Method methodid) {
+                public bool IsMethodEntryPoint (Method methodid) {
                         if ( InstrumentationPointCollection.ContainsKey (methodid) ) {
                                 if ( InstrumentationPointCollection [methodid].InstrumentationMethod.IsEntryPoint )
                                         return true;

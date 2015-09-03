@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChainsAPM.Models.Instrumentation {
         public class InstrumentationGroup {
-                ICollection<InstrumentationPoint> InstrumentationPoints {get; set; }
+                public ICollection<InstrumentationPoint> InstrumentationPoints {get; set; }
                 public string GroupName { get; set; }
         }
 }

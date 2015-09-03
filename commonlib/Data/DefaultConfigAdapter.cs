@@ -14,12 +14,163 @@ using ChainsAPM.Models.Resource;
 namespace ChainsAPM.Data {
         class DefaultConfigAdapter : IConfigDataAdapter {
                 public AgentConfig ReadAgentConfig (AgentInformation AgentInformation) {
+                        
                         var ac = new AgentConfig ()
                         {
                                 InstrumentationGroupCollection = new Dictionary<InstrumentationGroup, bool> (),
                                 InstrumentationPointCollection = new Dictionary<Models.Definitions.Method, InstrumentationPoint> ()
 
                         };
+                        InstrumentationGroup igData = new InstrumentationGroup ()
+                        {
+                                GroupName = "Generic Database",
+                                InstrumentationPoints = new List<InstrumentationPoint> ()
+                                
+                        };
+                        igData.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Open",
+                                        Class = new Models.Definitions.Class()
+                                        {
+                                                ClassName = "System.Data.IDbConnection"
+                                        }
+                                }
+                        });
+                        igData.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Close",
+                                        Class = new Models.Definitions.Class ()
+                                        {
+                                                ClassName = "System.Data.IDbConnection"
+                                        }
+                                }
+                        });
+                        igData.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "CreateCommand",
+                                        Class = new Models.Definitions.Class ()
+                                        {
+                                                ClassName = "System.Data.IDbConnection"
+                                        }
+                                }
+                        });
+
+                        ac.InstrumentationGroupCollection.Add (igData, true);
+
+                        InstrumentationGroup igSqlClient = new InstrumentationGroup ()
+                        {
+                                GroupName = "SqlClient",
+                                InstrumentationPoints = new List<InstrumentationPoint> ()
+
+                        };
+                        igSqlClient.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Open",
+                                        Class = new Models.Definitions.Class ()
+                                        {
+                                                ClassName = "System.Data.SqlClient"
+                                        }
+                                }
+                        });
+                        igSqlClient.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Close",
+                                        Class = new Models.Definitions.Class ()
+                                        {
+                                                ClassName = "System.Data.SqlClient"
+                                        }
+                                }
+                        });
+                        igSqlClient.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "CreateCommand",
+                                        Class = new Models.Definitions.Class ()
+                                        {
+                                                ClassName = "System.Data.SqlClient"
+                                        }
+                                }
+                        });
+                        ac.InstrumentationGroupCollection.Add (igSqlClient, true);
+
+                        InstrumentationGroup igThreading = new InstrumentationGroup ()
+                        {
+                                GroupName = "Generic Threading",
+                                InstrumentationPoints = new List<InstrumentationPoint> ()
+
+                        };
+                        igThreading.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Start",
+                                        Class = new Models.Definitions.Class ()
+                                        {
+                                                ClassName = "System.Threading.Thread"
+                                        }
+                                }
+                        });
+
+                        igThreading.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Sleep",
+                                        Class = new Models.Definitions.Class ()
+                                        {
+                                                ClassName = "System.Threading.Thread"
+                                        }
+                                },
+                                
+                        });
+
+                        igThreading.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "SpinWait",
+                                        Class = new Models.Definitions.Class ()
+                                        {
+                                                ClassName = "System.Threading.Thread"
+                                        }
+                                }
+                        });
+
+                        igThreading.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "WaitOne",
+                                        Class = new Models.Definitions.Class ()
+                                        {
+                                                ClassName = "System.Threading.WaitHandle"
+                                        }
+                                }
+                        });
+                        igThreading.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "WaitMultiple",
+                                        Class = new Models.Definitions.Class ()
+                                        {
+                                                ClassName = "System.Threading.WaitHandle"
+                                        }
+                                }
+                        });
+                        ac.InstrumentationGroupCollection.Add (igSqlClient, true);
+
                         ac.ParentAgentGroup = ReadAgentGroupConfig (ac);
                         return ac;
                 }
