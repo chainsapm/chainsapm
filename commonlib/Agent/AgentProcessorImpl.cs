@@ -113,61 +113,20 @@ namespace ChainsAPM.Agent {
                         ConnectedTime = DateTime.Now;
                         AgentInfo = cmd;
 
+                        ConfigAdapter.ReadAgentConfig (cmd);
+
                         AgentSubscription.OnNext (this);
                         var ListOfMethods = new List<string> ();
                         var ListOfClasses = new List<string> ();
                         var ListOfMethodSettings = new List<MethodsToInstrument.MethodProperties> ();
                         var commandsList = new ChainsAPM.Commands.Agent.MethodsToInstrument (DateTime.Now.ToFileTimeUtc (), ListOfMethodSettings, ListOfClasses, ListOfMethods);
 
-
-                        commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlCommand");
-                        commandsList.MethodList.Add ("Prepare");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlCommand");
-                        commandsList.MethodList.Add ("ExecuteReader");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlCommand");
-                        commandsList.MethodList.Add ("ExecuteScalar");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlCommand");
-                        commandsList.MethodList.Add ("ExecuteNonQuery");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-
-                        commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
-                        commandsList.MethodList.Add ("Open");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
-                        commandsList.MethodList.Add ("Close");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
-                        commandsList.MethodList.Add ("Dispose");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-
-                        commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
-                        commandsList.MethodList.Add ("EnlistTransaction");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
-                        commandsList.MethodList.Add ("EnlistDistributedTransaction");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-
-                        commandsList.MethodClassList.Add ("System.Net.HttpWebRequest");
-                        commandsList.MethodList.Add ("Create");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        commandsList.MethodClassList.Add ("System.Net.HttpWebRequest");
-                        commandsList.MethodList.Add ("GetResponse");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-
-                        commandsList.MethodClassList.Add ("HelloWorldTestHarness.Program");
-                        commandsList.MethodList.Add ("AddNumbers");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-
-                        commandsList.MethodClassList.Add ("HelloWorldTestHarness.Program");
-                        commandsList.MethodList.Add ("Recursive");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-
-                        commandsList.MethodClassList.Add ("HelloWorldTestHarness.Program");
-                        commandsList.MethodList.Add ("Main");
-                        commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        foreach ( var MethodToInstrument in AgentConfig.InstrumentationPointCollection ) {
+                                commandsList.MethodClassList.Add (MethodToInstrument.Key.Class.ClassName);
+                                commandsList.MethodList.Add (MethodToInstrument.Key.MethodName);
+                                commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        }
+                        
 
                         ConnectionHandler.SendCommand (commandsList);
                 }

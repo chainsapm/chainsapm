@@ -171,6 +171,57 @@ namespace ChainsAPM.Data {
                         });
                         ac.InstrumentationGroupCollection.Add (igSqlClient, true);
 
+
+                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlCommand");
+                        //commandsList.MethodList.Add ("Prepare");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlCommand");
+                        //commandsList.MethodList.Add ("ExecuteReader");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlCommand");
+                        //commandsList.MethodList.Add ("ExecuteScalar");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlCommand");
+                        //commandsList.MethodList.Add ("ExecuteNonQuery");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+
+                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
+                        //commandsList.MethodList.Add ("Open");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
+                        //commandsList.MethodList.Add ("Close");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
+                        //commandsList.MethodList.Add ("Dispose");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+
+                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
+                        //commandsList.MethodList.Add ("EnlistTransaction");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
+                        //commandsList.MethodList.Add ("EnlistDistributedTransaction");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+
+                        //commandsList.MethodClassList.Add ("System.Net.HttpWebRequest");
+                        //commandsList.MethodList.Add ("Create");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        //commandsList.MethodClassList.Add ("System.Net.HttpWebRequest");
+                        //commandsList.MethodList.Add ("GetResponse");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+
+                        //commandsList.MethodClassList.Add ("HelloWorldTestHarness.Program");
+                        //commandsList.MethodList.Add ("AddNumbers");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+
+                        //commandsList.MethodClassList.Add ("HelloWorldTestHarness.Program");
+                        //commandsList.MethodList.Add ("Recursive");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+
+                        //commandsList.MethodClassList.Add ("HelloWorldTestHarness.Program");
+                        //commandsList.MethodList.Add ("Main");
+                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+
+
                         ac.ParentAgentGroup = ReadAgentGroupConfig (ac);
                         return ac;
                 }

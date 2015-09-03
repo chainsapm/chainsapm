@@ -47,8 +47,8 @@ namespace ChainsAPM.Server {
                         wCb = new System.Threading.WaitCallback (TimerCallback);
                         concurrentAgentHandlerList = new System.Collections.Concurrent.ConcurrentDictionary<long, IConnectedObject> ();
                         System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.LowLatency;
-                        StorageAdapter = new ChainsAPM.Data.InMemoryStorageAdapter ();
-                        ConfigAdapter = new ChainsAPM.Data.MongoConfigDataAdapter ();
+                        StorageAdapter = StorageAdapter ?? new ChainsAPM.Data.InMemoryStorageAdapter ();
+                        ConfigAdapter = ConfigAdapter ?? new ChainsAPM.Data.DefaultConfigAdapter ();
                 }
 
                 public Server (Config.ServerConfig config) : this () {
@@ -177,8 +177,8 @@ namespace ChainsAPM.Server {
                                                  System.Threading.Interlocked.Increment (ref clientsConnected);
 
                                                  var agent = CreateAgent (client,
-                                                         new ChainsAPM.Data.InMemoryStorageAdapter (),
-                                                         new ChainsAPM.Data.MongoConfigDataAdapter ());
+                                                         StorageAdapter,
+                                                         ConfigAdapter);
                                                  concurrentAgentHandlerList.GetOrAdd (agent.GetHashCode (), agent);
                                                  agent.AgentSubscription.Subscribe (ag =>
                                                  {

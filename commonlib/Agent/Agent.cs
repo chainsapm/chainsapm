@@ -23,6 +23,7 @@ namespace ChainsAPM.Agent {
                 public AgentInformation AgentInfo { get; set; }
 
                 private IDataAdapter DataStorage { get; set; }
+                private IConfigDataAdapter ConfigAdapter { get; set; }
 
                 public Dictionary<long, long> ThreadDepth { get; set; }
                 public Dictionary<long, Stack<ChainsAPM.Models.EntryPoint>> ThreadEntryPointStack { get; set; }
@@ -59,6 +60,8 @@ namespace ChainsAPM.Agent {
                 public Agent (IConnectionHandler connectionHandler, IServerEvents serverEvents, IDataAdapter dataadapter, IConfigDataAdapter configdata) : this () {
                         ConnectionHandler = connectionHandler;
                         ServerEvents = serverEvents;
+                        DataStorage = dataadapter;
+                        ConfigAdapter = configdata;
                         ConnectionHandler.SetProcessor (CommandProcessor);
                         ConnectionHandler.HasData += HasData;
                         ConnectionHandler.Disconnected += Disconnected;
