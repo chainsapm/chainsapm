@@ -82,23 +82,23 @@ namespace ChainsAPM.Agent {
                                         System.Threading.Interlocked.Increment (ref messagesRecvd);
                                         if ( item != null ) {
 
-                                                if ( item is ChainsAPM.Commands.Agent.DefineMethod ) {
-                                                        Process (item as ChainsAPM.Commands.Agent.DefineMethod);
+                                                if ( item is DefineMethod ) {
+                                                        Process (item as DefineMethod);
                                                 }
 
-                                                if ( item is ChainsAPM.Commands.Agent.AgentInformation ) {
-                                                        Process (item as ChainsAPM.Commands.Agent.AgentInformation);
+                                                if ( item is AgentInformation ) {
+                                                        Process (item as AgentInformation);
                                                 }
 
-                                                if ( item is ChainsAPM.Commands.Agent.MethodEnter ) {
-                                                        Process (item as ChainsAPM.Commands.Agent.MethodEnter);
+                                                if ( item is MethodEnter ) {
+                                                        Process (item as MethodEnter);
                                                 }
 
-                                                if ( item is ChainsAPM.Commands.Agent.MethodExit ) {
-                                                        Process (item as ChainsAPM.Commands.Agent.MethodExit);
+                                                if ( item is MethodExit ) {
+                                                        Process (item as MethodExit);
                                                 }
-                                                if ( item is ChainsAPM.Commands.Common.SendString ) {
-                                                        var it = item as ChainsAPM.Commands.Common.SendString;
+                                                if ( item is Commands.Common.SendString ) {
+                                                        var it = item as Commands.Common.SendString;
                                                         Console.WriteLine ("Agent {0} has sent string {1}", AgentInfo.AgentName, it.StringData);
                                                         if ( ((ChainsAPM.Commands.Common.SendString)item).StringData == "Done!" ) {
                                                                 //TODO add in proper shutdown commands

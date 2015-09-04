@@ -14,28 +14,32 @@ using ChainsAPM.Models.Resource;
 namespace ChainsAPM.Data {
         class DefaultConfigAdapter : IConfigDataAdapter {
                 public AgentConfig ReadAgentConfig (AgentInformation AgentInformation) {
-                        
+
                         var ac = new AgentConfig ()
                         {
                                 InstrumentationGroupCollection = new Dictionary<InstrumentationGroup, bool> (),
                                 InstrumentationPointCollection = new Dictionary<Models.Definitions.Method, InstrumentationPoint> ()
 
                         };
+                        #region Generic IDbConnection
                         InstrumentationGroup igData = new InstrumentationGroup ()
                         {
                                 GroupName = "Generic Database",
                                 InstrumentationPoints = new List<InstrumentationPoint> ()
-                                
+
                         };
+
+                        var idbConnectionClass = new Models.Definitions.Class ()
+                        {
+                                ClassName = "System.Data.IDbConnection"
+                        };
+
                         igData.InstrumentationPoints.Add (new InstrumentationPoint ()
                         {
                                 InstrumentationMethod = new Models.Definitions.Method ()
                                 {
                                         MethodName = "Open",
-                                        Class = new Models.Definitions.Class()
-                                        {
-                                                ClassName = "System.Data.IDbConnection"
-                                        }
+                                        Class = idbConnectionClass
                                 }
                         });
                         igData.InstrumentationPoints.Add (new InstrumentationPoint ()
@@ -43,10 +47,7 @@ namespace ChainsAPM.Data {
                                 InstrumentationMethod = new Models.Definitions.Method ()
                                 {
                                         MethodName = "Close",
-                                        Class = new Models.Definitions.Class ()
-                                        {
-                                                ClassName = "System.Data.IDbConnection"
-                                        }
+                                        Class = idbConnectionClass
                                 }
                         });
                         igData.InstrumentationPoints.Add (new InstrumentationPoint ()
@@ -54,30 +55,31 @@ namespace ChainsAPM.Data {
                                 InstrumentationMethod = new Models.Definitions.Method ()
                                 {
                                         MethodName = "CreateCommand",
-                                        Class = new Models.Definitions.Class ()
-                                        {
-                                                ClassName = "System.Data.IDbConnection"
-                                        }
+                                        Class = idbConnectionClass
                                 }
                         });
 
-                        ac.InstrumentationGroupCollection.Add (igData, true);
+                        ac.InstrumentationGroupCollection.Add (igData, true); 
+                        #endregion
 
+                        #region SqlClient Specific
                         InstrumentationGroup igSqlClient = new InstrumentationGroup ()
                         {
                                 GroupName = "SqlClient",
                                 InstrumentationPoints = new List<InstrumentationPoint> ()
 
                         };
+
+                        var sqlClientClass = new Models.Definitions.Class ()
+                        {
+                                ClassName = "System.Data.SqlClient"
+                        };
                         igSqlClient.InstrumentationPoints.Add (new InstrumentationPoint ()
                         {
                                 InstrumentationMethod = new Models.Definitions.Method ()
                                 {
                                         MethodName = "Open",
-                                        Class = new Models.Definitions.Class ()
-                                        {
-                                                ClassName = "System.Data.SqlClient"
-                                        }
+                                        Class = sqlClientClass
                                 }
                         });
                         igSqlClient.InstrumentationPoints.Add (new InstrumentationPoint ()
@@ -85,10 +87,7 @@ namespace ChainsAPM.Data {
                                 InstrumentationMethod = new Models.Definitions.Method ()
                                 {
                                         MethodName = "Close",
-                                        Class = new Models.Definitions.Class ()
-                                        {
-                                                ClassName = "System.Data.SqlClient"
-                                        }
+                                        Class = sqlClientClass
                                 }
                         });
                         igSqlClient.InstrumentationPoints.Add (new InstrumentationPoint ()
@@ -96,14 +95,124 @@ namespace ChainsAPM.Data {
                                 InstrumentationMethod = new Models.Definitions.Method ()
                                 {
                                         MethodName = "CreateCommand",
-                                        Class = new Models.Definitions.Class ()
-                                        {
-                                                ClassName = "System.Data.SqlClient"
-                                        }
+                                        Class = sqlClientClass
                                 }
                         });
-                        ac.InstrumentationGroupCollection.Add (igSqlClient, true);
 
+                        InstrumentationGroup igSqlClommand = new InstrumentationGroup ()
+                        {
+                                GroupName = "SqlCommand",
+                                InstrumentationPoints = new List<InstrumentationPoint> ()
+
+                        };
+
+                        var sqlCommandClass = new Models.Definitions.Class ()
+                        {
+                                ClassName = "System.Data.SqlCommand"
+                        };
+
+                        igSqlClommand.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Prepare",
+                                        Class = sqlCommandClass
+                                }
+                        });
+
+                        igSqlClommand.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "ExecuteReader",
+                                        Class = sqlCommandClass
+                                }
+                        });
+
+                        igSqlClommand.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "ExecuteScalar",
+                                        Class = sqlCommandClass
+                                }
+                        });
+
+
+                        igSqlClommand.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "ExecuteNonQuery",
+                                        Class = sqlCommandClass
+                                }
+                        });
+
+
+                        InstrumentationGroup igSqlClonnection = new InstrumentationGroup ()
+                        {
+                                GroupName = "SqlConnection",
+                                InstrumentationPoints = new List<InstrumentationPoint> ()
+
+                        };
+
+                        var sqlConnectionClass = new Models.Definitions.Class ()
+                        {
+                                ClassName = "System.Data.SqlConnection"
+                        };
+
+                        igSqlClonnection.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Open",
+                                        Class = sqlConnectionClass
+                                }
+                        });
+
+                        igSqlClonnection.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Close",
+                                        Class = sqlConnectionClass
+                                }
+                        });
+
+                        igSqlClonnection.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Dispose",
+                                        Class = sqlConnectionClass
+                                }
+                        });
+
+                        igSqlClonnection.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "EnlistTransaction",
+                                        Class = sqlConnectionClass
+                                }
+                        });
+
+                        igSqlClonnection.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "EnlistDistributedTransaction",
+                                        Class = sqlConnectionClass
+                                }
+                        });
+
+                        ac.InstrumentationGroupCollection.Add (igSqlClient, true);
+                        ac.InstrumentationGroupCollection.Add (igSqlClommand, true);
+                        ac.InstrumentationGroupCollection.Add (igSqlClonnection, true);
+
+                        #endregion
+
+                        #region Threading
                         InstrumentationGroup igThreading = new InstrumentationGroup ()
                         {
                                 GroupName = "Generic Threading",
@@ -132,7 +241,7 @@ namespace ChainsAPM.Data {
                                                 ClassName = "System.Threading.Thread"
                                         }
                                 },
-                                
+
                         });
 
                         igThreading.InstrumentationPoints.Add (new InstrumentationPoint ()
@@ -169,57 +278,69 @@ namespace ChainsAPM.Data {
                                         }
                                 }
                         });
-                        ac.InstrumentationGroupCollection.Add (igSqlClient, true);
+                        ac.InstrumentationGroupCollection.Add (igThreading, true);
+                        #endregion
 
+                        #region Threading
+                        InstrumentationGroup igWebRequests = new InstrumentationGroup ()
+                        {
+                                GroupName = "Generic WebRequests",
+                                InstrumentationPoints = new List<InstrumentationPoint> ()
 
-                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlCommand");
-                        //commandsList.MethodList.Add ("Prepare");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlCommand");
-                        //commandsList.MethodList.Add ("ExecuteReader");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlCommand");
-                        //commandsList.MethodList.Add ("ExecuteScalar");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlCommand");
-                        //commandsList.MethodList.Add ("ExecuteNonQuery");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        };
 
-                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
-                        //commandsList.MethodList.Add ("Open");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
-                        //commandsList.MethodList.Add ("Close");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
-                        //commandsList.MethodList.Add ("Dispose");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        var webRequestsClass = new Models.Definitions.Class ()
+                        {
+                                ClassName = "System.Net.HttpWebRequest"
+                        };
 
-                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
-                        //commandsList.MethodList.Add ("EnlistTransaction");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        //commandsList.MethodClassList.Add ("System.Data.SqlClient.SqlConnection");
-                        //commandsList.MethodList.Add ("EnlistDistributedTransaction");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Create",
+                                        Class = webRequestsClass
+                                }
+                        });
 
-                        //commandsList.MethodClassList.Add ("System.Net.HttpWebRequest");
-                        //commandsList.MethodList.Add ("Create");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
-                        //commandsList.MethodClassList.Add ("System.Net.HttpWebRequest");
-                        //commandsList.MethodList.Add ("GetResponse");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "GetResponse",
+                                        Class = webRequestsClass
+                                }
+                        });
 
-                        //commandsList.MethodClassList.Add ("HelloWorldTestHarness.Program");
-                        //commandsList.MethodList.Add ("AddNumbers");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "GetResponse",
+                                        Class = webRequestsClass
+                                }
+                        });
 
-                        //commandsList.MethodClassList.Add ("HelloWorldTestHarness.Program");
-                        //commandsList.MethodList.Add ("Recursive");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "BeginGetResponse",
+                                        Class = webRequestsClass
+                                }
+                        });
 
-                        //commandsList.MethodClassList.Add ("HelloWorldTestHarness.Program");
-                        //commandsList.MethodList.Add ("Main");
-                        //commandsList.MethodPropList.Add (MethodsToInstrument.MethodProperties.Public);
+                        igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "EndGetResponse",
+                                        Class = webRequestsClass
+                                }
+                        });
+
+                        ac.InstrumentationGroupCollection.Add (igWebRequests, true);
+                        #endregion
 
 
                         ac.ParentAgentGroup = ReadAgentGroupConfig (ac);
