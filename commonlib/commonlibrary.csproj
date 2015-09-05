@@ -110,6 +110,7 @@
     <Compile Include="Agent\AgentProcessorImpl.cs" />
     <Compile Include="Commands\Agent\ACK.cs" />
     <Compile Include="Commands\Agent\AgentInformation.cs" />
+    <Compile Include="Commands\Agent\DefineClass.cs" />
     <Compile Include="Commands\Agent\DefineMethod.cs" />
     <Compile Include="Commands\Agent\DefineModule.cs" />
     <Compile Include="Commands\Agent\MethodEnter.cs" />

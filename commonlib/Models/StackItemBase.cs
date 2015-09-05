@@ -12,7 +12,7 @@ namespace ChainsAPM.Models {
         public class StackItemBase : IStackItem {
                
                 public ItemType Type { get; set; }
-                public int Depth { get; set; }
+                public uint Depth { get; set; }
                 public string Name { get; set; }
                 public long OriginalTimeStamp { get; set; }
                 public List<KeyValuePair<string, string>> Properties { get; set; }
@@ -45,9 +45,10 @@ namespace ChainsAPM.Models {
                                                 // TODO add in logic to handle a corruption
                                                 return false;
                                         case ItemType.Exit:
-                                                if ( stackitem.StackItemIdentifier == MethodDef ) {
+                                                if ( stackitem.StackItemIdentifier == StackItemIdentifier ) {
                                                         Elapsed = stackitem.OriginalTimeStamp - OriginalTimeStamp;
                                                         Finished = DateTime.FromFileTimeUtc (stackitem.OriginalTimeStamp);
+                                                        Type = stackitem.Type;
                                                 }
                                                 return true;
                                         case ItemType.Informational:
@@ -59,7 +60,15 @@ namespace ChainsAPM.Models {
 
                         }
                         // Still not at the proper depth
-                        return Children.Last ().UpdateStack (stackitem);
+                        try {
+
+                                return Children.Last ().UpdateStack (stackitem);
+                        }
+                        catch ( Exception ) {
+
+                                throw;
+                        }
+                        
 
                 }
         }

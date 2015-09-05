@@ -416,6 +416,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <ItemGroup>
     <ClCompile Include="src\commands\ACK.cpp" />
     <ClCompile Include="src\commands\AgentInformation.cpp" />
+    <ClCompile Include="src\commands\DefineClass.cpp" />
     <ClCompile Include="src\commands\DefineMethod.cpp" />
     <ClCompile Include="src\commands\DefineModule.cpp" />
     <ClCompile Include="src\commands\MethodEnter.cpp" />
@@ -517,6 +518,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="inc\Commands.h" />
     <ClInclude Include="inc\commands\ACK.h" />
     <ClInclude Include="inc\commands\AgentInformation.h" />
+    <ClInclude Include="inc\commands\DefineClass.h" />
     <ClInclude Include="inc\commands\DefineMethod.h" />
     <ClInclude Include="inc\commands\DefineModule.h" />
     <ClInclude Include="inc\commands\MethodEnter.h" />

@@ -380,7 +380,7 @@ void Cprofilermain::AddCommonFunctions()
 
 	auto cmd = std::dynamic_pointer_cast<Commands::MethodsToInstrument>(m_NetworkClient->ReceiveCommand());
 
-	if (cmd->MethodList.size() == cmd->MethodPropList.size() && cmd->MethodList.size() == cmd->MethodClassList.size())
+	if (cmd != nullptr && cmd->MethodList.size() == cmd->MethodPropList.size() && cmd->MethodList.size() == cmd->MethodClassList.size())
 	{
 		for (size_t i = 0; i < cmd->MethodList.size(); i++)
 		{
@@ -477,6 +477,7 @@ STDMETHODIMP Cprofilermain::SetMask()
 		| COR_PRF_MONITOR_APPDOMAIN_LOADS
 		//| COR_PRF_MONITOR_CODE_TRANSITIONS
 		| COR_PRF_DISABLE_INLINING
+		| COR_PRF_DISABLE_OPTIMIZATIONS
 		| COR_PRF_ENABLE_REJIT
 		| COR_PRF_DISABLE_ALL_NGEN_IMAGES
 		| COR_PRF_MONITOR_JIT_COMPILATION);
@@ -1544,7 +1545,7 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 		im.FunctionName = wszMethodDefName;
 		im.ClassName = wszTypeDefName;
 		this->m_Container->g_FullyQualifiedMethodsToProfile->find(im);
-
+		WCHAR* localString = L"WaitOne";
 		if (this->m_Container->g_FullyQualifiedMethodsToProfile->find(im) != this->m_Container->g_FullyQualifiedMethodsToProfile->end())
 		{
 			hr = RewriteIL(
@@ -1565,10 +1566,17 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 			mifm.m_ModuleID = moduleID;
 			m_ModFuncMap.emplace(mifm, functionID);
 
+			auto defclass = new Commands::DefineClass(timestamp, classID, wszTypeDefName);
+			tp->SendEvent<Commands::DefineClass>(defclass);
+
 			auto defp = new Commands::DefineMethod(timestamp, moduleID, classID, methodDef, functionID, wszMethodDefName);
 			tp->SendEvent<Commands::DefineMethod>(defp);
 
+			
+
 		}
+
+		
 
 	}
 

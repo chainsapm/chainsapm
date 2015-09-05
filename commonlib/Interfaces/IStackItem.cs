@@ -8,7 +8,7 @@ using ChainsAPM.Models;
 namespace ChainsAPM.Interfaces {
         public interface IStackItem {
                 ItemType Type { get; set; }
-                int Depth { get; set; }
+                uint Depth { get; set; }
                 string Name { get; set; }
                 long OriginalTimeStamp { get; set; }
                 List<KeyValuePair<string, string>> Properties { get; set; }

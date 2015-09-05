@@ -154,6 +154,9 @@
     <ClCompile Include="src\commands\MethodsToInstrument.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\commands\DefineClass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\clrprofiler_i.h">
@@ -244,6 +247,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inc\commands\MethodsToInstrument.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\commands\DefineClass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

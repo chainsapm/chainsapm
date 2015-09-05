@@ -45,6 +45,8 @@ namespace ChainsAPM.Agent {
 
                 public ByteCommandLocator CommandProcessor { get; private set; }
 
+                private List<ICommand<byte>> bigList = new List<ICommand<byte>> ();
+
                 private Agent () {
                         ThreadDepth = new Dictionary<long, long> ();
                         ThreadEntryPointStack = new Dictionary<long, Stack<Models.EntryPoint>> ();
@@ -58,10 +60,10 @@ namespace ChainsAPM.Agent {
                 }
 
                 public Agent (IConnectionHandler connectionHandler, IServerEvents serverEvents, IDataAdapter dataadapter, IConfigDataAdapter configdata) : this () {
+                        ConfigAdapter = configdata;
                         ConnectionHandler = connectionHandler;
                         ServerEvents = serverEvents;
                         DataStorage = dataadapter;
-                        ConfigAdapter = configdata;
                         ConnectionHandler.SetProcessor (CommandProcessor);
                         ConnectionHandler.HasData += HasData;
                         ConnectionHandler.Disconnected += Disconnected;
@@ -75,7 +77,7 @@ namespace ChainsAPM.Agent {
                 public void HasData (object sender) {
                         if ( sender == ConnectionHandler ) {
                                 var arr = ConnectionHandler.GetCommands ();
-
+                                bigList.AddRange (arr);
                                 // set up command processor
                                 foreach ( var item in arr ) {
 
@@ -84,6 +86,10 @@ namespace ChainsAPM.Agent {
 
                                                 if ( item is DefineMethod ) {
                                                         Process (item as DefineMethod);
+                                                }
+
+                                                if ( item is DefineClass ) {
+                                                        Process (item as DefineClass);
                                                 }
 
                                                 if ( item is AgentInformation ) {
@@ -97,6 +103,9 @@ namespace ChainsAPM.Agent {
                                                 if ( item is MethodExit ) {
                                                         Process (item as MethodExit);
                                                 }
+
+
+
                                                 if ( item is Commands.Common.SendString ) {
                                                         var it = item as Commands.Common.SendString;
                                                         Console.WriteLine ("Agent {0} has sent string {1}", AgentInfo.AgentName, it.StringData);

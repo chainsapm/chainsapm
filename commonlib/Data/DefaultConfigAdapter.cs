@@ -219,15 +219,18 @@ namespace ChainsAPM.Data {
                                 InstrumentationPoints = new List<InstrumentationPoint> ()
 
                         };
+
+                        var threadingClass = new Models.Definitions.Class ()
+                        {
+                                ClassName = "System.Threading.Thread"
+                        };
+
                         igThreading.InstrumentationPoints.Add (new InstrumentationPoint ()
                         {
                                 InstrumentationMethod = new Models.Definitions.Method ()
                                 {
                                         MethodName = "Start",
-                                        Class = new Models.Definitions.Class ()
-                                        {
-                                                ClassName = "System.Threading.Thread"
-                                        }
+                                        Class = threadingClass
                                 }
                         });
 
@@ -236,10 +239,7 @@ namespace ChainsAPM.Data {
                                 InstrumentationMethod = new Models.Definitions.Method ()
                                 {
                                         MethodName = "Sleep",
-                                        Class = new Models.Definitions.Class ()
-                                        {
-                                                ClassName = "System.Threading.Thread"
-                                        }
+                                        Class = threadingClass
                                 },
 
                         });
@@ -249,10 +249,7 @@ namespace ChainsAPM.Data {
                                 InstrumentationMethod = new Models.Definitions.Method ()
                                 {
                                         MethodName = "SpinWait",
-                                        Class = new Models.Definitions.Class ()
-                                        {
-                                                ClassName = "System.Threading.Thread"
-                                        }
+                                        Class = threadingClass
                                 }
                         });
 
@@ -261,10 +258,7 @@ namespace ChainsAPM.Data {
                                 InstrumentationMethod = new Models.Definitions.Method ()
                                 {
                                         MethodName = "WaitOne",
-                                        Class = new Models.Definitions.Class ()
-                                        {
-                                                ClassName = "System.Threading.WaitHandle"
-                                        }
+                                        Class = threadingClass
                                 }
                         });
                         igThreading.InstrumentationPoints.Add (new InstrumentationPoint ()
@@ -272,16 +266,13 @@ namespace ChainsAPM.Data {
                                 InstrumentationMethod = new Models.Definitions.Method ()
                                 {
                                         MethodName = "WaitMultiple",
-                                        Class = new Models.Definitions.Class ()
-                                        {
-                                                ClassName = "System.Threading.WaitHandle"
-                                        }
+                                        Class = threadingClass
                                 }
                         });
                         ac.InstrumentationGroupCollection.Add (igThreading, true);
                         #endregion
 
-                        #region Threading
+                        #region Generic WebRequests
                         InstrumentationGroup igWebRequests = new InstrumentationGroup ()
                         {
                                 GroupName = "Generic WebRequests",
@@ -312,14 +303,7 @@ namespace ChainsAPM.Data {
                                 }
                         });
 
-                        igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
-                        {
-                                InstrumentationMethod = new Models.Definitions.Method ()
-                                {
-                                        MethodName = "GetResponse",
-                                        Class = webRequestsClass
-                                }
-                        });
+                      
 
                         igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
                         {
@@ -339,11 +323,129 @@ namespace ChainsAPM.Data {
                                 }
                         });
 
+                        igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "_ReadAResult",
+                                        Class = webRequestsClass
+                                }
+                        });
+
+                        igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "BeginSubmitRequest",
+                                        Class = webRequestsClass
+                                }
+                        });
+
+                        igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "EndSubmitRequest",
+                                        Class = webRequestsClass
+                                }
+                        });
+
+                        igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "SetRequestSubmitted",
+                                        Class = webRequestsClass
+                                }
+                        });
+
+                        igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "CheckDefferedCallDone",
+                                        Class = webRequestsClass
+                                }
+                        });
+                        
+
+                        igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "CheckProtocol",
+                                        Class = webRequestsClass
+                                }
+                        });
+
+                        igWebRequests.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "CheckWriteSideResponseProcessing",
+                                        Class = webRequestsClass
+                                }
+                        });
+
+                        
+
                         ac.InstrumentationGroupCollection.Add (igWebRequests, true);
                         #endregion
 
+                        #region HelloWorldTestHarness.exe
+                        InstrumentationGroup igMyApplication = new InstrumentationGroup ()
+                        {
+                                GroupName = "HelloWorldTestHarness.exe",
+                                InstrumentationPoints = new List<InstrumentationPoint> ()
+
+                        };
+
+                        var helloClass = new Models.Definitions.Class ()
+                        {
+                                ClassName = "HelloWorldTestHarness.Program"
+                        };
+
+                        igMyApplication.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Main",
+                                        Class = helloClass,
+                                        IsEntryPoint = true
+                                }
+                        });
+
+                        igMyApplication.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Recursive",
+                                        Class = helloClass,
+                                }
+                        });
+                        igMyApplication.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "AddNumbers",
+                                        Class = helloClass,
+                                }
+                        });
+
+                        ac.InstrumentationGroupCollection.Add (igMyApplication, true);
+                        #endregion
+
+                        foreach ( var InstrumentationGrp in ac.InstrumentationGroupCollection ) {
+                                if ( InstrumentationGrp.Value ) {
+                                        foreach ( var InstrumentationPt in InstrumentationGrp.Key.InstrumentationPoints ) {
+                                                ac.InstrumentationPointCollection.Add (InstrumentationPt.InstrumentationMethod, InstrumentationPt);
+                                        }
+                                }
+                               
+                        }
 
                         ac.ParentAgentGroup = ReadAgentGroupConfig (ac);
+
                         return ac;
                 }
 

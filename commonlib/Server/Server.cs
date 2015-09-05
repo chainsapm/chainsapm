@@ -47,8 +47,8 @@ namespace ChainsAPM.Server {
                         wCb = new System.Threading.WaitCallback (TimerCallback);
                         concurrentAgentHandlerList = new System.Collections.Concurrent.ConcurrentDictionary<long, IConnectedObject> ();
                         System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.LowLatency;
-                        StorageAdapter = StorageAdapter ?? new ChainsAPM.Data.InMemoryStorageAdapter ();
-                        ConfigAdapter = ConfigAdapter ?? new ChainsAPM.Data.DefaultConfigAdapter ();
+                        StorageAdapter = new ChainsAPM.Data.InMemoryStorageAdapter ();
+                        ConfigAdapter = new ChainsAPM.Data.DefaultConfigAdapter ();
                 }
 
                 public Server (Config.ServerConfig config) : this () {

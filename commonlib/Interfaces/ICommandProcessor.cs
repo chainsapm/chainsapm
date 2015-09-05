@@ -9,5 +9,6 @@ namespace ChainsAPM.Interfaces {
                 void Process (Commands.Agent.MethodEnter cmd);
                 void Process (Commands.Agent.MethodExit cmd);
                 void Process (Commands.Agent.DefineModule cmd);
+                void Process (Commands.Agent.DefineClass cmd);
         }
 }

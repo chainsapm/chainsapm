@@ -3,8 +3,7 @@ using System.Text;
 
 namespace ChainsAPM.Models.Definitions {
         public class Method : System.IComparable<Method>, IEquatable<Method> {
-                public Assembly Assembly { get; set; }
-                public Module Module { get; set; }
+               
                 public Class Class { get; set; }
                 public long MethodId { get; set; }
                 public string MethodName { get; set; }
@@ -14,22 +13,15 @@ namespace ChainsAPM.Models.Definitions {
 
                 public override string ToString () {
                         var sb = new StringBuilder ();
-                        sb.Append (MethodName);
+                        if ( Class != null ) {
+                                sb.Append (Class);
+                                sb.Append ("::");
+                        }
+                        sb.Append (MethodName.Trim());
                         sb.Append (Signature);
                         return sb.ToString ();
                 }
 
-                public string FullName () {
-                        var sb = new StringBuilder ();
-                        sb.Append (Assembly);
-                        sb.Append (" ");
-                        sb.Append (Module);
-                        sb.Append ("!");
-                        sb.Append (Class);
-                        sb.Append ("::");
-                        sb.Append (this);
-                        return sb.ToString ();
-                }
 
                 public bool Equals (Method other) {
                         if ( MethodName.Equals(other.MethodName)   
@@ -41,6 +33,11 @@ namespace ChainsAPM.Models.Definitions {
 
                 public int CompareTo (Method other) {
                         return MethodName.CompareTo (other.MethodName);
+                }
+
+                public override int GetHashCode () {
+                        return this.ToString ().GetHashCode ();
+                        
                 }
         }
 }
