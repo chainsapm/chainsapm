@@ -126,14 +126,13 @@ STDMETHODIMP ModuleMetadataHelpers::InjectFieldToModule(const mdTypeDef& classTy
 STDMETHODIMP ModuleMetadataHelpers::GetFunctionInformation(FunctionID funcId, InformationClasses::FunctionInfo* funcInfo)
 {
 
-	mdMethodDef funcToken;
+	mdMethodDef funcToken = mdTokenNil;
 	ModuleID modID;
 	ClassID classID;
 
 	std::unique_ptr<IMetaDataImport> _MetaDataImport;
 	std::unique_ptr<IMetaDataImport2> _MetaDataImport2;
 
-	this->GetMetaDataImportInterfaceFromFunction(funcId, &funcToken, _MetaDataImport, _MetaDataImport2);
 	
 	
 

@@ -816,7 +816,6 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 
 		if (m_pICorProfilerInfo2 != NULL)
 		{
-			this->m_Container->g_MetadataHelpers = new ModuleMetadataHelpers(m_pICorProfilerInfo2);
 			clientData = new UINT_PTR(0x0);; // Obviously we're not using any 
 			m_pICorProfilerInfo2->SetFunctionIDMapper((FunctionIDMapper*)&Cprofilermain::Mapper1);
 #ifdef _WIN64 
@@ -828,7 +827,6 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 		if (m_pICorProfilerInfo3 != NULL)
 		{
 			// .NET40
-			this->m_Container->g_MetadataHelpers = new ModuleMetadataHelpers(m_pICorProfilerInfo2);
 			clientData = new UINT_PTR(40);
 			m_pICorProfilerInfo3->SetFunctionIDMapper2((FunctionIDMapper2*)&Cprofilermain::Mapper2, this);
 #ifdef _WIN64 
@@ -843,7 +841,6 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 		if (m_pICorProfilerInfo4 != NULL)
 		{
 			// .NET45
-			this->m_Container->g_MetadataHelpers = new ModuleMetadataHelpers(m_pICorProfilerInfo2);
 			clientData = new UINT_PTR(45);
 			m_pICorProfilerInfo4->SetFunctionIDMapper2((FunctionIDMapper2*)&Cprofilermain::Mapper2, this);
 
@@ -1044,7 +1041,7 @@ void Cprofilermain::FunctionEnterHook2(FunctionID funcId, UINT_PTR clientData,
 	ThreadID threadId = 0;
 	{
 		//critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
-		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+		this->m_pICorProfilerInfo->GetCurrentThreadID(&threadId);
 		//csh.leave_early();
 	}
 	// Send no commands for now.
@@ -1061,7 +1058,7 @@ void Cprofilermain::FunctionLeaveHook2(FunctionID funcId, UINT_PTR clientData,
 	ThreadID threadId = 0;
 	{
 		//critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
-		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+		this->m_pICorProfilerInfo->GetCurrentThreadID(&threadId);
 		//csh.leave_early();
 	}
 
@@ -1082,7 +1079,7 @@ void Cprofilermain::FunctionTailHook2(FunctionID funcId, UINT_PTR clientData,
 	ThreadID threadId = 0;
 	{
 		//critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
-		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+		this->m_pICorProfilerInfo->GetCurrentThreadID(&threadId);
 		//csh.leave_early();
 	}
 
@@ -1120,7 +1117,7 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 #ifdef ALLMETHODS
 
 	InformationClasses::FunctionInfo *funcInfo = new InformationClasses::FunctionInfo();
-	this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, funcInfo);
+	//this->m_Container->g_MetadataHelpers->GetFunctionInformation(funcId, funcInfo);
 	FILETIME HighPrecisionFileTime{ 0 };
 	GetSystemTimeAsFileTime(&HighPrecisionFileTime);
 	__int64 timestamp = (((__int64)HighPrecisionFileTime.dwHighDateTime) << 32) + HighPrecisionFileTime.dwLowDateTime;
@@ -1318,6 +1315,69 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 		hr = pUnk->QueryInterface(IID_IMetaDataImport, (LPVOID *)&pImport);
 		LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: QueryInterface failed for ModuleID = " <<
 			HEX(moduleID) << L" (" << wszName << L")");
+	}
+
+	//pImport->EnumTypeDefs()
+
+	HCORENUM hEnum = NULL;
+	mdTypeDef rgTypeDefs[1024];
+	mdTypeRef rgTypeRefs[1024];
+	ULONG cAssemblyRefsReturned;
+	wchar_t typeDeffNameBuffer[255];
+	ULONG numChars = 0;
+	DWORD attrFlags = 0;
+	mdToken tkExtends = mdTokenNil;
+	mdToken resolutionScope;
+	
+	if (::ContainsAtEnd(wszName, L".exe"))
+	{
+		mdTypeRef httpRefPtr = mdTokenNil;
+		//pEmit->DefineTypeRefByName(0x23000002, L"System.Net.HttpWebRequest", &httpRefPtr);
+		do
+		{
+			hr = pImport->EnumTypeRefs(
+				&hEnum,
+				rgTypeRefs,
+				_countof(rgTypeRefs),
+				&cAssemblyRefsReturned);
+
+			for (size_t i = 0; i < cAssemblyRefsReturned; i++)
+			{
+				pImport->GetTypeRefProps(rgTypeRefs[i],
+					&resolutionScope,
+					typeDeffNameBuffer,
+					225,
+					&numChars);
+				auto s = std::wstring(typeDeffNameBuffer);
+			}
+
+		} while (hr == S_OK);
+
+
+		pImport->CloseEnum(hEnum);
+		hEnum = NULL;
+		do
+		{
+			hr = pImport->EnumTypeDefs(
+				&hEnum,
+				rgTypeDefs,
+				_countof(rgTypeDefs),
+				&cAssemblyRefsReturned);
+
+			for (size_t i = 0; i < cAssemblyRefsReturned; i++)
+			{
+				pImport->GetTypeDefProps(rgTypeDefs[i],
+					typeDeffNameBuffer,
+					255,
+					&numChars,
+					&attrFlags,
+					&tkExtends);
+				auto s = std::wstring(typeDeffNameBuffer);
+			}
+
+		} while (hr == S_OK);
+
+		pImport->CloseEnum(hEnum);
 	}
 
 	if (fPumpHelperMethodsIntoThisModule)
@@ -2178,7 +2238,7 @@ void Cprofilermain::NtvEnteredFunction(unsigned __int64 moduleIDCur, mdMethodDef
 	ThreadID threadId = 0;
 	{
 		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
-		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+		m_pICorProfilerInfo->GetCurrentThreadID(&threadId);
 		csh.leave_early();
 	}
 
@@ -2204,7 +2264,7 @@ void Cprofilermain::NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, i
 	ThreadID threadId = 0;
 	{
 		critsec_helper csh(&this->m_Container->g_MetaDataCriticalSection);
-		this->m_Container->g_MetadataHelpers->GetCurrentThread(&threadId);
+		m_pICorProfilerInfo->GetCurrentThreadID(&threadId);
 		csh.leave_early();
 	}
 
