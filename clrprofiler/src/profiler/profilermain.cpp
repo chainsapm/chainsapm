@@ -166,9 +166,20 @@ CRITICAL_SECTION Cprofilermain::g_StaticContainerClassCritSec;
 // NOTE: Must keep these signatures in sync with the DllImports in ProfilerHelper.cs!
 //---------------------------------------------------------------------------------------
 
+
+EXTERN_C void STDAPICALLTYPE NtvEnteredHttp(
+	unsigned __int64 moduleIDCur,
+	unsigned __int64 mdCur,
+	WCHAR* httpString)
+{
+	Cprofilermain * pContainerClass = nullptr;
+	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
+	pContainerClass->NtvEnteredFunction(moduleIDCur, mdCur, 0);
+}
+
 EXTERN_C void STDAPICALLTYPE NtvEnteredFunction(
 	unsigned __int64 moduleIDCur,
-	mdMethodDef mdCur,
+	unsigned __int64 mdCur,
 	int nVersionCur)
 {
 	Cprofilermain * pContainerClass = nullptr;
@@ -178,7 +189,7 @@ EXTERN_C void STDAPICALLTYPE NtvEnteredFunction(
 
 EXTERN_C void STDAPICALLTYPE NtvExitedFunction(
 	unsigned __int64 moduleIDCur,
-	mdMethodDef mdCur,
+	unsigned __int64 mdCur,
 	int nVersionCur)
 {
 	Cprofilermain * pContainerClass = nullptr;
@@ -805,7 +816,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 
 		if (m_pICorProfilerInfo2 != NULL)
 		{
-			this->m_Container->g_MetadataHelpers = new MetadataHelpers(m_pICorProfilerInfo2);
+			this->m_Container->g_MetadataHelpers = new ModuleMetadataHelpers(m_pICorProfilerInfo2);
 			clientData = new UINT_PTR(0x0);; // Obviously we're not using any 
 			m_pICorProfilerInfo2->SetFunctionIDMapper((FunctionIDMapper*)&Cprofilermain::Mapper1);
 #ifdef _WIN64 
@@ -817,7 +828,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 		if (m_pICorProfilerInfo3 != NULL)
 		{
 			// .NET40
-			this->m_Container->g_MetadataHelpers = new MetadataHelpers(m_pICorProfilerInfo2);
+			this->m_Container->g_MetadataHelpers = new ModuleMetadataHelpers(m_pICorProfilerInfo2);
 			clientData = new UINT_PTR(40);
 			m_pICorProfilerInfo3->SetFunctionIDMapper2((FunctionIDMapper2*)&Cprofilermain::Mapper2, this);
 #ifdef _WIN64 
@@ -832,7 +843,7 @@ STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 		if (m_pICorProfilerInfo4 != NULL)
 		{
 			// .NET45
-			this->m_Container->g_MetadataHelpers = new MetadataHelpers(m_pICorProfilerInfo2);
+			this->m_Container->g_MetadataHelpers = new ModuleMetadataHelpers(m_pICorProfilerInfo2);
 			clientData = new UINT_PTR(45);
 			m_pICorProfilerInfo4->SetFunctionIDMapper2((FunctionIDMapper2*)&Cprofilermain::Mapper2, this);
 
@@ -1167,17 +1178,21 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 // [public] Creates the IL for the managed leave/enter helpers.
 void Cprofilermain::SetILFunctionBodyForManagedHelper(ModuleID moduleID, mdMethodDef methodDef)
 {
-	assert(!m_fInstrumentationHooksInSeparateAssembly);
+	/*assert(!m_fInstrumentationHooksInSeparateAssembly);
 	assert(moduleID == m_modidMscorlib);
-	assert((methodDef == m_mdEnter) || (methodDef == m_mdExit));
+	assert((methodDef == m_mdEnter) || (methodDef == m_mdExit));*/
 
-	HRESULT hr = SetILForManagedHelper(
-		m_pICorProfilerInfo.get(),
-		moduleID,
-		methodDef,
-		m_mdIntPtrExplicitCast,
-		(methodDef == m_mdEnter) ? m_mdEnterPInvoke : m_mdExitPInvoke);
-
+	HRESULT hr = E_FAIL;
+	if ((moduleID == m_modidMscorlib) &&
+		((methodDef == m_mdEnter) || (methodDef == m_mdExit)))
+	{
+		hr = SetILForManagedHelper(
+			m_pICorProfilerInfo.get(),
+			moduleID,
+			methodDef,
+			m_mdIntPtrExplicitCast,
+			(methodDef == m_mdEnter) ? m_mdEnterPInvoke : m_mdExitPInvoke);
+	} 
 	if (FAILED(hr))
 	{
 		LOG_APPEND(L"SetILForManagedHelper failed for methodDef = " << HEX(methodDef) << L"--" <<
@@ -1265,35 +1280,7 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 		return S_OK;
 	}
 
-	AppDomainID appDomainID;
-	ModuleID modIDDummy;
-	hr = m_pICorProfilerInfo->GetAssemblyInfo(
-		assemblyID,
-		0,          // cchName,
-		NULL,       // pcchName,
-		NULL,       // szName[] ,
-		&appDomainID,
-		&modIDDummy);
-
-	LOG_IFFAILEDRET(hr, L"GetAssemblyInfo failed for assemblyID = " << HEX(assemblyID));
-
-	WCHAR wszAppDomainName[200];
-	ULONG cchAppDomainName;
-	ProcessID pProcID;
-	//BOOL fShared = FALSE;
-
-	hr = m_pICorProfilerInfo->GetAppDomainInfo(
-		appDomainID,
-		_countof(wszAppDomainName),
-		&cchAppDomainName,
-		wszAppDomainName,
-		&pProcID);
-
-	LOG_IFFAILEDRET(hr, L"GetAppDomainInfo failed for appDomainID = " << HEX(appDomainID));
-
-	LOG_APPEND(L"ModuleLoadFinished for " << wszName << L", ModuleID = " << HEX(moduleID) <<
-		L", LoadAddress = " << HEX(pbBaseLoadAddr) << L", AppDomainID = " << HEX(appDomainID) <<
-		L", ADName = " << wszAppDomainName);
+	
 
 	BOOL fPumpHelperMethodsIntoThisModule = FALSE;
 	if (::ContainsAtEnd(wszName, L"mscorlib.dll"))
@@ -1780,7 +1767,7 @@ void Cprofilermain::AddMemberRefs(IMetaDataAssemblyImport * pAssemblyImport, IMe
 		L"ILRewriteProfilerHelper.ProfilerHelper" :
 		k_wszHelpersContainerType;
 
-	hr = pEmit->DefineTypeRefByName(
+	hr = pEmit->DefineTypeRefByName( 
 		assemblyRef,
 		wszTypeToReference,
 		&typeRef);

@@ -18,7 +18,8 @@ namespace ChainsAPM.Data {
                         var ac = new AgentConfig ()
                         {
                                 InstrumentationGroupCollection = new Dictionary<InstrumentationGroup, bool> (),
-                                InstrumentationPointCollection = new Dictionary<Models.Definitions.Method, InstrumentationPoint> ()
+                                InstrumentationPointCollection = new Dictionary<Models.Definitions.Method, InstrumentationPoint> (),
+                                ConfigName = "DefaultAgentConfig"
 
                         };
                         #region Generic IDbConnection
@@ -435,6 +436,88 @@ namespace ChainsAPM.Data {
                         ac.InstrumentationGroupCollection.Add (igMyApplication, true);
                         #endregion
 
+                        #region ASP.NET and MVC
+                        InstrumentationGroup igASPNET = new InstrumentationGroup ()
+                        {
+                                GroupName = "ASP.NET",
+                                InstrumentationPoints = new List<InstrumentationPoint> ()
+
+                        };
+
+                        var pipelineClass = new Models.Definitions.Class ()
+                        {
+                                ClassName = "System.Web.Hosting.PipelineRuntime"
+                        };
+
+
+                        igASPNET.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "ProcessRequestNotification",
+                                        Class = pipelineClass,
+                                        IsEntryPoint = true
+                                }
+                        });
+
+                        igASPNET.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "ProcessRequestNotificationHelper",
+                                        Class = pipelineClass
+                                }
+                        });
+
+                        var mvcAsyncHandlerClass = new Models.Definitions.Class ()
+                        {
+                                ClassName = "System.Web.Mvc.MvcHandler.System.Web.IHttpAsyncHandler"
+
+                        };
+                        igASPNET.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "EndProcessRequest",
+                                        Class = mvcAsyncHandlerClass
+                                }
+                        });
+
+
+                        //System.Web.Mvc.MvcHandler.EndProcessRequest (System.IAsyncResult)
+                        var mvcHandlerClass = new Models.Definitions.Class ()
+                        {
+                                ClassName = "System.Web.Mvc.MvcHandler"
+
+                        };
+                        igASPNET.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "EndProcessRequest",
+                                        Class = mvcHandlerClass
+                                }
+                        });
+
+                        //System.Web.Mvc.ActionMethodDispatcher.Execute
+                        var mvcActionDispatcherClass = new Models.Definitions.Class ()
+                        {
+                                ClassName = "System.Web.Mvc.ActionMethodDispatcher"
+
+                        };
+                        igASPNET.InstrumentationPoints.Add (new InstrumentationPoint ()
+                        {
+                                InstrumentationMethod = new Models.Definitions.Method ()
+                                {
+                                        MethodName = "Execute",
+                                        Class = pipelineClass
+                                }
+                        });
+
+
+                        ac.InstrumentationGroupCollection.Add (igASPNET, true);
+                        #endregion
+
                         foreach ( var InstrumentationGrp in ac.InstrumentationGroupCollection ) {
                                 if ( InstrumentationGrp.Value ) {
                                         foreach ( var InstrumentationPt in InstrumentationGrp.Key.InstrumentationPoints ) {
@@ -453,7 +536,8 @@ namespace ChainsAPM.Data {
                         var ac = new AgentGroupConfig ()
                         {
                                 InstrumentationGroupCollection = new Dictionary<InstrumentationGroup, bool> (),
-                                InstrumentationPointCollection = new Dictionary<Models.Definitions.Method, InstrumentationPoint> ()
+                                InstrumentationPointCollection = new Dictionary<Models.Definitions.Method, InstrumentationPoint> (),
+                                ConfigName = "DefaultAgentGroupConfig"
 
                         };
                         ac.ParentApplication = ReadApplicationConfig (ac);
@@ -464,7 +548,8 @@ namespace ChainsAPM.Data {
                         var ac = new ApplicationConfig ()
                         {
                                 InstrumentationGroupCollection = new Dictionary<InstrumentationGroup, bool> (),
-                                InstrumentationPointCollection = new Dictionary<Models.Definitions.Method, InstrumentationPoint> ()
+                                InstrumentationPointCollection = new Dictionary<Models.Definitions.Method, InstrumentationPoint> (),
+                                ConfigName = "DefaultApplicationConfig"
 
                         };
                         ac.ParentApplicationGroup = ReadApplicationGroupConfig (ac);
@@ -475,7 +560,8 @@ namespace ChainsAPM.Data {
                         var ac = new ApplicationGroupConfig ()
                         {
                                 InstrumentationGroupCollection = new Dictionary<InstrumentationGroup, bool> (),
-                                InstrumentationPointCollection = new Dictionary<Models.Definitions.Method, InstrumentationPoint> ()
+                                InstrumentationPointCollection = new Dictionary<Models.Definitions.Method, InstrumentationPoint> (),
+                                ConfigName = "DefaultApplicationGroupConfig"
                         };
                         return ac;
                 }

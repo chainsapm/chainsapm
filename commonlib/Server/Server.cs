@@ -47,7 +47,7 @@ namespace ChainsAPM.Server {
                         wCb = new System.Threading.WaitCallback (TimerCallback);
                         concurrentAgentHandlerList = new System.Collections.Concurrent.ConcurrentDictionary<long, IConnectedObject> ();
                         System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.LowLatency;
-                        StorageAdapter = new ChainsAPM.Data.InMemoryStorageAdapter ();
+                        StorageAdapter = new ChainsAPM.Data.MongoDataStorageAdapter ();
                         ConfigAdapter = new ChainsAPM.Data.DefaultConfigAdapter ();
                 }
 

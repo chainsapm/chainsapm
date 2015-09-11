@@ -1,5 +1,8 @@
 ﻿@{
-    ViewBag.Title = "Home Page";
+        ViewBag.Title = "Home Page";
+        if ( System.Diagnostics.Debugger.IsAttached ) {
+            System.Diagnostics.Debugger.Break ();
+        }
 }
 
 <div class="jumbotron">

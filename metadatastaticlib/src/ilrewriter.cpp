@@ -1681,6 +1681,90 @@ HRESULT SetILForManagedHelper(
 	return S_OK;
 }
 
+HRESULT SetILForHttpRequest(
+	ICorProfilerInfo * pICorProfilerInfo,
+	ModuleID moduleID,
+	mdMethodDef mdHelperToAdd,
+	mdMethodDef mdHttpContextGetReqMemberRef,
+	mdMethodDef mdHttpRequestGetURLMemberRef,
+	mdMethodDef mdObjectToStringMemberRef,
+	mdMethodDef mdPInvokeToCall)
+{
+	ILRewriter rewriter(
+		pICorProfilerInfo,
+		NULL, // no ICorProfilerFunctionControl for classic-style on-first-JIT instrumentation
+		moduleID,
+		mdHelperToAdd);
+
+	rewriter.InitializeTiny();
+
+	ILInstr * pFirstOriginalInstr = rewriter.GetILList()->m_pNext;
+	ILInstr * pNewInstr = NULL;
+
+	// nop
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_NOP;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.0 (uint32/uint64 ModuleIDCur)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_0;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// conv.u8 (cast ModuleIDCur to a managed U8)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CONV_U8;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.1 (uint32 methodDef of function being entered/exited)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_1;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ldarg.2 (int32 rejitted version number of function being entered/exited)
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_LDARG_2;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// Call System.Web.HttpContext::get_Request()
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CALLVIRT;
+	pNewInstr->m_Arg32 = mdHttpContextGetReqMemberRef;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// Call System.Web.HttpRequest::get_Url()
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CALLVIRT;
+	pNewInstr->m_Arg32 = mdHttpRequestGetURLMemberRef;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// Call  System.Object::ToString()
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CALLVIRT;
+	pNewInstr->m_Arg32 = mdObjectToStringMemberRef;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// call the PInvoke, which will target the profiler's NtvEnter/ExitFunction
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_CALL;
+	pNewInstr->m_Arg32 = mdPInvokeToCall;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// nop
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_NOP;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	// ret
+	pNewInstr = rewriter.NewILInstr();
+	pNewInstr->m_opcode = CEE_RET;
+	rewriter.InsertBefore(pFirstOriginalInstr, pNewInstr);
+
+	IfFailRet(rewriter.Export());
+
+	return S_OK;
+}
+
 // Uses the general-purpose ILRewriter class to create IL for
 // helper probes from scratch.  This is used when the profiler is
 // run in the mode to pump helper methods directly into mscorlib,

@@ -5,12 +5,14 @@ using ChainsAPM.Models.Instrumentation;
 
 namespace ChainsAPM.Config
 {
-    public class ApplicationConfig : IInstrumentationMethodGroupConfig, IInstrumentationPointConfig {
+    public class ApplicationConfig : IBaseConfig, IInstrumentationMethodGroupConfig, IInstrumentationPointConfig {
         public ApplicationGroupConfig ParentApplicationGroup { get; set; }
                 public IDictionary<InstrumentationGroup, bool> InstrumentationGroupCollection { get; set; }
 
                 public IDictionary<Method, InstrumentationPoint> InstrumentationPointCollection { get; set; }
-
+                public string ConfigName {
+                        get; set;
+                }
 
                 public  bool IsMethodEntryPoint (Models.Definitions.Method methodid) {
                         if ( InstrumentationPointCollection.ContainsKey (methodid) ) {

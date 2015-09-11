@@ -1,5 +1,7 @@
-﻿namespace ChainsAPM.Config {
-        public class ServerConfig {
+﻿using ChainsAPM.Interfaces.Config;
+
+namespace ChainsAPM.Config {
+        public class ServerConfig : IBaseConfig {
                 public class DatabaseNode {
                         public System.Reflection.Assembly DatabaseAdapter { get; set; }
                         public string DatabaseName { get; set; }
@@ -18,6 +20,9 @@
                         public int Port { get; set; }
                         public bool UseIPv6 { get; set; }
 
+                }
+                public string ConfigName {
+                        get; set;
                 }
                 public ServerNode Server { get; set; }
                 public DatabaseNode DocumentDB { get; set; }

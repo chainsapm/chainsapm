@@ -10,7 +10,7 @@ namespace ChainsAPM.Models {
                 Informational
         }
         public class StackItemBase : IStackItem {
-               
+
                 public ItemType Type { get; set; }
                 public uint Depth { get; set; }
                 public string Name { get; set; }
@@ -23,6 +23,10 @@ namespace ChainsAPM.Models {
                 public IStackItem CurrentChild { get; set; }
                 public long StackItemIdentifier { get; set; }
                 public long MethodDef { get; set; }
+                public string MachineName { get; set; }
+                public string AgentName { get; set; }
+                public string ProcessName { get; set; }
+                public string ApplicationName { get; set; }
 
                 public virtual bool UpdateStack (IStackItem stackitem) {
                         if ( Children == null )
@@ -68,7 +72,7 @@ namespace ChainsAPM.Models {
 
                                 throw;
                         }
-                        
+
 
                 }
         }

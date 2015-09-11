@@ -44,12 +44,10 @@ namespace HelloWorldTestHarness {
                         var resp = wr.GetResponse ();
                         resp.Close ();
                         Console.WriteLine ("After last call.");
-                        Console.ReadLine ();
                         sw.Stop ();
                         tw.WriteLine ("HelloWorld.exe ran {1} loops in {0} ms with profiling {2}", sw.ElapsedMilliseconds.ToString (), loops, env == null ? "OFF" : "ON");
                         tw.Flush ();
                         tw.Dispose ();
-                        Console.ReadLine ();
                 }
                 static int AddNumbers (int i, int b) {
                         var wr = System.Net.HttpWebRequest.Create ("http://www.google.com");

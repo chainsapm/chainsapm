@@ -17,7 +17,7 @@ namespace server {
                                         var ip = System.Net.IPAddress.Any;
                                         System.Net.IPAddress outip = null;
                                         var parsed = System.Net.IPAddress.TryParse (options.IPAddress, out outip);
-                                        if (parsed && outip != System.Net.IPAddress.Loopback) {
+                                        if ( parsed && outip != System.Net.IPAddress.Loopback ) {
                                                 ip = outip;
                                         }
                                         int useport = options.Port;
@@ -54,8 +54,15 @@ namespace server {
 
                 private static void StartServer (System.Net.IPAddress ip, int port) {
 
-                        s = new server.ConsoleServer.ConsoleServer (ip, port);
-                        s.Start ();
+                        if ( ip.Equals (System.Net.IPAddress.IPv6Any) ) {
+                                sIPV6 = new server.ConsoleServer.ConsoleServer (ip, port);
+                                sIPV6.Start ();
+                        } else {
+                                s = new server.ConsoleServer.ConsoleServer (ip, port);
+                                s.Start ();
+                        }
+                         
+                        
                 }
 
 

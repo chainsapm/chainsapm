@@ -20,6 +20,9 @@ namespace WebApplication1
         [WebMethod]
         public string HelloWorld()
         {
+                        if ( System.Diagnostics.Debugger.IsAttached ) {
+                                System.Diagnostics.Debugger.Break ();
+                        }
             return "Hello World";
         }
     }

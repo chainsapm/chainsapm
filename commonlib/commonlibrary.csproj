@@ -118,6 +118,7 @@
     <Compile Include="Commands\Agent\MethodsToInstrument.cs" />
     <Compile Include="Commands\Locator.cs" />
     <Compile Include="Data\DefaultConfigAdapter.cs" />
+    <Compile Include="Interfaces\Config\IBaseConfig.cs" />
     <Compile Include="Interfaces\Config\IInstrumentationMethodConfig.cs" />
     <Compile Include="Interfaces\Config\IInstrumentationMethodGroupConfig.cs" />
     <Compile Include="Interfaces\Config\IInstrumentationPointConfig.cs" />

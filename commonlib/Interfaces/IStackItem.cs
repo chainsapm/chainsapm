@@ -18,6 +18,10 @@ namespace ChainsAPM.Interfaces {
                 Queue<IStackItem> Children { get; set; }
                 IStackItem CurrentChild { get; set; }
                 long StackItemIdentifier { get; set; }
-                bool UpdateStack (IStackItem stackitem);
+                string MachineName { get; set; }
+                string AgentName { get; set; }
+                string ProcessName { get; set; }
+                string ApplicationName { get; set; }
+                bool UpdateStack(IStackItem stackitem);
         }
 }

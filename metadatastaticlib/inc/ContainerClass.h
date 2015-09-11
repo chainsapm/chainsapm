@@ -179,7 +179,7 @@ public:
 #include "FunctionInfo.h"
 
 class StackItemBase;
-class MetadataHelpers;
+class ModuleMetadataHelpers;
 
 _ALLOCATOR_DECL(CACHE_FREELIST(stdext::allocators::max_fixed_size<50000>), stdext::allocators::sync_none, ALLOC_500);
 
@@ -291,7 +291,7 @@ struct  ContainerClass
 	~ContainerClass();
 
 	// Class that holds 
-	MetadataHelpers *  g_MetadataHelpers;
+	ModuleMetadataHelpers *  g_MetadataHelpers;
 
 	// As a function is mapped we want to keep a reference to it's specific details so we can 
 	// use it again when generating the call stack.
