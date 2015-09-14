@@ -1317,6 +1317,19 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 			HEX(moduleID) << L" (" << wszName << L")");
 	}
 
+	COMPtrHolder<IMetaDataAssemblyImport> pAssemblyImport;
+	{
+		COMPtrHolder<IUnknown> pUnk;
+
+		hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataAssemblyImport, &pUnk);
+		LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: GetModuleMetaData failed for ModuleID = " <<
+			HEX(moduleID) << L" (" << wszName << L")");
+
+		hr = pUnk->QueryInterface(IID_IMetaDataAssemblyImport, (LPVOID *)&pAssemblyImport);
+		LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: QueryInterface failed for ModuleID = " <<
+			HEX(moduleID) << L" (" << wszName << L")");
+	}
+
 	//pImport->EnumTypeDefs()
 
 	HCORENUM hEnum = NULL;
@@ -1324,6 +1337,7 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 	mdTypeRef rgTypeRefs[1024];
 	ULONG cAssemblyRefsReturned;
 	wchar_t typeDeffNameBuffer[255];
+	wchar_t modRefNameBuffer[255];
 	ULONG numChars = 0;
 	DWORD attrFlags = 0;
 	mdToken tkExtends = mdTokenNil;
@@ -1335,6 +1349,14 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 		//pEmit->DefineTypeRefByName(0x23000002, L"System.Net.HttpWebRequest", &httpRefPtr);
 		do
 		{
+			
+			
+			hr = pImport->EnumModuleRefs(
+				&hEnum,
+				rgTypeRefs,
+				_countof(rgTypeRefs),
+				&cAssemblyRefsReturned);
+
 			hr = pImport->EnumTypeRefs(
 				&hEnum,
 				rgTypeRefs,
@@ -1346,9 +1368,39 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 				pImport->GetTypeRefProps(rgTypeRefs[i],
 					&resolutionScope,
 					typeDeffNameBuffer,
-					225,
+					255,
 					&numChars);
-				auto s = std::wstring(typeDeffNameBuffer);
+				if ((resolutionScope & 0x1A000000) == 0x1A000000)
+				{
+					pImport->GetModuleRefProps(resolutionScope,
+						modRefNameBuffer,
+						255,
+						&numChars);
+					auto s2 = std::wstring(typeDeffNameBuffer);
+				}
+
+				if ((resolutionScope & 0x23000000) == 0x23000000)
+				{
+					char publicKeyToken[1024];
+					char hashVal[1024];
+					ULONG pktLen = 0;
+					ULONG hashLen = 0;
+					DWORD flags = 0;
+					ASSEMBLYMETADATA amd{ 0 };
+					pAssemblyImport->GetAssemblyRefProps(resolutionScope,
+						(const void**)&publicKeyToken,
+						&pktLen,
+						modRefNameBuffer,
+						255,
+						&numChars,
+						&amd,
+						(const void**)&hashVal,
+						&hashLen,
+						&flags);
+
+					auto s2 = std::wstring(typeDeffNameBuffer);
+				}
+				
 			}
 
 		} while (hr == S_OK);
