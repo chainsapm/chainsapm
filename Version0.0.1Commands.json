@@ -1,0 +1,686 @@
+{
+  "CSharpTypeMapping": [
+    {
+      "OriginalType": "FunctionID",
+      "NewType": "System.Int64"
+    },
+    {
+      "OriginalType": "ProcessID",
+      "NewType": "System.Int64"
+    },
+    {
+      "OriginalType": "AssemblyID",
+      "NewType": "System.Int64"
+    },
+    {
+      "OriginalType": "AppDomainID",
+      "NewType": "System.Int64"
+    },
+    {
+      "OriginalType": "ModuleID",
+      "NewType": "System.Int64"
+    },
+    {
+      "OriginalType": "ClassID",
+      "NewType": "System.Int64"
+    },
+    {
+      "OriginalType": "ThreadID",
+      "NewType": "System.Int64"
+    },
+    {
+      "OriginalType": "ContextID",
+      "NewType": "System.Int64"
+    },
+    {
+      "OriginalType": "ObjectID",
+      "NewType": "System.Int64"
+    },
+    {
+      "OriginalType": "GCHandleID",
+      "NewType": "System.Int64"
+    },
+    {
+      "OriginalType": "ReJITID",
+      "NewType": "System.Int64"
+    },
+    {
+      "OriginalType": "mdToken",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdModule",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdTypeRef",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdTypeDef",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdFieldDef",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdMethodDef",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdParamDef",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdInterfaceImpl",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdMemberRef",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdCustomAttribute",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdPermission",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdSignature",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdEvent",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdProperty",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdModuleRef",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdAssembly",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdAssemblyRef",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdFile",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdExportedType",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdManifestResource",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdTypeSpec",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdGenericParam",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdMethodSpec",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdGenericParamConstraint",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdString",
+      "NewType": "System.Int32"
+    },
+    {
+      "OriginalType": "mdCPToken",
+      "NewType": "System.Int32"
+    }
+  ],
+  "CppTypeMapping": [
+    {
+      "OriginalType": "FunctionID",
+      "NewType": "__int64"
+    },
+    {
+      "OriginalType": "ProcessID",
+      "NewType": "__int64"
+    },
+    {
+      "OriginalType": "AssemblyID",
+      "NewType": "__int64"
+    },
+    {
+      "OriginalType": "AppDomainID",
+      "NewType": "__int64"
+    },
+    {
+      "OriginalType": "ModuleID",
+      "NewType": "__int64"
+    },
+    {
+      "OriginalType": "ClassID",
+      "NewType": "__int64"
+    },
+    {
+      "OriginalType": "ThreadID",
+      "NewType": "__int64"
+    },
+    {
+      "OriginalType": "ContextID",
+      "NewType": "__int64"
+    },
+    {
+      "OriginalType": "ObjectID",
+      "NewType": "__int64"
+    },
+    {
+      "OriginalType": "GCHandleID",
+      "NewType": "__int64"
+    },
+    {
+      "OriginalType": "ReJITID",
+      "NewType": "__int64"
+    },
+    {
+      "OriginalType": "mdToken",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdModule",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdTypeRef",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdTypeDef",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdFieldDef",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdMethodDef",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdParamDef",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdInterfaceImpl",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdMemberRef",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdCustomAttribute",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdPermission",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdSignature",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdEvent",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdProperty",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdModuleRef",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdAssembly",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdAssemblyRef",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdFile",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdExportedType",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdManifestResource",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdTypeSpec",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdGenericParam",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdMethodSpec",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdGenericParamConstraint",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdString",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "mdCPToken",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "System.Byte",
+      "NewType": "char"
+    },
+    {
+      "OriginalType": "System.Int16",
+      "NewType": "__int16"
+    },
+    {
+      "OriginalType": "System.Int32",
+      "NewType": "__int32"
+    },
+    {
+      "OriginalType": "System.Int64",
+      "NewType": "__int64"
+    },
+    {
+      "OriginalType": "System.Single",
+      "NewType": "float"
+    },
+    {
+      "OriginalType": "System.Double",
+      "NewType": "double"
+    },
+    {
+      "OriginalType": "System.String",
+      "NewType": "std::wstring"
+    }
+  ],
+  "NetworkCommands": [
+    {
+      "NetworkCommand": {
+        "Name": "Agent Information",
+        "Description": "Supplies the server with all of the information needed to identify an agent.",
+        "Code": 1,
+        "Namespace": "Agent",
+        "ClassName": "AgentInformation",
+        "CommandType": null,
+        "ClassProperties": [
+          {
+            "TypeName": "System.String",
+            "Name": "AgentName",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "MachineName",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "WorkingDirectory",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "CommandLine",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "ProcessName",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.Int16",
+            "Name": "ProcessPID",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "NETVersion",
+            "IsList": false,
+            "IsArray": false
+          }
+        ],
+        "EnumerationList": []
+      },
+      "CommandName": "Agent Information"
+    },
+    {
+      "NetworkCommand": {
+        "Name": "ACK",
+        "Description": "Acknowledge Command",
+        "Code": 2,
+        "Namespace": "Agent",
+        "ClassName": "ACK",
+        "CommandType": null,
+        "ClassProperties": [
+          {
+            "TypeName": "System.Int64",
+            "Name": "CommandTimeStamp",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.Int16",
+            "Name": "CommandNumber",
+            "IsList": false,
+            "IsArray": false
+          }
+        ],
+        "EnumerationList": []
+      },
+      "CommandName": "ACK"
+    },
+    {
+      "NetworkCommand": {
+        "Name": "Methods To Instrument",
+        "Description": "Provides the Agent with a simple list of commands to instrument.",
+        "Code": 3,
+        "Namespace": "Agent",
+        "ClassName": "MethodsToInstrument",
+        "CommandType": null,
+        "ClassProperties": [
+          {
+            "TypeName": "MethodProperties",
+            "Name": "MethodPropList",
+            "IsList": true,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "MethodClassList",
+            "IsList": true,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "MethodList",
+            "IsList": true,
+            "IsArray": false
+          }
+        ],
+        "EnumerationList": [
+          {
+            "EnumerationName": "MethodProperties",
+            "Items": [
+              {
+                "Name": "Public",
+                "Value": 1
+              },
+              {
+                "Name": "Protected",
+                "Value": 4
+              },
+              {
+                "Name": "Private",
+                "Value": 8
+              },
+              {
+                "Name": "Friend",
+                "Value": 16
+              },
+              {
+                "Name": "Abstract",
+                "Value": 32
+              },
+              {
+                "Name": "Static",
+                "Value": 64
+              },
+              {
+                "Name": "IgnoreGetSet",
+                "Value": 128
+              },
+              {
+                "Name": "EntireClass",
+                "Value": 256
+              }
+            ]
+          }
+        ]
+      },
+      "CommandName": "Methods To Instrument"
+    },
+    {
+      "NetworkCommand": {
+        "Name": "Define Method",
+        "Description": "Define a method after it has been instrumented. This is required to properly map a mdToken to it's name.",
+        "Code": 5,
+        "Namespace": "Agent",
+        "ClassName": "DefineMethod",
+        "CommandType": null,
+        "ClassProperties": [
+          {
+            "TypeName": "System.Int64",
+            "Name": "ModuleID",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.Int64",
+            "Name": "ClassID",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.Int64",
+            "Name": "MethodDef",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.Int64",
+            "Name": "FunctionID",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "MethodName",
+            "IsList": false,
+            "IsArray": false
+          }
+        ],
+        "EnumerationList": []
+      },
+      "CommandName": "Define Method"
+    },
+    {
+      "NetworkCommand": {
+        "Name": "Method Enter",
+        "Description": "Update Command Description",
+        "Code": 6,
+        "Namespace": "Agent",
+        "ClassName": "MethodEnter",
+        "CommandType": null,
+        "ClassProperties": [
+          {
+            "TypeName": "System.Int64",
+            "Name": "ThreadID",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.Int64",
+            "Name": "ModuleID",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.Int64",
+            "Name": "MethodDef",
+            "IsList": false,
+            "IsArray": false
+          }
+        ],
+        "EnumerationList": []
+      },
+      "CommandName": "Method Enter"
+    },
+    {
+      "NetworkCommand": {
+        "Name": "Method Exit",
+        "Description": "Update Command Description",
+        "Code": 7,
+        "Namespace": "Agent",
+        "ClassName": "MethodExit",
+        "CommandType": null,
+        "ClassProperties": [
+          {
+            "TypeName": "System.Int64",
+            "Name": "ThreadID",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.Int64",
+            "Name": "ModuleID",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.Int64",
+            "Name": "MethodDef",
+            "IsList": false,
+            "IsArray": false
+          }
+        ],
+        "EnumerationList": []
+      },
+      "CommandName": "Method Exit"
+    },
+    {
+      "NetworkCommand": {
+        "Name": "Define Module",
+        "Description": "Define a module after it has been loaded. This is required to properly map a mdToken to it's name.",
+        "Code": 4,
+        "Namespace": "Agent",
+        "ClassName": "DefineModule",
+        "CommandType": null,
+        "ClassProperties": [
+          {
+            "TypeName": "System.Int64",
+            "Name": "ModuleID",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "ModuleName",
+            "IsList": false,
+            "IsArray": false
+          }
+        ],
+        "EnumerationList": []
+      },
+      "CommandName": "Define Module"
+    },
+    {
+      "NetworkCommand": {
+        "Name": "DefineInstrumentationMethods",
+        "Description": "This command will define a single set of instrumentation methods",
+        "Code": 8,
+        "Namespace": "Agent",
+        "ClassName": "DefineInstrumentationMethods",
+        "CommandType": null,
+        "ClassProperties": [
+          {
+            "TypeName": "System.String",
+            "Name": "ModuleName",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "TypeName",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "MethodName",
+            "IsList": false,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "EntryMethodLocals",
+            "IsList": true,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "EntryMethodSignature",
+            "IsList": true,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.Byte",
+            "Name": "EntryMethodILBytes",
+            "IsList": false,
+            "IsArray": true
+          }
+          {
+            "TypeName": "System.String",
+            "Name": "ExitMethodLocals",
+            "IsList": true,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.String",
+            "Name": "ExitMethodSignature",
+            "IsList": true,
+            "IsArray": false
+          },
+          {
+            "TypeName": "System.Byte",
+            "Name": "ExitMethodILBytes",
+            "IsList": false,
+            "IsArray": true
+          }
+        ],
+        "EnumerationList": []
+      },
+      "CommandName": "DefineInstrumentationMethods"
+    }
+  ]
+}
