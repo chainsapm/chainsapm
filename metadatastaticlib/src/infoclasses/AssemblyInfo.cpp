@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "../../metadatastaticlib/inc/AssemblyInfo.h"
+#include "../inc/infoclasses/AssemblyInfo.h"
 
 namespace InformationClasses {
 	AssemblyInfo::AssemblyInfo()

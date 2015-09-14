@@ -73,29 +73,11 @@
     <ClCompile Include="src\xdlldata.c">
       <Filter>Generated Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\infoclasses\AgentInfo.cpp">
-      <Filter>Common Classes\Agent Info Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\infoclasses\AssemblyInfo.cpp">
-      <Filter>Common Classes\Info Classes</Filter>
-    </ClCompile>
     <ClCompile Include="src\helpers\bit_converter.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
-    <ClCompile Include="src\infoclasses\ClassInfo.cpp">
-      <Filter>Common Classes\Info Classes</Filter>
-    </ClCompile>
     <ClCompile Include="src\helpers\critsec_helper.cpp">
       <Filter>Helpers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\infoclasses\ParameterInfo.cpp">
-      <Filter>Common Classes\Info Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\infoclasses\ModuleInfo.cpp">
-      <Filter>Common Classes\Info Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="src\infoclasses\ProcessInfo.cpp">
-      <Filter>Common Classes\Agent Info Classes</Filter>
     </ClCompile>
     <ClCompile Include="src\dllmain\clrprofiler.cpp">
       <Filter>DLLMain</Filter>
@@ -129,9 +111,6 @@
     </ClCompile>
     <ClCompile Include="src\profiler\CorProfilerCallbackImplementation.cpp">
       <Filter>CorProfilerCallback</Filter>
-    </ClCompile>
-    <ClCompile Include="src\infoclasses\FunctionInfo.cpp">
-      <Filter>Common Classes\Info Classes</Filter>
     </ClCompile>
     <ClCompile Include="src\commands\ACK.cpp">
       <Filter>Source Files</Filter>

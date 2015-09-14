@@ -1,18 +1,20 @@
+#pragma once
+
 // profilermain.h : Declaration of the Cprofilermain
 #ifndef PROFILERMAIN_H
 #define PROFILERMAIN_H
 
 
 
-#pragma once
+
 #include "resource.h"       // main symbols
 
-#include "../../metadatastaticlib/inc/commonstructures.h"
+#include "../../metadatastaticlib/inc/infoclasses/commonstructures.h"
 #include "clrprofiler_i.h"
 #include <cor.h>
 #include <corprof.h>
-#include "../../metadatastaticlib/inc/MetadataHelpers.h"
-#include "../../metadatastaticlib/inc/FunctionInfo.h"
+#include "../../metadatastaticlib/inc/ModuleMetadataHelpers.h"
+#include "../../metadatastaticlib/inc/infoclasses/FunctionInfo.h"
 #include "stackitems.h"
 #include "CorProfilerCallbackImplementation.h"
 #include "Commands.h"
@@ -434,18 +436,18 @@ private:
 	// Highest available API
 	byte m_HighestProfileInfo;
 	// container for ICorProfilerInfo reference
-	std::shared_ptr<ICorProfilerInfo> m_pICorProfilerInfo;
+	CComPtr<ICorProfilerInfo> m_pICorProfilerInfo;
 	// container for ICorProfilerInfo2 reference
-	std::shared_ptr<ICorProfilerInfo2> m_pICorProfilerInfo2;
+	CComPtr<ICorProfilerInfo2> m_pICorProfilerInfo2;
 	// container for ICorProfilerInfo3 reference
-	std::shared_ptr<ICorProfilerInfo3> m_pICorProfilerInfo3;
+	CComPtr<ICorProfilerInfo3> m_pICorProfilerInfo3;
 	// container for ICorProfilerInfo4 reference
-	std::shared_ptr<ICorProfilerInfo4> m_pICorProfilerInfo4;
+	CComPtr<ICorProfilerInfo4> m_pICorProfilerInfo4;
 
 
 	ModFuncMap m_ModFuncMap;
 	// container for IL allocation
-	std::shared_ptr<IMethodMalloc> m_pIMethodMalloc;
+	CComPtr<IMethodMalloc> m_pIMethodMalloc;
 	//std::map<FunctionID, FunctionInfo> m_FunctionInfoMap;
 	COR_PRF_SUSPEND_REASON m_CurrentSuspendReason;
 	COR_PRF_GC_REASON m_CurrentGCReason;

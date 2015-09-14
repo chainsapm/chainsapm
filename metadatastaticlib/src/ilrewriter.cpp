@@ -15,7 +15,7 @@
 // 
 
 
-//#include "profilermain.h"
+#include "stdafx.h"
 #pragma warning( disable : 4091 )
 #include <corhlpr.cpp>
 #include <cor.h>

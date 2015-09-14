@@ -15,7 +15,7 @@ namespace HelloWorldTestHarness {
 
                 static int Recursive (int counter, int max) {
                         Console.WriteLine ("Recursive {0}", counter);
-                        var wr = System.Net.HttpWebRequest.Create ("http://www.google.com");
+                        var wr = System.Net.HttpWebRequest.Create ("http://portal.publix.com");
                         var resp = wr.GetResponse ();
                         resp.Close ();
                         if ( counter < max ) {
@@ -40,7 +40,7 @@ namespace HelloWorldTestHarness {
 
                         Recursive (0, 10);
                         Console.WriteLine ("Just before last call.");
-                        var wr = System.Net.HttpWebRequest.Create ("http://www.google.com");
+                        var wr = System.Net.HttpWebRequest.Create ("http://portal.publix.com");
                         var resp = wr.GetResponse ();
                         resp.Close ();
                         Console.WriteLine ("After last call.");
@@ -50,7 +50,7 @@ namespace HelloWorldTestHarness {
                         tw.Dispose ();
                 }
                 static int AddNumbers (int i, int b) {
-                        var wr = System.Net.HttpWebRequest.Create ("http://www.google.com");
+                        var wr = System.Net.HttpWebRequest.Create ("http://portal.publix.com");
                         var resp = wr.GetResponse ();
                         resp.Close ();
                         return i + b;

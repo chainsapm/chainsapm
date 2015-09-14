@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ContainerClass.h"
-#include "../../metadatastaticlib/inc/FunctionInfo.h"
+#include "../../metadatastaticlib/inc/infoclasses/commonstructures.h"
 #include "stackitems.h"
 
 

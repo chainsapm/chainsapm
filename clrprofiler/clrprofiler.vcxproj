@@ -186,6 +186,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AssemblerOutput>All</AssemblerOutput>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -210,6 +211,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RegisterOutput>false</RegisterOutput>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'">
@@ -224,6 +226,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <AssemblerOutput>All</AssemblerOutput>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -266,6 +269,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -290,6 +294,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <RegisterOutput>false</RegisterOutput>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <Profile>true</Profile>
     </Link>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
@@ -308,6 +313,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -348,6 +354,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <AssemblerOutput>All</AssemblerOutput>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -386,6 +393,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -423,9 +431,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClCompile Include="src\commands\MethodExit.cpp" />
     <ClCompile Include="src\commands\MethodsToInstrument.cpp" />
     <ClCompile Include="src\helpers\bit_converter.cpp" />
-    <ClCompile Include="src\infoclasses\AgentInfo.cpp" />
-    <ClCompile Include="src\infoclasses\AssemblyInfo.cpp" />
-    <ClCompile Include="src\infoclasses\ClassInfo.cpp" />
     <ClCompile Include="src\dllmain\clrprofiler.cpp" />
     <ClCompile Include="src\clrprofiler_i.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -470,12 +475,8 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\infoclasses\FunctionInfo.cpp" />
     <ClCompile Include="src\common\GarbageCollectionStackItem.cpp" />
-    <ClCompile Include="src\infoclasses\ModuleInfo.cpp" />
     <ClCompile Include="src\network\networkclient.cpp" />
-    <ClCompile Include="src\infoclasses\ParameterInfo.cpp" />
-    <ClCompile Include="src\infoclasses\ProcessInfo.cpp" />
     <ClCompile Include="src\profiler\profilermain.cpp" />
     <ClCompile Include="src\common\RuntimeSuspensionStackItem.cpp" />
     <ClCompile Include="src\helpers\srw_helper.cpp" />

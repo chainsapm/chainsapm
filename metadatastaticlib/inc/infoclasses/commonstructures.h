@@ -1,11 +1,7 @@
-#ifndef COMMONSTRUCT
-#define COMMONSTRUCT
+#pragma once
 
 #include <cor.h>
 #include <corprof.h>
-#include <string>
-#include <map>
-#include <stack>
 
 //#include <boost/date_time.hpp>
 
@@ -43,4 +39,3 @@ struct WCharStringData
 };
 
 
-#endif

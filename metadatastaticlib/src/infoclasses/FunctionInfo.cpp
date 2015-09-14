@@ -1,6 +1,6 @@
 #pragma once
 #include "stdafx.h"
-#include "../../metadatastaticlib/inc/FunctionInfo.h"
+#include "../inc/infoclasses/FunctionInfo.h"
 
 namespace InformationClasses {
 	FunctionInfo::FunctionInfo()

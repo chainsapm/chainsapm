@@ -23,6 +23,7 @@
 
 #include "resource.h"
 // Debug ASSERT
+#pragma warning(push, 0)
 #include <assert.h>
 // ATL LIbraries
 #include <atlbase.h>
@@ -48,11 +49,13 @@
 #include <memory>
 #include <allocators>
 
+
+
 // Statically linked libs
 #pragma comment(lib, "corguids.lib")
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "metadatastaticlib.lib")
-
+#pragma warning(pop)
 
 //#include <boost/thread.hpp>
 

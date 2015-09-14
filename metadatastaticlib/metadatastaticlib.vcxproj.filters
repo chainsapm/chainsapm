@@ -18,43 +18,43 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="inc\MetadataHelpers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="inc\stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inc\targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\AssemblyInfo.h">
+    <ClInclude Include="inc\infoclasses\ProcessInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\ClassInfo.h">
+    <ClInclude Include="inc\infoclasses\AgentInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\commonstructures.h">
+    <ClInclude Include="inc\infoclasses\AssemblyInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\ContainerClass.h">
+    <ClInclude Include="inc\infoclasses\ClassInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\FunctionInfo.h">
+    <ClInclude Include="inc\infoclasses\commonstructures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\ModuleInfo.h">
+    <ClInclude Include="inc\infoclasses\ContainerClass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\ParameterInfo.h">
+    <ClInclude Include="inc\infoclasses\FunctionInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\ProcessInfo.h">
+    <ClInclude Include="inc\infoclasses\ModuleInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\AgentInfo.h">
+    <ClInclude Include="inc\infoclasses\ParameterInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inc\allinfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\ModuleMetadataHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -62,13 +62,34 @@
     <ClCompile Include="src\ilrewriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\MetadataHelpers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\metadatastaticlib.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\AgentInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\AssemblyInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\ClassInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\FunctionInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\ModuleInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\ParameterInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\ProcessInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ModuleMetadataHelpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

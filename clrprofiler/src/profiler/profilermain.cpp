@@ -7,6 +7,7 @@
 #include "srw_helper.h"
 #include "critsec_helper.h"
 #include "../../metadatastaticlib/inc/allinfo.h"
+#include "../../metadatastaticlib/inc/ModuleMetadataHelpers.h"
 
 
 
@@ -364,19 +365,19 @@ Cprofilermain::~Cprofilermain()
 	delete g_MetadataHelpers;*/
 	if (m_pICorProfilerInfo != NULL)
 	{
-		m_pICorProfilerInfo.reset();
+		m_pICorProfilerInfo.Release();
 	}
 	if (m_pICorProfilerInfo2 != NULL)
 	{
-		m_pICorProfilerInfo2.reset();
+		m_pICorProfilerInfo2.Release();
 	}
 	if (m_pICorProfilerInfo3 != NULL)
 	{
-		m_pICorProfilerInfo3.reset();
+		m_pICorProfilerInfo3.Release();
 	}
 	if (m_pICorProfilerInfo4 != NULL)
 	{
-		m_pICorProfilerInfo4.reset();
+		m_pICorProfilerInfo4.Release();
 	}
 	// CRITICAL 1 Research this critical section in the profiler main destructor.
 	DeleteCriticalSection(&this->m_Container->g_ThreadingCriticalSection);
@@ -1184,12 +1185,12 @@ void Cprofilermain::SetILFunctionBodyForManagedHelper(ModuleID moduleID, mdMetho
 		((methodDef == m_mdEnter) || (methodDef == m_mdExit)))
 	{
 		hr = SetILForManagedHelper(
-			m_pICorProfilerInfo.get(),
+			m_pICorProfilerInfo,
 			moduleID,
 			methodDef,
 			m_mdIntPtrExplicitCast,
 			(methodDef == m_mdEnter) ? m_mdEnterPInvoke : m_mdExitPInvoke);
-	} 
+	}
 	if (FAILED(hr))
 	{
 		LOG_APPEND(L"SetILForManagedHelper failed for methodDef = " << HEX(methodDef) << L"--" <<
@@ -1205,7 +1206,7 @@ void Cprofilermain::SetILFunctionBodyForManagedHelper2(ModuleID moduleID, mdMeth
 	assert((methodDef == m_mdEnter2) || (methodDef == m_mdExit2));
 
 	HRESULT hr = SetILForManagedHelper2(
-		m_pICorProfilerInfo.get(),
+		m_pICorProfilerInfo,
 		moduleID,
 		methodDef,
 		m_mdIntPtrExplicitCast,
@@ -1224,7 +1225,7 @@ void Cprofilermain::SetILFunctionBodyForManagedHelperAdd(ModuleID moduleID, mdMe
 	assert((methodDef == m_mdEnter2) || (methodDef == m_mdExit2));
 
 	HRESULT hr = SetILForManagedHelperAddNumbers(
-		m_pICorProfilerInfo.get(),
+		m_pICorProfilerInfo,
 		moduleID,
 		methodDef,
 		m_mdIntPtrExplicitCast,
@@ -1277,7 +1278,7 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 		return S_OK;
 	}
 
-	
+
 
 	BOOL fPumpHelperMethodsIntoThisModule = FALSE;
 	if (::ContainsAtEnd(wszName, L"mscorlib.dll"))
@@ -1289,11 +1290,13 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 		}
 	}
 
+	ModuleMetadataHelpers helper(m_pICorProfilerInfo, moduleID);
+
 	// Grab metadata interfaces 
 
-	COMPtrHolder<IMetaDataEmit> pEmit;
+	CComPtr<IMetaDataEmit> pEmit;
 	{
-		COMPtrHolder<IUnknown> pUnk;
+		CComPtr<IUnknown> pUnk;
 
 		hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofWrite, IID_IMetaDataEmit, &pUnk);
 		LOG_IFFAILEDRET(hr, L"IID_IMetaDataEmit: GetModuleMetaData failed for ModuleID = " <<
@@ -1304,9 +1307,10 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 			HEX(moduleID) << L" (" << wszName << L")");
 	}
 
-	COMPtrHolder<IMetaDataImport> pImport;
+	//std::unique_ptr<IMetaDataImport> pImport;
+	CComPtr<IMetaDataImport> pImport;
 	{
-		COMPtrHolder<IUnknown> pUnk;
+		CComPtr<IUnknown> pUnk;
 
 		hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataImport, &pUnk);
 		LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: GetModuleMetaData failed for ModuleID = " <<
@@ -1317,9 +1321,10 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 			HEX(moduleID) << L" (" << wszName << L")");
 	}
 
-	COMPtrHolder<IMetaDataAssemblyImport> pAssemblyImport;
+	
+	CComPtr<IMetaDataAssemblyImport> pAssemblyImport;
 	{
-		COMPtrHolder<IUnknown> pUnk;
+		CComPtr<IUnknown> pUnk;
 
 		hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataAssemblyImport, &pUnk);
 		LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: GetModuleMetaData failed for ModuleID = " <<
@@ -1328,42 +1333,104 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 		hr = pUnk->QueryInterface(IID_IMetaDataAssemblyImport, (LPVOID *)&pAssemblyImport);
 		LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: QueryInterface failed for ModuleID = " <<
 			HEX(moduleID) << L" (" << wszName << L")");
+		
 	}
 
+	
+	
 	//pImport->EnumTypeDefs()
 
-	HCORENUM hEnum = NULL;
-	mdTypeDef rgTypeDefs[1024];
-	mdTypeRef rgTypeRefs[1024];
-	ULONG cAssemblyRefsReturned;
+	HCORENUM hEnumAssembly = NULL;
+	HCORENUM hEnumModule = NULL;
+	HCORENUM hEnumTypeRefs = NULL;
+	HCORENUM hEnumTypeDefs = NULL;
+	mdTypeDef rgTypeDefs[1024]{ 0 };
+	mdTypeRef rgTypeRefs[1024]{ 0 };
+	mdModuleRef rgModuleRefs[1024]{ 0 };
+	mdAssemblyRef rgAssemblyRefs[1024]{ 0 };
+	ULONG numberOfTokens;
+
 	wchar_t typeDeffNameBuffer[255];
 	wchar_t modRefNameBuffer[255];
+	wchar_t assemblyRefNameBuffer[255];
+
 	ULONG numChars = 0;
 	DWORD attrFlags = 0;
 	mdToken tkExtends = mdTokenNil;
 	mdToken resolutionScope;
-	
+
 	if (::ContainsAtEnd(wszName, L".exe"))
 	{
+		CComPtr<IMetaDataAssemblyImport> pAssemblyImportUP;
+		{
+			CComPtr<IUnknown> pUnk;
+
+			hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataAssemblyImport, &pUnk);
+			LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: GetModuleMetaData failed for ModuleID = " <<
+				HEX(moduleID) << L" (" << wszName << L")");
+
+			hr = pUnk->QueryInterface(IID_IMetaDataAssemblyImport, (LPVOID *)&pAssemblyImportUP);
+			LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: QueryInterface failed for ModuleID = " <<
+				HEX(moduleID) << L" (" << wszName << L")");
+
+		}
+
 		mdTypeRef httpRefPtr = mdTokenNil;
-		//pEmit->DefineTypeRefByName(0x23000002, L"System.Net.HttpWebRequest", &httpRefPtr);
+		// Enum Assembly Refs
 		do
 		{
-			
-			
+			hr = pAssemblyImportUP->EnumAssemblyRefs(
+				&hEnumAssembly,
+				rgAssemblyRefs,
+				_countof(rgAssemblyRefs),
+				&numberOfTokens);
+
+			for (size_t i = 0; i < numberOfTokens; i++)
+			{
+				char *publicKeyToken = NULL;
+				char *hashVal = NULL;
+				ULONG pktLen = 0;
+				ULONG hashLen = 0;
+				DWORD flags = 0;
+				ASSEMBLYMETADATA amd{ 0 };
+				pAssemblyImportUP->GetAssemblyRefProps(rgAssemblyRefs[i],
+					(const void**)&publicKeyToken,
+					&pktLen,
+					assemblyRefNameBuffer,
+					_countof(assemblyRefNameBuffer),
+					&numChars,
+					&amd,
+					(const void**)&hashVal,
+					&hashLen,
+					&flags);
+
+				auto s2 = std::wstring(assemblyRefNameBuffer);
+			}
+		} while (hr == S_OK);
+
+		pImport->CloseEnum(hEnumAssembly);
+
+		// Enum Module Refs
+		do {
 			hr = pImport->EnumModuleRefs(
-				&hEnum,
-				rgTypeRefs,
-				_countof(rgTypeRefs),
-				&cAssemblyRefsReturned);
+				&hEnumModule,
+				rgModuleRefs,
+				_countof(rgModuleRefs),
+				&numberOfTokens);
 
+		} while (hr == S_OK);
+
+		pImport->CloseEnum(hEnumModule);
+		
+		//Enum TypeRefs
+		do {
 			hr = pImport->EnumTypeRefs(
-				&hEnum,
+				&hEnumTypeRefs,
 				rgTypeRefs,
 				_countof(rgTypeRefs),
-				&cAssemblyRefsReturned);
+				&numberOfTokens);
 
-			for (size_t i = 0; i < cAssemblyRefsReturned; i++)
+			for (size_t i = 0; i < numberOfTokens; i++)
 			{
 				pImport->GetTypeRefProps(rgTypeRefs[i],
 					&resolutionScope,
@@ -1400,23 +1467,23 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 
 					auto s2 = std::wstring(typeDeffNameBuffer);
 				}
-				
+
 			}
 
 		} while (hr == S_OK);
 
+		pImport->CloseEnum(hEnumTypeRefs);
 
-		pImport->CloseEnum(hEnum);
-		hEnum = NULL;
+		// Enum Type Defs
 		do
 		{
 			hr = pImport->EnumTypeDefs(
-				&hEnum,
+				&hEnumTypeDefs,
 				rgTypeDefs,
 				_countof(rgTypeDefs),
-				&cAssemblyRefsReturned);
+				&numberOfTokens);
 
-			for (size_t i = 0; i < cAssemblyRefsReturned; i++)
+			for (size_t i = 0; i < numberOfTokens; i++)
 			{
 				pImport->GetTypeDefProps(rgTypeDefs[i],
 					typeDeffNameBuffer,
@@ -1429,7 +1496,7 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 
 		} while (hr == S_OK);
 
-		pImport->CloseEnum(hEnum);
+		pImport->CloseEnum(hEnumTypeDefs);
 	}
 
 	if (fPumpHelperMethodsIntoThisModule)
@@ -1648,7 +1715,7 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 		if (this->m_Container->g_FullyQualifiedMethodsToProfile->find(im) != this->m_Container->g_FullyQualifiedMethodsToProfile->end())
 		{
 			hr = RewriteIL(
-				m_pICorProfilerInfo.get(),
+				m_pICorProfilerInfo,
 				NULL,
 				moduleID,
 				methodDef,
@@ -1671,11 +1738,11 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 			auto defp = new Commands::DefineMethod(timestamp, moduleID, classID, methodDef, functionID, wszMethodDefName);
 			tp->SendEvent<Commands::DefineMethod>(defp);
 
-			
+
 
 		}
 
-		
+
 
 	}
 
@@ -1748,7 +1815,7 @@ STDMETHODIMP Cprofilermain::GetReJITParameters(ModuleID moduleId, mdMethodDef me
 	moduleInfo.m_pMethodDefToLatestVersionMap->LookupIfExists(methodId, &nVersion);
 
 	hr = RewriteIL(
-		m_pICorProfilerInfo.get(),
+		m_pICorProfilerInfo,
 		pFunctionControl,
 		moduleId,
 		methodId,
@@ -1879,7 +1946,7 @@ void Cprofilermain::AddMemberRefs(IMetaDataAssemblyImport * pAssemblyImport, IMe
 		L"ILRewriteProfilerHelper.ProfilerHelper" :
 		k_wszHelpersContainerType;
 
-	hr = pEmit->DefineTypeRefByName( 
+	hr = pEmit->DefineTypeRefByName(
 		assemblyRef,
 		wszTypeToReference,
 		&typeRef);

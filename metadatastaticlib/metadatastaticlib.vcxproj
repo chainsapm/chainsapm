@@ -94,11 +94,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <ShowIncludes>false</ShowIncludes>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -108,11 +110,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <ShowIncludes>false</ShowIncludes>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -121,13 +125,15 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <ShowIncludes>false</ShowIncludes>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -138,13 +144,15 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <ShowIncludes>false</ShowIncludes>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,24 +165,31 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="inc\AgentInfo.h" />
+    <ClInclude Include="inc\infoclasses\AgentInfo.h" />
     <ClInclude Include="inc\allinfo.h" />
-    <ClInclude Include="inc\AssemblyInfo.h" />
-    <ClInclude Include="inc\ClassInfo.h" />
-    <ClInclude Include="inc\commonstructures.h" />
-    <ClInclude Include="inc\ContainerClass.h" />
-    <ClInclude Include="inc\FunctionInfo.h" />
-    <ClInclude Include="inc\MetadataHelpers.h" />
-    <ClInclude Include="inc\ModuleInfo.h" />
-    <ClInclude Include="inc\ParameterInfo.h" />
-    <ClInclude Include="inc\ProcessInfo.h" />
+    <ClInclude Include="inc\infoclasses\AssemblyInfo.h" />
+    <ClInclude Include="inc\infoclasses\ClassInfo.h" />
+    <ClInclude Include="inc\infoclasses\commonstructures.h" />
+    <ClInclude Include="inc\infoclasses\ContainerClass.h" />
+    <ClInclude Include="inc\infoclasses\FunctionInfo.h" />
+    <ClInclude Include="inc\ModuleMetadataHelpers.h" />
+    <ClInclude Include="inc\infoclasses\ModuleInfo.h" />
+    <ClInclude Include="inc\infoclasses\ParameterInfo.h" />
+    <ClInclude Include="inc\infoclasses\ProcessInfo.h" />
     <ClInclude Include="inc\stdafx.h" />
     <ClInclude Include="inc\targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\infoclasses\AgentInfo.cpp" />
+    <ClCompile Include="src\infoclasses\AssemblyInfo.cpp" />
+    <ClCompile Include="src\infoclasses\ClassInfo.cpp" />
+    <ClCompile Include="src\infoclasses\FunctionInfo.cpp" />
     <ClCompile Include="src\ilrewriter.cpp" />
-    <ClCompile Include="src\MetadataHelpers.cpp" />
+    <ClCompile Include="src\ModuleMetadataHelpers.cpp" />
     <ClCompile Include="src\metadatastaticlib.cpp" />
+    <ClCompile Include="src\infoclasses\ModuleInfo.cpp" />
+    <ClCompile Include="src\infoclasses\ParameterInfo.cpp" />
+    <ClCompile Include="src\infoclasses\ProcessInfo.cpp" />
     <ClCompile Include="src\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
