@@ -168,7 +168,7 @@
     <ClInclude Include="inc\infoclasses\AgentInfo.h" />
     <ClInclude Include="inc\allinfo.h" />
     <ClInclude Include="inc\infoclasses\AssemblyInfo.h" />
-    <ClInclude Include="inc\infoclasses\ClassInfo.h" />
+    <ClInclude Include="inc\infoclasses\TypeInfo.h" />
     <ClInclude Include="inc\infoclasses\commonstructures.h" />
     <ClInclude Include="inc\infoclasses\ContainerClass.h" />
     <ClInclude Include="inc\infoclasses\FunctionInfo.h" />
@@ -182,7 +182,7 @@
   <ItemGroup>
     <ClCompile Include="src\infoclasses\AgentInfo.cpp" />
     <ClCompile Include="src\infoclasses\AssemblyInfo.cpp" />
-    <ClCompile Include="src\infoclasses\ClassInfo.cpp" />
+    <ClCompile Include="src\infoclasses\TypeInfo.cpp" />
     <ClCompile Include="src\infoclasses\FunctionInfo.cpp" />
     <ClCompile Include="src\ilrewriter.cpp" />
     <ClCompile Include="src\ModuleMetadataHelpers.cpp" />

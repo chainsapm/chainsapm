@@ -83,7 +83,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="WebRequests.cs" />
+    <Compile Include="_System\Web\Hosting\PipelineRuntime.cs" />
     <Compile Include="CustomAttribute\CustomAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

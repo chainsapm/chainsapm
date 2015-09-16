@@ -219,7 +219,7 @@ struct  ContainerClass
 	// As a function is mapped we want to keep a reference to it's specific details so we can 
 	// use it again when generating the call stack.
 	std::map<FunctionID, std::unique_ptr<InformationClasses::FunctionInfo>> * g_FunctionSet;
-	std::map<ClassID, std::unique_ptr<InformationClasses::ClassInfo>> * g_ClassSet;
+	std::map<ClassID, std::unique_ptr<InformationClasses::TypeInfo>> * g_ClassSet;
 	std::map<AssemblyID, std::unique_ptr<InformationClasses::AssemblyInfo>> * g_AssemblySet;
 	std::map<ModuleID, std::unique_ptr<InformationClasses::ModuleInfo>> * g_ModuleSet;
 	std::unordered_multiset<ItemMapping> * g_FullyQualifiedMethodsToProfile;

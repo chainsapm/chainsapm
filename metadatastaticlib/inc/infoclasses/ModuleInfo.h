@@ -1,5 +1,6 @@
 #pragma once
 #include "AssemblyInfo.h"
+#include "../ModuleMetadataHelpers.h"
 
 namespace InformationClasses {
 	class ModuleInfo
@@ -7,5 +8,7 @@ namespace InformationClasses {
 	public:
 		ModuleInfo();
 		~ModuleInfo();
+		std::wstring ModuleName;
+		std::wstring FileName;
 	};
 }

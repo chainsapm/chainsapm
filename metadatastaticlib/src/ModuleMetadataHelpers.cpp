@@ -14,179 +14,20 @@ ModuleMetadataHelpers::ModuleMetadataHelpers(ATL::CComPtr<ICorProfilerInfo> prof
 		ATL::CComPtr<IUnknown> pUnk;
 
 		hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofWrite, IID_IMetaDataEmit2, (IUnknown**)&pUnk);
-
 		hr = pUnk->QueryInterface(IID_IMetaDataEmit2, (LPVOID *)&pMetaDataEmit);
-	}
-
-	{
-		ATL::CComPtr<IUnknown> pUnk;
 
 		hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataImport2, (IUnknown**)&pUnk);
-
 		hr = pUnk->QueryInterface(IID_IMetaDataImport2, (LPVOID *)&pMetaDataImport);
-	}
-
-	{
-		ATL::CComPtr<IUnknown> pUnk;
 
 		hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataAssemblyImport, (IUnknown**)&pUnk);
 		hr = pUnk->QueryInterface(IID_IMetaDataAssemblyImport, (LPVOID *)&pMetaDataAssemblyImport);
-	}
-
-	{
-		ATL::CComPtr<IUnknown> pUnk;
 
 		hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataAssemblyEmit, (IUnknown**)&pUnk);
 		hr = pUnk->QueryInterface(IID_IMetaDataAssemblyEmit, (LPVOID *)&pMetaDataAssemblyEmit);
 	}
 
+	AssemblyRefs = std::map<std::wstring, mdAssemblyRef>();
 
-	HCORENUM hEnumAssembly = NULL;
-	HCORENUM hEnumModule = NULL;
-	HCORENUM hEnumTypeRefs = NULL;
-	HCORENUM hEnumTypeDefs = NULL;
-
-	mdTypeDef rgTypeDefs[1024]{ 0 };
-	mdTypeRef rgTypeRefs[1024]{ 0 };
-	mdModuleRef rgModuleRefs[1024]{ 0 };
-	mdAssemblyRef rgAssemblyRefs[1024]{ 0 };
-	ULONG numberOfTokens;
-
-	wchar_t typeDeffNameBuffer[255];
-	wchar_t modRefNameBuffer[255];
-	wchar_t assemblyRefNameBuffer[255];
-
-	ULONG numChars = 0;
-	DWORD attrFlags = 0;
-	mdToken tkExtends = mdTokenNil;
-	mdToken resolutionScope;
-
-	;
-	if (GetModuleName().find(L".exe") != std::wstring::npos)
-	{
-		mdTypeRef httpRefPtr = mdTokenNil;
-		// Enum Assembly Refs
-		do
-		{
-			hr = pMetaDataAssemblyImport->EnumAssemblyRefs(
-				&hEnumAssembly,
-				rgAssemblyRefs,
-				_countof(rgAssemblyRefs),
-				&numberOfTokens);
-
-			for (size_t i = 0; i < numberOfTokens; i++)
-			{
-				char *publicKeyToken = NULL;
-				char *hashVal = NULL;
-				ULONG pktLen = 0;
-				ULONG hashLen = 0;
-				DWORD flags = 0;
-				ASSEMBLYMETADATA amd{ 0 };
-				pMetaDataAssemblyImport->GetAssemblyRefProps(rgAssemblyRefs[i],
-					(const void**)&publicKeyToken,
-					&pktLen,
-					assemblyRefNameBuffer,
-					_countof(assemblyRefNameBuffer),
-					&numChars,
-					&amd,
-					(const void**)&hashVal,
-					&hashLen,
-					&flags);
-
-				auto s2 = std::wstring(assemblyRefNameBuffer);
-			}
-		} while (hr == S_OK);
-
-		pMetaDataAssemblyImport->CloseEnum(hEnumAssembly);
-
-		// Enum Module Refs
-		do {
-			hr = pMetaDataImport->EnumModuleRefs(
-				&hEnumModule,
-				rgModuleRefs,
-				_countof(rgModuleRefs),
-				&numberOfTokens);
-
-		} while (hr == S_OK);
-
-		pMetaDataImport->CloseEnum(hEnumModule);
-
-		//Enum TypeRefs
-		do {
-			hr = pMetaDataImport->EnumTypeRefs(
-				&hEnumTypeRefs,
-				rgTypeRefs,
-				_countof(rgTypeRefs),
-				&numberOfTokens);
-
-			for (size_t i = 0; i < numberOfTokens; i++)
-			{
-				pMetaDataImport->GetTypeRefProps(rgTypeRefs[i],
-					&resolutionScope,
-					typeDeffNameBuffer,
-					255,
-					&numChars);
-				if ((resolutionScope & 0x1A000000) == 0x1A000000)
-				{
-					pMetaDataImport->GetModuleRefProps(resolutionScope,
-						modRefNameBuffer,
-						255,
-						&numChars);
-					auto s2 = std::wstring(typeDeffNameBuffer);
-				}
-
-				if ((resolutionScope & 0x23000000) == 0x23000000)
-				{
-					char publicKeyToken[1024];
-					char hashVal[1024];
-					ULONG pktLen = 0;
-					ULONG hashLen = 0;
-					DWORD flags = 0;
-					ASSEMBLYMETADATA amd{ 0 };
-					pMetaDataAssemblyImport->GetAssemblyRefProps(resolutionScope,
-						(const void**)&publicKeyToken,
-						&pktLen,
-						modRefNameBuffer,
-						255,
-						&numChars,
-						&amd,
-						(const void**)&hashVal,
-						&hashLen,
-						&flags);
-
-					auto s2 = std::wstring(typeDeffNameBuffer);
-				}
-
-			}
-
-		} while (hr == S_OK);
-
-		pMetaDataImport->CloseEnum(hEnumTypeRefs);
-
-		// Enum Type Defs
-		do
-		{
-			hr = pMetaDataImport->EnumTypeDefs(
-				&hEnumTypeDefs,
-				rgTypeDefs,
-				_countof(rgTypeDefs),
-				&numberOfTokens);
-
-			for (size_t i = 0; i < numberOfTokens; i++)
-			{
-				pMetaDataImport->GetTypeDefProps(rgTypeDefs[i],
-					typeDeffNameBuffer,
-					255,
-					&numChars,
-					&attrFlags,
-					&tkExtends);
-				auto s = std::wstring(typeDeffNameBuffer);
-			}
-
-		} while (hr == S_OK);
-
-		pMetaDataImport->CloseEnum(hEnumTypeDefs);
-	}
 	
 }
 
@@ -215,6 +56,165 @@ std::wstring ModuleMetadataHelpers::GetModuleName()
 	return std::wstring(moduleName);
 }
 
+void ModuleMetadataHelpers::PopulateAssemblyRefs()
+{
+	HRESULT hr = E_FAIL;
+	HCORENUM hEnumAssembly = NULL;
+	mdAssemblyRef rgAssemblyRefs[1024]{ 0 };
+	ULONG numberOfTokens;
+	wchar_t assemblyRefNameBuffer[255];
+	ULONG numChars = 0;
+	DWORD attrFlags = 0;
+	mdToken tkExtends = mdTokenNil;
+	mdToken resolutionScope;
+	char *publicKeyToken = NULL;
+	char *hashVal = NULL;
+	ULONG pktLen = 0;
+	ULONG hashLen = 0;
+	DWORD flags = 0;
+	ASSEMBLYMETADATA amd{ 0 };
+
+	// Enum Assembly Refs
+	do
+	{
+		hr = pMetaDataAssemblyImport->EnumAssemblyRefs(
+			&hEnumAssembly,
+			rgAssemblyRefs,
+			_countof(rgAssemblyRefs),
+			&numberOfTokens);
+
+		for (size_t i = 0; i < numberOfTokens; i++)
+		{
+
+			pMetaDataAssemblyImport->GetAssemblyRefProps(rgAssemblyRefs[i],
+				(const void**)&publicKeyToken,
+				&pktLen,
+				assemblyRefNameBuffer,
+				_countof(assemblyRefNameBuffer),
+				&numChars,
+				&amd,
+				(const void**)&hashVal,
+				&hashLen,
+				&flags);
+			AssemblyRefs.emplace(assemblyRefNameBuffer, rgAssemblyRefs[i]);
+		}
+	} while (hr == S_OK);
+
+	pMetaDataAssemblyImport->CloseEnum(hEnumAssembly);
+}
+
+HRESULT ModuleMetadataHelpers::GetTypeDefOrRef(std::wstring ModuleName, std::wstring TypeName, mdToken & TypeRefOrDef)
+{
+	if (ModuleName == GetModuleName())
+	{
+		return pMetaDataImport->FindTypeDefByName(TypeName.c_str(), NULL, &TypeRefOrDef);;
+	}
+	else {
+		auto match = AssemblyRefs.find(ModuleName);
+		if (match != AssemblyRefs.end())
+		{
+			mdToken matchToken = match->second;
+			return pMetaDataImport->FindTypeRef(matchToken, TypeName.c_str(), &TypeRefOrDef);
+		}
+	}
+	return E_FAIL;
+	
+	//if (GetModuleName().find(L".exe") != std::wstring::npos)
+	//{
+	//	
+
+	//	pMetaDataAssemblyImport->CloseEnum(hEnumAssembly);
+
+	//	// Enum Module Refs
+	//	do {
+	//		hr = pMetaDataImport->EnumModuleRefs(
+	//			&hEnumModule,
+	//			rgModuleRefs,
+	//			_countof(rgModuleRefs),
+	//			&numberOfTokens);
+
+	//	} while (hr == S_OK);
+
+	//	pMetaDataImport->CloseEnum(hEnumModule);
+
+	//	//Enum TypeRefs
+	//	do {
+	//		hr = pMetaDataImport->EnumTypeRefs(
+	//			&hEnumTypeRefs,
+	//			rgTypeRefs,
+	//			_countof(rgTypeRefs),
+	//			&numberOfTokens);
+
+	//		for (size_t i = 0; i < numberOfTokens; i++)
+	//		{
+	//			pMetaDataImport->GetTypeRefProps(rgTypeRefs[i],
+	//				&resolutionScope,
+	//				typeDeffNameBuffer,
+	//				255,
+	//				&numChars);
+	//			if ((resolutionScope & 0x1A000000) == 0x1A000000)
+	//			{
+	//				pMetaDataImport->GetModuleRefProps(resolutionScope,
+	//					modRefNameBuffer,
+	//					255,
+	//					&numChars);
+	//				auto s2 = std::wstring(typeDeffNameBuffer);
+	//			}
+
+	//			if ((resolutionScope & 0x23000000) == 0x23000000)
+	//			{
+	//				char publicKeyToken[1024];
+	//				char hashVal[1024];
+	//				ULONG pktLen = 0;
+	//				ULONG hashLen = 0;
+	//				DWORD flags = 0;
+	//				ASSEMBLYMETADATA amd{ 0 };
+	//				pMetaDataAssemblyImport->GetAssemblyRefProps(resolutionScope,
+	//					(const void**)&publicKeyToken,
+	//					&pktLen,
+	//					modRefNameBuffer,
+	//					255,
+	//					&numChars,
+	//					&amd,
+	//					(const void**)&hashVal,
+	//					&hashLen,
+	//					&flags);
+
+	//				auto s2 = std::wstring(typeDeffNameBuffer);
+	//			}
+
+	//		}
+
+	//	} while (hr == S_OK);
+
+	//	pMetaDataImport->CloseEnum(hEnumTypeRefs);
+
+	//	// Enum Type Defs
+	//	do
+	//	{
+	//		hr = pMetaDataImport->EnumTypeDefs(
+	//			&hEnumTypeDefs,
+	//			rgTypeDefs,
+	//			_countof(rgTypeDefs),
+	//			&numberOfTokens);
+
+	//		for (size_t i = 0; i < numberOfTokens; i++)
+	//		{
+	//			pMetaDataImport->GetTypeDefProps(rgTypeDefs[i],
+	//				typeDeffNameBuffer,
+	//				255,
+	//				&numChars,
+	//				&attrFlags,
+	//				&tkExtends);
+	//			auto s = std::wstring(typeDeffNameBuffer);
+	//		}
+
+	//	} while (hr == S_OK);
+
+	//	pMetaDataImport->CloseEnum(hEnumTypeDefs);
+	//}
+	//return E_NOTIMPL;
+}
 ///* static public */
 //PCCOR_SIGNATURE ModuleMetadataHelpers::ParseElementType(const ATL::CComPtr<IMetaDataImport>&  pMDImport,
 //	PCCOR_SIGNATURE signature, std::wstring *buffer)

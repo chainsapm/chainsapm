@@ -33,9 +33,6 @@
     <ClInclude Include="inc\infoclasses\AssemblyInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\infoclasses\ClassInfo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="inc\infoclasses\commonstructures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -57,6 +54,9 @@
     <ClInclude Include="inc\ModuleMetadataHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\infoclasses\TypeInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ilrewriter.cpp">
@@ -74,9 +74,6 @@
     <ClCompile Include="src\infoclasses\AssemblyInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\infoclasses\ClassInfo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\infoclasses\FunctionInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -90,6 +87,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ModuleMetadataHelpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\infoclasses\TypeInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -15,7 +15,7 @@ ContainerClass::ContainerClass()
 	// TODO: Issue #2 Add more containers to properly handle a proper entry point.
 
 	this->g_FunctionSet = new std::map<FunctionID, std::unique_ptr<InformationClasses::FunctionInfo>>();
-	this->g_ClassSet = new  std::map<ClassID, std::unique_ptr<InformationClasses::ClassInfo>>();
+	this->g_ClassSet = new  std::map<ClassID, std::unique_ptr<InformationClasses::TypeInfo>>();
 	this->g_AssemblySet = new std::map<AssemblyID, std::unique_ptr<InformationClasses::AssemblyInfo>>();
 	this->g_ModuleSet = new std::map<ModuleID, std::unique_ptr<InformationClasses::ModuleInfo>>();
 	this->g_FullyQualifiedMethodsToProfile = new std::unordered_multiset<ItemMapping>();
