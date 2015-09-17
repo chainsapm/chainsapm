@@ -40,7 +40,6 @@ ModuleMetadataHelpers::~ModuleMetadataHelpers()
 	}
 }
 
-
 std::wstring ModuleMetadataHelpers::GetModuleName()
 {
 	LPCBYTE loadAddress = NULL;

@@ -84,7 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="_System\Web\Hosting\PipelineRuntime.cs" />
-    <Compile Include="CustomAttribute\CustomAttribute.cs" />
+    <Compile Include="CustomAttributes\CustomAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

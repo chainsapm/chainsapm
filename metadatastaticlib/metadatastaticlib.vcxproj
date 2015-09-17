@@ -176,6 +176,7 @@
     <ClInclude Include="inc\infoclasses\ModuleInfo.h" />
     <ClInclude Include="inc\infoclasses\ParameterInfo.h" />
     <ClInclude Include="inc\infoclasses\ProcessInfo.h" />
+    <ClInclude Include="inc\RewriteHelper.h" />
     <ClInclude Include="inc\stdafx.h" />
     <ClInclude Include="inc\targetver.h" />
   </ItemGroup>
@@ -190,6 +191,7 @@
     <ClCompile Include="src\infoclasses\ModuleInfo.cpp" />
     <ClCompile Include="src\infoclasses\ParameterInfo.cpp" />
     <ClCompile Include="src\infoclasses\ProcessInfo.cpp" />
+    <ClCompile Include="src\RewriteHelper.cpp" />
     <ClCompile Include="src\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>

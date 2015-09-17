@@ -57,6 +57,9 @@
     <ClInclude Include="inc\infoclasses\TypeInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\RewriteHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ilrewriter.cpp">
@@ -90,6 +93,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\infoclasses\TypeInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RewriteHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
