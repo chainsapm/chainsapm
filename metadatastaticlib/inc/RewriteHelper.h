@@ -8,7 +8,11 @@ public:
 	~RewriteHelper();
 	ULONG DecompressSignature(const COR_SIGNATURE* originalSignature, ULONG originalSignaureLen, COR_SIGNATURE *newSignature, ULONG *newSignatureLen);
 
+	void DecompressSignature(COR_SIGNATURE * &newSig, PCCOR_SIGNATURE &sigPtr);
+
 	ULONG CompressSignature(COR_SIGNATURE* originalSignature, ULONG originalSignaureLen, COR_SIGNATURE *newSignature, ULONG *newSignatureLen);
+
+	void CompressSignature(COR_SIGNATURE *& newSig, PCCOR_SIGNATURE & sigPtr);
 
 
 private:
@@ -19,13 +23,13 @@ private:
 
 	mdToken DecompressTypeAndToken(COR_SIGNATURE * &newSig, PCCOR_SIGNATURE &sigPtr);
 
-	void DecompressGeneric(COR_SIGNATURE * &newSig, const CorElementType &val, PCCOR_SIGNATURE &sigPtr);
+	void DecompressGeneric(COR_SIGNATURE * &newSig, PCCOR_SIGNATURE &sigPtr);
 
 	void CompressData(COR_SIGNATURE *& newSig, PCCOR_SIGNATURE & sigPtr);
 
 	void CompressTypeAndToken(COR_SIGNATURE *& newSig, PCCOR_SIGNATURE & sigPtr);
 
-	void CompressGeneric(COR_SIGNATURE *& newSig, const CorElementType & val, PCCOR_SIGNATURE & sigPtr);
+	void CompressGeneric(COR_SIGNATURE *& newSig, PCCOR_SIGNATURE & sigPtr);
 
 	void CompressArray(COR_SIGNATURE *& newSig, PCCOR_SIGNATURE & sigPtr);
 
