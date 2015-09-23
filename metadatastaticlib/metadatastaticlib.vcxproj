@@ -165,6 +165,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="inc\ILInjectionHelper.h" />
     <ClInclude Include="inc\infoclasses\AgentInfo.h" />
     <ClInclude Include="inc\allinfo.h" />
     <ClInclude Include="inc\infoclasses\AssemblyInfo.h" />
@@ -176,22 +177,23 @@
     <ClInclude Include="inc\infoclasses\ModuleInfo.h" />
     <ClInclude Include="inc\infoclasses\ParameterInfo.h" />
     <ClInclude Include="inc\infoclasses\ProcessInfo.h" />
-    <ClInclude Include="inc\RewriteHelper.h" />
+    <ClInclude Include="inc\SignatureHelper.h" />
     <ClInclude Include="inc\stdafx.h" />
     <ClInclude Include="inc\targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\ILInjectionHelper.cpp" />
     <ClCompile Include="src\infoclasses\AgentInfo.cpp" />
     <ClCompile Include="src\infoclasses\AssemblyInfo.cpp" />
     <ClCompile Include="src\infoclasses\TypeInfo.cpp" />
     <ClCompile Include="src\infoclasses\FunctionInfo.cpp" />
-    <ClCompile Include="src\ilrewriter.cpp" />
+    <ClCompile Include="src\__ilrewriter.cpp" />
     <ClCompile Include="src\ModuleMetadataHelpers.cpp" />
     <ClCompile Include="src\metadatastaticlib.cpp" />
     <ClCompile Include="src\infoclasses\ModuleInfo.cpp" />
     <ClCompile Include="src\infoclasses\ParameterInfo.cpp" />
     <ClCompile Include="src\infoclasses\ProcessInfo.cpp" />
-    <ClCompile Include="src\RewriteHelper.cpp" />
+    <ClCompile Include="src\SignatureHelper.cpp" />
     <ClCompile Include="src\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
