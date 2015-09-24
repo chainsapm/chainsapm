@@ -60,6 +60,9 @@
     <ClInclude Include="inc\ILInjectionHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\__ilrewriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stdafx.cpp">

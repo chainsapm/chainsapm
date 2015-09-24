@@ -177,6 +177,7 @@
     <ClInclude Include="inc\SignatureHelper.h" />
     <ClInclude Include="inc\stdafx.h" />
     <ClInclude Include="inc\targetver.h" />
+    <ClInclude Include="inc\__ilrewriter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ILInjectionHelper.cpp" />

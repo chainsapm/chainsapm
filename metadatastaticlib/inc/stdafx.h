@@ -13,10 +13,6 @@
 #include <atlcom.h>
 #include <atlctl.h>
 
-// Cor Profiling Libraries
-#include <cor.h>
-#include <corprof.h>
-
 // STL Libraries
 #include <map>
 #include <unordered_map>

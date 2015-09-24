@@ -12,6 +12,14 @@ mdToken ModuleMetadataHelpers::GetMappedToken(mdToken token)
 	return mdTokenNil;
 }
 
+mdToken ModuleMetadataHelpers::DefineSigToken(mdSignature original, PCCOR_SIGNATURE pNewSig, ULONG sigLen, mdSignature & replacement)
+{
+	pMetaDataEmit->GetTokenFromSig(pNewSig, sigLen, &replacement);
+	TokenMapping[original] = replacement;
+	return replacement;
+}
+
+
 ModuleMetadataHelpers::ModuleMetadataHelpers(ATL::CComPtr<ICorProfilerInfo> profilerInfo, ModuleID moduleID) :
 	pICorProfilerInfo(profilerInfo), ThisModuleID(moduleID)
 {
@@ -35,25 +43,30 @@ ModuleMetadataHelpers::ModuleMetadataHelpers(ATL::CComPtr<ICorProfilerInfo> prof
 
 	}
 
+	SetupClass();
+
+}
+
+void ModuleMetadataHelpers::SetupClass()
+{
 	AssemblyRefs = std::map<std::wstring, mdAssemblyRef>();
 
 	GetModuleName();
 	GetAssemblyName();
-
+	PopulateAssemblyRefs();
+	PopulateModuleRefs();
 }
 
-ModuleMetadataHelpers::ModuleMetadataHelpers(ATL::CComPtr<IMetaDataImport2> MetaDataImport, 
-	ATL::CComPtr<IMetaDataEmit2> MetaDataEmit, ATL::CComPtr<IMetaDataAssemblyImport> AssemblyMetaDataImport, 
+ModuleMetadataHelpers::ModuleMetadataHelpers(ATL::CComPtr<IMetaDataImport2> MetaDataImport,
+	ATL::CComPtr<IMetaDataEmit2> MetaDataEmit, ATL::CComPtr<IMetaDataAssemblyImport> AssemblyMetaDataImport,
 	ATL::CComPtr<IMetaDataAssemblyEmit> AssemblyMetaDataEmit)
 {
 	MetaDataImport.CopyTo(&pMetaDataImport);
 	MetaDataEmit.CopyTo(&pMetaDataEmit);
 	AssemblyMetaDataImport.CopyTo(&pMetaDataAssemblyImport);
 	AssemblyMetaDataEmit.CopyTo(&pMetaDataAssemblyEmit);
-	AssemblyRefs = std::map<std::wstring, mdAssemblyRef>();
 
-	GetModuleName();
-	GetAssemblyName();
+	SetupClass();
 }
 
 ModuleMetadataHelpers::~ModuleMetadataHelpers()
@@ -233,7 +246,7 @@ void ModuleMetadataHelpers::PopulateModuleRefs()
 
 HRESULT ModuleMetadataHelpers::FindTypeDefOrRef(std::wstring ModuleOrAssemblyName, std::wstring TypeName, mdToken & TypeRefOrDef)
 {
-	if (ModuleOrAssemblyName == GetModuleName())
+	if (ModuleOrAssemblyName == GetModuleName() | ModuleOrAssemblyName == GetAssemblyName())
 	{
 		return pMetaDataImport->FindTypeDefByName(TypeName.c_str(), NULL, &TypeRefOrDef);;
 	}

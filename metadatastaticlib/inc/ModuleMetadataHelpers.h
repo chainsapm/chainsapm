@@ -1,11 +1,17 @@
 #pragma once
-#include "stdafx.h"
+
+// Cor Profiling Libraries
+#include <cor.h>
+#include <corprof.h>
+#include <memory>
+
 #define MAX_LENGTH 2048
 
 class ModuleMetadataHelpers
 {
 public:
 	ModuleMetadataHelpers(ATL::CComPtr<ICorProfilerInfo> profilerInfo, ModuleID moduleID);
+	void SetupClass();
 	ModuleMetadataHelpers(ATL::CComPtr<IMetaDataImport2> MetaDataImport, 
 		ATL::CComPtr<IMetaDataEmit2> MetaDataEmit,
 		ATL::CComPtr<IMetaDataAssemblyImport> AssemblyMetaDataImport,
@@ -21,7 +27,10 @@ public:
 	
 	// Find a token to be remapped to a proper Definition or Reference
 	mdToken GetMappedToken(mdToken);
-	
+
+	mdToken DefineSigToken(mdSignature original, PCCOR_SIGNATURE pNewSig, ULONG sigLen, mdSignature & replacement);
+
+
 	//PCCOR_SIGNATURE ParseElementType(const CComPtr<IMetaDataImport>& pMDImport, PCCOR_SIGNATURE signature, std::wstring* buffer);
 
 	// Get a forward copy of all of the current assembly references in this module
