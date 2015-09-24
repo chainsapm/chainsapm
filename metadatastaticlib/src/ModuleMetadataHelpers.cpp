@@ -32,60 +32,121 @@ ModuleMetadataHelpers::ModuleMetadataHelpers(ATL::CComPtr<ICorProfilerInfo> prof
 
 		hr = pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataAssemblyEmit, (IUnknown**)&pUnk);
 		hr = pUnk->QueryInterface(IID_IMetaDataAssemblyEmit, (LPVOID *)&pMetaDataAssemblyEmit);
+
 	}
 
 	AssemblyRefs = std::map<std::wstring, mdAssemblyRef>();
 
+	GetModuleName();
+	GetAssemblyName();
 
+}
+
+ModuleMetadataHelpers::ModuleMetadataHelpers(ATL::CComPtr<IMetaDataImport2> MetaDataImport, 
+	ATL::CComPtr<IMetaDataEmit2> MetaDataEmit, ATL::CComPtr<IMetaDataAssemblyImport> AssemblyMetaDataImport, 
+	ATL::CComPtr<IMetaDataAssemblyEmit> AssemblyMetaDataEmit)
+{
+	MetaDataImport.CopyTo(&pMetaDataImport);
+	MetaDataEmit.CopyTo(&pMetaDataEmit);
+	AssemblyMetaDataImport.CopyTo(&pMetaDataAssemblyImport);
+	AssemblyMetaDataEmit.CopyTo(&pMetaDataAssemblyEmit);
+	AssemblyRefs = std::map<std::wstring, mdAssemblyRef>();
+
+	GetModuleName();
+	GetAssemblyName();
 }
 
 ModuleMetadataHelpers::~ModuleMetadataHelpers()
 {
-	DeleteCriticalSection(&m_ThreadCS);
 	if (pICorProfilerInfo != NULL)
-	{
 		pICorProfilerInfo.Release();
-	}
+
+	if (pMetaDataImport != NULL)
+		pMetaDataImport.Release();
+
+	if (pMetaDataEmit != NULL)
+		pMetaDataEmit.Release();
+
+	if (pMetaDataAssemblyImport != NULL)
+		pMetaDataAssemblyImport.Release();
+
+	if (pMetaDataAssemblyEmit != NULL)
+		pMetaDataAssemblyEmit.Release();
 }
 
-HRESULT ModuleMetadataHelpers::DefineTokenReference(std::wstring ModuleOrAssembly, std::wstring TypeName, std::wstring MemberName, mdToken tokenIn)
+HRESULT ModuleMetadataHelpers::DefineTokenReference(std::wstring ModuleOrAssemblyName, std::wstring TypeName, std::wstring MemberName, PCCOR_SIGNATURE MethodSignature, mdToken tokenIn)
 {
-
 	mdToken tokenOut = mdTokenNil;
+	HRESULT hr = E_FAIL;
 	if (MemberName.empty())
 	{
-		if (FindTypeDefOrRef(ModuleOrAssembly, TypeName, tokenOut) == S_OK)
-			TokenMapping[tokenIn] = tokenOut;
-		else
-			return E_FAIL;
+		hr = FindTypeDefOrRef(ModuleOrAssemblyName, TypeName, tokenOut);
+		if (hr == CLDB_E_RECORD_NOTFOUND) {
+			hr = AddTypeDefOrRef(TypeName, tokenOut, ModuleOrAssemblyName);
+		}
 	}
 	else {
-		if (FindMemberDefOrRef(ModuleOrAssembly, TypeName, MemberName, tokenOut) == S_OK)
-			TokenMapping[tokenIn] = tokenOut;
-		else
-			return E_FAIL;
+		hr = FindMemberDefOrRef(ModuleOrAssemblyName, TypeName, MemberName, tokenOut);
+		if (hr == CLDB_E_RECORD_NOTFOUND) {
+			hr = AddMemberRefOrDef(TypeName, MemberName, MethodSignature, tokenOut, ModuleOrAssemblyName);
+		}
 	}
-	return S_OK;
+	TokenMapping[tokenIn] = tokenOut;
+	return hr;
+}
+
+const HRESULT &ModuleMetadataHelpers::AddMemberRefOrDef(std::wstring &TypeName, std::wstring &MemberName, const PCCOR_SIGNATURE &MethodSignature, mdToken &tokenOut, std::wstring &ModuleOrAssemblyName)
+{
+	if (ModuleOrAssemblyName == GetModuleName())
+		return AddMethodDef(TypeName, MemberName, MethodSignature, tokenOut);
+	else
+		return AddMethodRef(ModuleOrAssemblyName, TypeName, MemberName, MethodSignature, tokenOut);
+}
+
+HRESULT ModuleMetadataHelpers::AddTypeDefOrRef(std::wstring &TypeName, mdToken &tokenOut, std::wstring &ModuleOrAssemblyName)
+{
+	if (ModuleOrAssemblyName == GetModuleName())
+		return AddTypeDef(TypeName, tokenOut);
+	else
+		return AddTypeRef(ModuleOrAssemblyName, TypeName, tokenOut);
 }
 
 std::wstring ModuleMetadataHelpers::GetModuleName()
 {
 	if (ModuleName.empty())
 	{
-		LPCBYTE loadAddress = NULL;
-		WCHAR moduleName[255];
+		WCHAR moduleName[255]{ 0 };
 		ULONG modNameLen = 0;
-		AssemblyID assemblyID;
-		pICorProfilerInfo->GetModuleInfo(ThisModuleID,
-			&loadAddress,
-			_countof(moduleName),
-			&modNameLen,
-			moduleName,
-			&assemblyID);
+		GUID modGUID{ 0 };
+		pMetaDataImport->GetScopeProps(moduleName, _countof(moduleName), &modNameLen, &modGUID);
 		ModuleName.assign(moduleName);
 	}
 
 	return ModuleName;
+}
+
+std::wstring ModuleMetadataHelpers::GetAssemblyName()
+{
+	if (AssemblyName.empty())
+	{
+		HRESULT hr = E_FAIL;
+		wchar_t assemblyNameBuffer[255];
+		ULONG numChars = 0;
+		DWORD attrFlags = 0;
+		char *publicKeyToken = NULL;
+		char *hashVal = NULL;
+		ULONG pktLen = 0;
+		ULONG hashLen = 0;
+		DWORD flags = 0;
+		ASSEMBLYMETADATA amd{ 0 };
+		mdAssembly mdAsemProp = mdAssemblyNil;
+		pMetaDataAssemblyImport->GetAssemblyFromScope(&mdAsemProp);
+		pMetaDataAssemblyImport->GetAssemblyProps(mdAsemProp, (const void**)&publicKeyToken, &pktLen,
+			&hashLen, assemblyNameBuffer, _countof(assemblyNameBuffer), &numChars, &amd, &flags);
+		AssemblyName.assign(assemblyNameBuffer);
+	}
+
+	return AssemblyName;
 }
 
 void ModuleMetadataHelpers::PopulateAssemblyRefs()
@@ -114,10 +175,11 @@ void ModuleMetadataHelpers::PopulateAssemblyRefs()
 			rgAssemblyRefs,
 			_countof(rgAssemblyRefs),
 			&numberOfTokens);
+		if (numberOfTokens == 0)
+			break;
 
 		for (size_t i = 0; i < numberOfTokens; i++)
 		{
-
 			pMetaDataAssemblyImport->GetAssemblyRefProps(rgAssemblyRefs[i],
 				(const void**)&publicKeyToken,
 				&pktLen,
@@ -153,6 +215,9 @@ void ModuleMetadataHelpers::PopulateModuleRefs()
 			_countof(rgModuleRefs),
 			&numberOfTokens);
 
+		if (numberOfTokens == 0)
+			break;
+
 		for (size_t i = 0; i < numberOfTokens; i++)
 		{
 			pMetaDataImport->GetModuleRefProps(rgModuleRefs[i],
@@ -166,21 +231,22 @@ void ModuleMetadataHelpers::PopulateModuleRefs()
 	pMetaDataAssemblyImport->CloseEnum(hEnumModule);
 }
 
-HRESULT ModuleMetadataHelpers::FindTypeDefOrRef(std::wstring ModuleName, std::wstring TypeName, mdToken & TypeRefOrDef)
+HRESULT ModuleMetadataHelpers::FindTypeDefOrRef(std::wstring ModuleOrAssemblyName, std::wstring TypeName, mdToken & TypeRefOrDef)
 {
-	if (ModuleName == GetModuleName())
+	if (ModuleOrAssemblyName == GetModuleName())
 	{
 		return pMetaDataImport->FindTypeDefByName(TypeName.c_str(), NULL, &TypeRefOrDef);;
 	}
 	else {
-		auto match = AssemblyRefs.find(ModuleName);
+		auto match = AssemblyRefs.find(ModuleOrAssemblyName);
 		if (match != AssemblyRefs.end())
 		{
 			mdToken matchToken = match->second;
-			return pMetaDataImport->FindTypeRef(matchToken, TypeName.c_str(), &TypeRefOrDef);
+			HRESULT hr = pMetaDataImport->FindTypeRef(matchToken, TypeName.c_str(), &TypeRefOrDef);
+			return hr;
 		}
 
-		match = ModuleRefs.find(ModuleName);
+		match = ModuleRefs.find(ModuleOrAssemblyName);
 		if (match != ModuleRefs.end())
 		{
 			mdToken matchToken = match->second;
@@ -217,7 +283,7 @@ HRESULT ModuleMetadataHelpers::AddAssemblyRef(std::wstring AssemblyName, mdAssem
 	return E_NOTIMPL;
 }
 
-HRESULT ModuleMetadataHelpers::AddModuleRef(std::wstring ModuleName, mdModuleRef & ModuleRef) {
+HRESULT ModuleMetadataHelpers::AddModuleRef(std::wstring ModuleOrAssemblyName, mdModuleRef & ModuleRef) {
 	return E_NOTIMPL;
 }
 
@@ -294,26 +360,53 @@ HRESULT ModuleMetadataHelpers::AddMethodDef(std::wstring TypeName, std::wstring 
 }
 
 HRESULT ModuleMetadataHelpers::AddMethodRef(std::wstring ModuleOrAssemblyName, std::wstring TypeName, std::wstring MethodName, PCCOR_SIGNATURE MethodSignature, mdMemberRef & MethodRef) {
-
-	return E_NOTIMPL;
+	mdToken matchToken = mdTokenNil;
+	auto match = AssemblyRefs.find(ModuleName);
+	if (match != AssemblyRefs.end())
+	{
+		matchToken = match->second;
+	}
+	return pMetaDataEmit->DefineMemberRef(matchToken, TypeName.c_str(), MethodSignature, 0, &MethodRef);
 }
 
 HRESULT ModuleMetadataHelpers::AddTypeRef(std::wstring ModuleName, std::wstring TypeName, mdTypeRef & TypeRef) {
-	return E_NOTIMPL;
+	mdToken matchToken = mdTokenNil;
+	auto match = AssemblyRefs.find(ModuleName);
+	if (match != AssemblyRefs.end())
+	{
+		matchToken = match->second;
+	}
+	return pMetaDataEmit->DefineTypeRefByName(matchToken, TypeName.c_str(), &TypeRef);
 }
 
 HRESULT ModuleMetadataHelpers::AddTypeDef(std::wstring TypeName, mdTypeDef & TypeDef) {
-	return E_NOTIMPL;
+	return pMetaDataEmit->DefineTypeDef(TypeName.c_str(), 0, mdTokenNil, NULL, &TypeDef);
 }
 
 HRESULT ModuleMetadataHelpers::GetSecuritySafeCriticalAttributeToken(mdMethodDef  & pmdSafeCritical)
 {
-	mdTypeDef tdSafeCritical;
+	mdToken matchToken = mdTokenNil;
+	HRESULT hr = E_FAIL;
+	auto match = AssemblyRefs.find(ModuleName);
+	if (match != AssemblyRefs.end())
+	{
+		matchToken = match->second;
+	}
 
-	HRESULT hr = pMetaDataImport->FindTypeDefByName(
-		L"System.Security.SecuritySafeCriticalAttribute",
-		mdTokenNil,
-		&tdSafeCritical);
+	mdTypeDef tdSafeCritical;
+	if (ModuleName == L"mscorlib")
+	{
+		hr = pMetaDataImport->FindTypeDefByName(
+			L"System.Security.SecuritySafeCriticalAttribute",
+			mdTokenNil,
+			&tdSafeCritical);
+	}
+	else {
+		hr = pMetaDataImport->FindTypeRef(matchToken,
+			L"System.Security.SecuritySafeCriticalAttribute",
+			&tdSafeCritical);
+	}
+
 
 	COR_SIGNATURE sigSafeCriticalCtor[] = {
 		IMAGE_CEE_CS_CALLCONV_HASTHIS,
@@ -321,7 +414,7 @@ HRESULT ModuleMetadataHelpers::GetSecuritySafeCriticalAttributeToken(mdMethodDef
 		ELEMENT_TYPE_VOID,                  // return type == void
 	};
 
-	hr = pMetaDataImport->FindMember(
+	hr = pMetaDataImport->FindMemberRef(
 		tdSafeCritical,
 		L".ctor",
 		sigSafeCriticalCtor,

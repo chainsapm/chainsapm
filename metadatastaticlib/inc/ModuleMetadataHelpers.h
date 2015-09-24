@@ -6,9 +6,14 @@ class ModuleMetadataHelpers
 {
 public:
 	ModuleMetadataHelpers(ATL::CComPtr<ICorProfilerInfo> profilerInfo, ModuleID moduleID);
+	ModuleMetadataHelpers(ATL::CComPtr<IMetaDataImport2> MetaDataImport, 
+		ATL::CComPtr<IMetaDataEmit2> MetaDataEmit,
+		ATL::CComPtr<IMetaDataAssemblyImport> AssemblyMetaDataImport,
+		ATL::CComPtr<IMetaDataAssemblyEmit> AssemblyMetaDataEmit);
 	~ModuleMetadataHelpers();
 	// Return the module name
 	std::wstring GetModuleName();
+	std::wstring GetAssemblyName();
 	// Find a type defined or referenced inside of this module
 	HRESULT FindTypeDefOrRef(std::wstring ModuleName, std::wstring TypeName, mdToken &TypeRefOrDef);
 	// Find a method or member for a type inside of the current module
@@ -25,7 +30,9 @@ public:
 	void PopulateModuleRefs();
 	
 	// Given the proper parameters this will either Find or Define a Type or Member
-	HRESULT DefineTokenReference(std::wstring ModuleOrAssembly, std::wstring TypeName, std::wstring MemberName, mdToken tokenIn);
+	HRESULT DefineTokenReference(std::wstring ModuleOrAssembly, std::wstring TypeName, std::wstring MemberName, PCCOR_SIGNATURE MethodSignature, mdToken tokenIn);
+	const HRESULT &AddMemberRefOrDef(std::wstring &TypeName, std::wstring &MemberName, const PCCOR_SIGNATURE &MethodSignature, mdToken &tokenOut, std::wstring &ModuleOrAssembly);
+	HRESULT AddTypeDefOrRef(std::wstring &TypeName, mdToken &tokenOut, std::wstring &ModuleOrAssembly);
 	// Define new type inside current module
 	HRESULT AddTypeDef(std::wstring TypeName, mdToken & TypeRefOrDef);
 	// Reference type outside current module
@@ -46,6 +53,7 @@ public:
 private:
 	ModuleID ThisModuleID;
 	std::wstring ModuleName;
+	std::wstring AssemblyName;
 	std::map<std::wstring, mdAssemblyRef> AssemblyRefs;
 	std::map<std::wstring, mdModuleRef> ModuleRefs;
 	std::map<mdToken, mdToken> TokenMapping;
@@ -56,6 +64,8 @@ private:
 	ATL::CComPtr<IMetaDataImport2> pMetaDataImport;
 	ATL::CComPtr<IMetaDataAssemblyEmit> pMetaDataAssemblyEmit;
 	ATL::CComPtr<IMetaDataAssemblyImport> pMetaDataAssemblyImport;
+	ATL::CComPtr<IMetaDataInfo> pMetaDataInfo;
+	
 	//boost::mutex m_ThreadIdMutex;
 
 	HRESULT GetSecuritySafeCriticalAttributeToken(mdMethodDef & pmdSafeCritical);

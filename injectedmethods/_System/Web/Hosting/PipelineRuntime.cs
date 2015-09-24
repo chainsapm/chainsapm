@@ -73,9 +73,6 @@ namespace injectedmethods._System.Web.Hosting {
                 }
                 public static void ProcessRequest_Enter (System.Web.HttpWorkerRequest workerRequest, System.Web.HttpContext context) {
                         if ( context != null ) {
-                                var something = new List<string> [20,20,20,20,20,20,20,20];
-                                List<string> [,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,] testarray;
-                                List<List<List<List<string>>>> llllstring = new List<List<List<List<string>>>>();
                                 List<string> headers = new List<string> ();
                                 List<string> cookies = new List<string> ();
                                 List<string> session = new List<string> ();
