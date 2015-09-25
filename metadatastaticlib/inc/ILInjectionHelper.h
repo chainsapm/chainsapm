@@ -1,20 +1,24 @@
 #pragma once
-
+// ATL LIbraries
+#include <atlbase.h>
+#include <atlcom.h>
+#include <atlctl.h>
 #pragma warning( disable : 4091 )
-#include <corhlpr.cpp>
 #include <cor.h>
 #include <corprof.h>
 #pragma warning( default : 4091 )
 
 #include "ModuleMetadataHelpers.h"
 #include "SignatureHelper.h"
+
+
 class ILInjectionHelper
 {
 public:
 	ILInjectionHelper();
 	ILInjectionHelper(std::shared_ptr<ModuleMetadataHelpers> MetaDataHelpers, 
-		CComPtr<ICorProfilerFunctionControl> pICorProfilerFunctionControl, 
-		CComPtr<ICorProfilerInfo> pICorProfilerInfo);
+		ATL::CComPtr<ICorProfilerFunctionControl> pICorProfilerFunctionControl, 
+		ATL::CComPtr<ICorProfilerInfo> pICorProfilerInfo);
 
 	// Imports the IL bytes into our linked list
 	HRESULT ImportIL(LPCBYTE pIL);

@@ -180,6 +180,7 @@
     <ClInclude Include="inc\__ilrewriter.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\corhlpr.cpp" />
     <ClCompile Include="src\ILInjectionHelper.cpp" />
     <ClCompile Include="src\infoclasses\AgentInfo.cpp" />
     <ClCompile Include="src\infoclasses\AssemblyInfo.cpp" />
@@ -194,7 +195,7 @@
     <ClCompile Include="src\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="inc\sigparse.inl" />
+    <None Include="src\sigparse.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

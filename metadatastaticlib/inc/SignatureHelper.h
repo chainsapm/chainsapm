@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include "ModuleMetadataHelpers.h"
 
 class SignatureHelper
@@ -9,13 +10,15 @@ public:
 	~SignatureHelper() {};
 
 	// Decompress signature to use full ULONG and mdToken instead of compressed versions, optionally replce the token
-	ULONG DecompressSignature(const COR_SIGNATURE* originalSignature, ULONG originalSignaureLen, COR_SIGNATURE *newSignature, ULONG *newSignatureLen, bool ReplaceToken = false);
+	ULONG DecompressMethodSignature(const COR_SIGNATURE* originalSignature, ULONG originalSignaureLen, COR_SIGNATURE *newSignature, ULONG *newSignatureLen, bool ReplaceToken = false);
 	// Compress signature for use in actual metadata
-	ULONG CompressSignature(COR_SIGNATURE* originalSignature, ULONG originalSignaureLen, COR_SIGNATURE *newSignature, ULONG *newSignatureLen);
+	ULONG CompressMethodSignature(COR_SIGNATURE* originalSignature, ULONG originalSignaureLen, COR_SIGNATURE *newSignature, ULONG *newSignatureLen);
 	// [DEBUG] Used for sanity check when debugging signature issues
 	PCCOR_SIGNATURE ParseElementType(PCCOR_SIGNATURE signature, std::wstring* buffer);
 
-private:
+
+	ULONG CompressSignature(COR_SIGNATURE *& newSig, PCCOR_SIGNATURE & sigPtr);
+
 	void DecompressSignature(COR_SIGNATURE * &newSig, PCCOR_SIGNATURE &sigPtr, bool ReplaceToken);
 
 	void DecompressArray(COR_SIGNATURE * &newSig, PCCOR_SIGNATURE &sigPtr, bool ReplaceToken);
@@ -25,8 +28,6 @@ private:
 	mdToken DecompressTypeAndToken(COR_SIGNATURE * &newSig, PCCOR_SIGNATURE &sigPtr, bool ReplaceToken);
 
 	void DecompressGeneric(COR_SIGNATURE * &newSig, PCCOR_SIGNATURE &sigPtr, bool ReplaceToken);
-
-	void CompressSignature(COR_SIGNATURE *& newSig, PCCOR_SIGNATURE & sigPtr);
 
 	void CompressData(COR_SIGNATURE *& newSig, PCCOR_SIGNATURE & sigPtr);
 

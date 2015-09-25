@@ -1,9 +1,13 @@
 #pragma once
-
 // Cor Profiling Libraries
 #include <cor.h>
 #include <corprof.h>
 #include <memory>
+// ATL LIbraries
+#include <atlbase.h>
+#include <atlcom.h>
+#include <atlctl.h>
+
 
 #define MAX_LENGTH 2048
 
@@ -39,8 +43,8 @@ public:
 	void PopulateModuleRefs();
 	
 	// Given the proper parameters this will either Find or Define a Type or Member
-	HRESULT DefineTokenReference(std::wstring ModuleOrAssembly, std::wstring TypeName, std::wstring MemberName, PCCOR_SIGNATURE MethodSignature, mdToken tokenIn);
-	const HRESULT &AddMemberRefOrDef(std::wstring &TypeName, std::wstring &MemberName, const PCCOR_SIGNATURE &MethodSignature, mdToken &tokenOut, std::wstring &ModuleOrAssembly);
+	HRESULT DefineTokenReference(std::wstring ModuleOrAssembly, std::wstring TypeName, std::wstring MemberName, PCCOR_SIGNATURE MethodSignature, ULONG SigLength, mdToken mdParentToken, mdToken tokenIn);
+	const HRESULT &AddMemberRefOrDef(std::wstring &TypeName, std::wstring &MemberName, const PCCOR_SIGNATURE &MethodSignature, ULONG SigLength, mdToken &tokenOut, std::wstring &ModuleOrAssembly);
 	HRESULT AddTypeDefOrRef(std::wstring &TypeName, mdToken &tokenOut, std::wstring &ModuleOrAssembly);
 	// Define new type inside current module
 	HRESULT AddTypeDef(std::wstring TypeName, mdToken & TypeRefOrDef);
@@ -51,9 +55,9 @@ public:
 	// Reference assembly outside current module
 	HRESULT AddAssemblyRef(std::wstring AssemblyName, mdAssemblyRef & TypeRefOrDef);
 	// Reference method (member) outside current module
-	HRESULT AddMethodRef(std::wstring ModuleOrAssemblyName, std::wstring TypeName, std::wstring MethodName, PCCOR_SIGNATURE MethodSignature, mdMemberRef & MethodRef);
+	HRESULT AddMethodRef(std::wstring ModuleOrAssemblyName, std::wstring TypeName, std::wstring MethodName, PCCOR_SIGNATURE MethodSignature, ULONG SigLength, mdMemberRef & MethodRef);
 	// Create new method inside of this module
-	HRESULT AddMethodDef(std::wstring TypeName, std::wstring MethodName, PCCOR_SIGNATURE MethodSignature, mdMethodDef & MethodDef);
+	HRESULT AddMethodDef(std::wstring TypeName, std::wstring MethodName, PCCOR_SIGNATURE MethodSignature, ULONG SigLength, mdMethodDef & MethodDef);
 	// Create signature token for this method
 	HRESULT AddMethodLocals(std::wstring TypeName, std::wstring MethodName, PCCOR_SIGNATURE LocalsSignature, mdSignature & SigToken);
 

@@ -1,11 +1,12 @@
 #pragma once
+#ifndef ilrw
+#define ilrw
 
 #pragma warning( disable : 4091 )
-#include <corhlpr.cpp>
 #include <cor.h>
 #include <corprof.h>
+#include <corhlpr.h>
 #pragma warning( default : 4091 )
-#include "sigparse.inl"
 
 #include <assert.h>
 
@@ -26,10 +27,36 @@
 #include "ModuleMetadataHelpers.h"
 #pragma runtime_checks("", off)
 
-void __fastcall UnmanagedInspectObject(void* pv)
-{
-	void* pv2 = pv;
-}
+
+static int k_rgnStackPushes[] = {
+
+#define OPDEF(c,s,pop,push,args,type,l,s1,s2,ctrl) \
+	{ push },
+
+#define Push0    0
+#define Push1    1
+#define PushI    1
+#define PushI4   1
+#define PushR4   1
+#define PushI8   1
+#define PushR8   1
+#define PushRef  1
+#define VarPush  1          // Test code doesn't call vararg fcns, so this should not be used
+
+#include "opcode.def"
+
+#undef Push0   
+#undef Push1   
+#undef PushI   
+#undef PushI4  
+#undef PushR4  
+#undef PushI8  
+#undef PushR8  
+#undef PushRef 
+#undef VarPush 
+#undef OPDEF
+};
+
 
 #undef IfFailRet
 #define IfFailRet(EXPR) do { HRESULT hr = (EXPR); if(FAILED(hr)) { return (hr); } } while (0)
@@ -129,34 +156,6 @@ static const BYTE s_OpCodeFlags[] =
 	4 | OPCODEFLAGS_BranchTarget,   // CEE_SWITCH_ARG
 };
 
-static int k_rgnStackPushes[] = {
-
-#define OPDEF(c,s,pop,push,args,type,l,s1,s2,ctrl) \
-	{ push },
-
-#define Push0    0
-#define Push1    1
-#define PushI    1
-#define PushI4   1
-#define PushR4   1
-#define PushI8   1
-#define PushR8   1
-#define PushRef  1
-#define VarPush  1          // Test code doesn't call vararg fcns, so this should not be used
-
-#include "opcode.def"
-
-#undef Push0   
-#undef Push1   
-#undef PushI   
-#undef PushI4  
-#undef PushR4  
-#undef PushI8  
-#undef PushR8  
-#undef PushRef 
-#undef VarPush 
-#undef OPDEF
-};
 
 class ILRewriter
 {
@@ -262,3 +261,5 @@ public:
 
 	ILInstr * NewLDC(LPVOID p);
 };
+
+#endif

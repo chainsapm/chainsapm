@@ -101,9 +101,12 @@
     <ClCompile Include="src\ILInjectionHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\corhlpr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="inc\sigparse.inl">
+    <None Include="src\sigparse.cpp">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

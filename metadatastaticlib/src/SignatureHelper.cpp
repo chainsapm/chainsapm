@@ -6,7 +6,7 @@
 // Decompression routines
 //********************************************************************************
 
-ULONG SignatureHelper::DecompressSignature(const COR_SIGNATURE * originalSignature, ULONG originalSignaureLen, COR_SIGNATURE * newSignature, ULONG * newSignatureLen, bool ReplaceToken)
+ULONG SignatureHelper::DecompressMethodSignature(const COR_SIGNATURE * originalSignature, ULONG originalSignaureLen, COR_SIGNATURE * newSignature, ULONG * newSignatureLen, bool ReplaceToken)
 {
 	COR_SIGNATURE* newSig = newSignature;
 	PCCOR_SIGNATURE sigPtr = originalSignature;
@@ -18,7 +18,7 @@ ULONG SignatureHelper::DecompressSignature(const COR_SIGNATURE * originalSignatu
 	// Get the calling convention of this signature
 	*newSig++ = CorSigUncompressCallingConv(sigPtr);
 
-	if (callConv == IMAGE_CEE_CS_CALLCONV_GENERIC)
+	if (callConv == IMAGE_CEE_CS_CALLCONV_GENERIC | callConv == IMAGE_CEE_CS_CALLCONV_GENERICINST)
 	{
 		// Special case where a generic method gets a count of generic instances before the
 		// normal parameter list
@@ -183,7 +183,7 @@ inline void SignatureHelper::DecompressArray(COR_SIGNATURE * &newSig, PCCOR_SIGN
 // Compression routines
 //********************************************************************************
 
-ULONG SignatureHelper::CompressSignature(COR_SIGNATURE * originalSignature, ULONG originalSignaureLen, COR_SIGNATURE * newSignature, ULONG * newSignatureLen)
+ULONG SignatureHelper::CompressMethodSignature(COR_SIGNATURE * originalSignature, ULONG originalSignaureLen, COR_SIGNATURE * newSignature, ULONG * newSignatureLen)
 {
 
 	COR_SIGNATURE* newSig = newSignature;
@@ -196,7 +196,7 @@ ULONG SignatureHelper::CompressSignature(COR_SIGNATURE * originalSignature, ULON
 	// Calling convention of this signature
 	*newSig++ = *sigPtr++;
 
-	if (callConv == IMAGE_CEE_CS_CALLCONV_GENERIC)
+	if (callConv == IMAGE_CEE_CS_CALLCONV_GENERIC | callConv == IMAGE_CEE_CS_CALLCONV_GENERICINST)
 	{
 		// Special case where a generic method gets a count of generic instances before the
 		// normal parameter list
@@ -223,8 +223,9 @@ ULONG SignatureHelper::CompressSignature(COR_SIGNATURE * originalSignature, ULON
 	return (UINT_PTR)newSig - (UINT_PTR)newSignature;
 }
 
-void SignatureHelper::CompressSignature(COR_SIGNATURE *& newSig, PCCOR_SIGNATURE & sigPtr)
+ULONG SignatureHelper::CompressSignature(COR_SIGNATURE *& newSig, PCCOR_SIGNATURE & sigPtr)
 {
+	PCCOR_SIGNATURE newSigStart = newSig;
 	CorElementType ElementType = (CorElementType)*sigPtr++;
 	switch (ElementType)
 	{
@@ -279,6 +280,7 @@ void SignatureHelper::CompressSignature(COR_SIGNATURE *& newSig, PCCOR_SIGNATURE
 		break;
 
 	}
+	return (UINT_PTR)newSig - (UINT_PTR)newSigStart;
 }
 
 inline void SignatureHelper::CompressData(COR_SIGNATURE *& newSig, PCCOR_SIGNATURE & sigPtr)
