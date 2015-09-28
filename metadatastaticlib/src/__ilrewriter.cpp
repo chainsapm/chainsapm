@@ -1,3 +1,6 @@
+#include "..\inc\__ilrewriter.h"
+#include "..\inc\__ilrewriter.h"
+#include "..\inc\__ilrewriter.h"
 // ==++==
 // 
 //   Copyright (c) Microsoft Corporation.  All rights reserved.
@@ -303,6 +306,12 @@ HRESULT ILRewriter::ImportEH(const COR_ILMETHOD_SECT_EH* pILEH, unsigned nEH)
 	}
 
 	return S_OK;
+}
+
+ILInstr* ILRewriter::NewILInstr(ILInstr pInstr)
+{
+	m_nInstrs++;
+	return new ILInstr(pInstr);
 }
 
 ILInstr* ILRewriter::NewILInstr()
@@ -684,11 +693,75 @@ void __fastcall ILRewriter::Probe_SDSFLD(WCHAR * pFieldName)
 	printf("STSFLD: %S\n", pFieldName);
 }
 
-UINT ILRewriter::AddNewInt32Local() { return 0; }
+void ILRewriter::AddILEnterProbe(ILRewriter & il) {
+	ILInstr * pThisFirstIL = m_IL.m_pNext;
+	ILInstr * pInstr = il.m_IL.m_pNext;
+	ILInstr * pNewInstr = NULL;
+	for (; pInstr != &il.m_IL; pInstr = pInstr->m_pNext)
+	{
+		pNewInstr = NewILInstr(*pInstr);
+		InsertBefore(pThisFirstIL, pNewInstr);
+	}
 
-UINT ILRewriter::AddNewObjectArrayLocal() { return 0; }
+}
 
-UINT ILRewriter::AddNewString() { return 0; }
+void ILRewriter::AddILProbe(ILInstr * pFirstIL) {
+
+	for (ILInstr * pInstr = pFirstIL; pInstr != NULL; pInstr = pInstr->m_pNext)
+	{
+		InsertBefore(pFirstIL, pInstr);
+	}
+
+}
+
+void ILRewriter::AddILExitProbe(ILRewriter & il) {
+	HRESULT hr;
+	BOOL fAtLeastOneProbeAdded = FALSE;
+
+	// Find all RETs, and insert a call to the exit probe before each one.
+	for (ILInstr * pInstr = GetILList()->m_pNext; pInstr != GetILList(); pInstr = pInstr->m_pNext)
+	{
+		switch (pInstr->m_opcode)
+		{
+		case CEE_RET:
+		{
+			// We want any branches or leaves that targeted the RET instruction to
+			// actually target the epilog instructions we're adding. So turn the "RET"
+			// into ["NOP", "RET"], and THEN add the epilog between the NOP & RET. That
+			// ensures that any branches that went to the RET will now go to the NOP and
+			// then execute our epilog.
+
+			// RET->NOP
+			pInstr->m_opcode = CEE_NOP;
+
+			// Add the new RET after
+			ILInstr * pNewRet = NewILInstr();
+			pNewRet->m_opcode = CEE_RET;
+			InsertAfter(pInstr, pNewRet);
+			ILInstr * pThisFirstIL = m_IL.m_pNext;
+			ILInstr * pInstr = il.m_IL.m_pNext;
+			ILInstr * pNewInstr = NULL;
+			for (; pInstr != &il.m_IL; pInstr = pInstr->m_pNext)
+			{
+				pNewInstr = NewILInstr(*pInstr);
+				InsertBefore(pThisFirstIL, pNewInstr);
+			}
+			fAtLeastOneProbeAdded = TRUE;
+
+			// Advance pInstr after all this gunk so the for loop continues properly
+			pInstr = pNewRet;
+			break;
+		}
+
+		default:
+			break;
+		}
+	}
+}
+
+UINT ILRewriter::AddNewULONGLocal() { return 0; }
+
+UINT ILRewriter::AddNewDateTimeLocal() { return 0; }
 
 WCHAR* ILRewriter::GetNameFromToken(mdToken tk) { return L""; }
 

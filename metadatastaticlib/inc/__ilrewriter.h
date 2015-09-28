@@ -192,6 +192,7 @@ private:
 	IMetaDataEmit * m_pMetaDataEmit;
 
 public:
+
 	ILRewriter(ICorProfilerInfo * pICorProfilerInfo, ICorProfilerFunctionControl * pICorProfilerFunctionControl, ModuleID moduleID, mdToken tkMethod);
 	ILRewriter();
 	~ILRewriter();
@@ -213,6 +214,7 @@ public:
 	HRESULT ImportEH(const COR_ILMETHOD_SECT_EH* pILEH, unsigned nEH);
 
 	ILInstr* NewILInstr();
+	ILInstr* NewILInstr(ILInstr);
 
 	ILInstr* GetInstrFromOffset(unsigned offset);
 
@@ -251,15 +253,24 @@ public:
 
 	static void __fastcall Probe_LDSFLD(WCHAR * pFieldName);
 	static void __fastcall Probe_SDSFLD(WCHAR * pFieldName);
-	UINT AddNewInt32Local();
 
-	UINT AddNewObjectArrayLocal();
+	void AddILEnterProbe(ILRewriter & il);
 
-	UINT AddNewString();
+	void AddILProbe(ILInstr * pFirstIL);
+
+	void AddILExitProbe(ILRewriter & il);
+
+	UINT AddNewULONGLocal();
+
+	UINT AddNewDateTimeLocal();
 
 	WCHAR* GetNameFromToken(mdToken tk);
 
 	ILInstr * NewLDC(LPVOID p);
+
+	std::wstring ModuleName;
+	std::wstring TypeName;
+	std::wstring MethodName;
 };
 
 #endif

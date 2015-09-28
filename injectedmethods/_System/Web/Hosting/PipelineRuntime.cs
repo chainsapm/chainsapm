@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,18 +9,33 @@ namespace injectedmethods._System.Web.Hosting {
 
         [CustomAttribute.AssemblyTypeInformation ("System.Web.dll", "System.Web.Hosting.PipelineRuntime")]
         class PipelineRuntime {
+                [SecurityCritical]
+                internal static extern long GetSystemTimeAsFileTime ();
+
                 [System.Runtime.InteropServices.DllImport ("clrprofiler.dll")]
                 extern static public void NtvEnterHttp (System.UInt64 mdToken, System.UInt64 methodDef,
                         string method, int responseCode, int subCode, string request, string queryString,
                         string body, string [] headers, string [] cookes, string [] session);
 
+                [System.Runtime.InteropServices.DllImport ("clrprofiler.dll")]
+                extern static public void NtvExitSimple (System.UInt64 mdToken, System.UInt64 methodDef);
+
                 [CustomAttribute.LocalVariableFixup (0, 0, "System.Web.Hosting.IIS7WorkerRequest"), CustomAttribute.LocalVariableFixup (1, 1, "System.Web.HttpContext")]
-                public void ProcessRequest_Inject () {
+                public void ProcessRequestNotificationHelper_Enter_Inject () {
                         System.Web.HttpWorkerRequest workerRequest = null;      
                         System.Web.HttpContext context = null;
-                        ProcessRequest_Enter (workerRequest, context);
+                        ProcessRequestNotificationHelper_Enter (workerRequest, context);
                 }
-                public static void ProcessRequest_Info (System.Web.HttpWorkerRequest workerRequest, System.Web.HttpContext context) {
+                public void ProcessRequestNotificationHelper_Exit_Inject () {
+                        ProcessRequestNotificationHelper_Exit ();
+                }
+                [CustomAttribute.LocalVariableFixup (0, 0, "System.Web.Hosting.IIS7WorkerRequest"), CustomAttribute.LocalVariableFixup (1, 1, "System.Web.HttpContext")]
+                public void ProcessRequestNotificationHelper_Info_Inject () {
+                        System.Web.HttpWorkerRequest workerRequest = null;
+                        System.Web.HttpContext context = null;
+                        ProcessRequestNotificationHelper_Info (workerRequest, context);
+                }
+                public void ProcessRequestNotificationHelper_Info (System.Web.HttpWorkerRequest workerRequest, System.Web.HttpContext context) {
                         if ( context != null ) {
                                 IList<string> headers = new List<string> ();
                                 IList<string> cookies = new List<string> ();
@@ -66,7 +82,7 @@ namespace injectedmethods._System.Web.Hosting {
                                        httpQueryString, body, headers.ToArray (), cookies.ToArray (), session.ToArray ());
                         }
                 }
-                public static void ProcessRequest_Enter (System.Web.HttpWorkerRequest workerRequest, System.Web.HttpContext context) {
+                public void ProcessRequestNotificationHelper_Enter (System.Web.HttpWorkerRequest workerRequest, System.Web.HttpContext context) {
                         if ( context != null ) {
                                 List<string> headers = new List<string> ();
                                 List<string> cookies = new List<string> ();
@@ -113,10 +129,12 @@ namespace injectedmethods._System.Web.Hosting {
                                        httpQueryString, body, headers.ToArray (), cookies.ToArray (), session.ToArray ());
                         }
                 }
-                public static void ProcessRequest_Exit (System.Web.HttpWorkerRequest workerRequest, System.Web.HttpContext context, string [] responseheaders, string [] responseservervars) {
-                        string s = "s2";
-                        string s2 = "s3";
-                        string s3 = "s";
+                public void ProcessRequestNotificationHelper_Exit () {
+                        NtvExitSimple (0xDEADBEEFDEADBEEF, 0x00C0FFEE00C0FFEE);
+                }
+
+                public void DateTimeDummy () {
+                        ulong dtutc = (ulong)DateTime.Now.ToFileTimeUtc ();
                 }
         }
 }
