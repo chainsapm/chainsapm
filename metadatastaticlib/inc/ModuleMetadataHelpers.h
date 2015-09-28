@@ -27,7 +27,7 @@ public:
 	// Find a type defined or referenced inside of this module
 	HRESULT FindTypeDefOrRef(std::wstring ModuleName, std::wstring TypeName, mdToken &TypeRefOrDef);
 	// Find a method or member for a type inside of the current module
-	HRESULT FindMemberDefOrRef(std::wstring ModuleOrAssembly, std::wstring TypeName, std::wstring MemberName, mdToken & TypeRefOrDef);
+	HRESULT FindMemberDefOrRef(std::wstring ModuleOrAssembly, std::wstring TypeName, std::wstring MemberName, PCCOR_SIGNATURE MethodSignature, ULONG SigLength, mdToken & TypeRefOrDef);
 	
 	// Find a token to be remapped to a proper Definition or Reference
 	mdToken GetMappedToken(mdToken);

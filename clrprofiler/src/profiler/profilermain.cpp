@@ -1176,32 +1176,32 @@ UINT_PTR Cprofilermain::MapFunction(FunctionID funcId, UINT_PTR clientData, BOOL
 // [public] Creates the IL for the managed leave/enter helpers.
 void Cprofilermain::SetILFunctionBodyForManagedHelper(ModuleID moduleID, mdMethodDef methodDef)
 {
-	/*assert(!m_fInstrumentationHooksInSeparateAssembly);
-	assert(moduleID == m_modidMscorlib);
-	assert((methodDef == m_mdEnter) || (methodDef == m_mdExit));*/
+	///*assert(!m_fInstrumentationHooksInSeparateAssembly);
+	//assert(moduleID == m_modidMscorlib);
+	//assert((methodDef == m_mdEnter) || (methodDef == m_mdExit));*/
 
-	HRESULT hr = E_FAIL;
-	if ((moduleID == m_modidMscorlib) &&
-		((methodDef == m_mdEnter) || (methodDef == m_mdExit)))
-	{
-		hr = SetILForManagedHelper(
-			m_pICorProfilerInfo,
-			moduleID,
-			methodDef,
-			m_mdIntPtrExplicitCast,
-			(methodDef == m_mdEnter) ? m_mdEnterPInvoke : m_mdExitPInvoke);
-	}
-	if (FAILED(hr))
-	{
-		LOG_APPEND(L"SetILForManagedHelper failed for methodDef = " << HEX(methodDef) << L"--" <<
-			((methodDef == m_mdEnter) ? L"enter" : L"exit") << L", hr = " << HEX(hr));
-	}
+	//HRESULT hr = E_FAIL;
+	//if ((moduleID == m_modidMscorlib) &&
+	//	((methodDef == m_mdEnter) || (methodDef == m_mdExit)))
+	//{
+	//	hr = SetILForManagedHelper(
+	//		m_pICorProfilerInfo,
+	//		moduleID,
+	//		methodDef,
+	//		m_mdIntPtrExplicitCast,
+	//		(methodDef == m_mdEnter) ? m_mdEnterPInvoke : m_mdExitPInvoke);
+	//}
+	//if (FAILED(hr))
+	//{
+	//	LOG_APPEND(L"SetILForManagedHelper failed for methodDef = " << HEX(methodDef) << L"--" <<
+	//		((methodDef == m_mdEnter) ? L"enter" : L"exit") << L", hr = " << HEX(hr));
+	//}
 }
 
 // [public] Creates the IL for the managed leave/enter helpers.
 void Cprofilermain::SetILFunctionBodyForManagedHelper2(ModuleID moduleID, mdMethodDef methodDef)
 {
-	assert(!m_fInstrumentationHooksInSeparateAssembly);
+	/*assert(!m_fInstrumentationHooksInSeparateAssembly);
 	assert(moduleID == m_modidMscorlib);
 	assert((methodDef == m_mdEnter2) || (methodDef == m_mdExit2));
 
@@ -1216,11 +1216,11 @@ void Cprofilermain::SetILFunctionBodyForManagedHelper2(ModuleID moduleID, mdMeth
 	{
 		LOG_APPEND(L"SetILForManagedHelper failed for methodDef = " << HEX(methodDef) << L"--" <<
 			((methodDef == m_mdEnter) ? L"enter" : L"exit") << L", hr = " << HEX(hr));
-	}
+	}*/
 }
 void Cprofilermain::SetILFunctionBodyForManagedHelperAdd(ModuleID moduleID, mdMethodDef methodDef)
 {
-	assert(!m_fInstrumentationHooksInSeparateAssembly);
+	/*assert(!m_fInstrumentationHooksInSeparateAssembly);
 	assert(moduleID == m_modidMscorlib);
 	assert((methodDef == m_mdEnter2) || (methodDef == m_mdExit2));
 
@@ -1235,7 +1235,7 @@ void Cprofilermain::SetILFunctionBodyForManagedHelperAdd(ModuleID moduleID, mdMe
 	{
 		LOG_APPEND(L"SetILForManagedHelper failed for methodDef = " << HEX(methodDef) << L"--" <<
 			((methodDef == m_mdEnter) ? L"enter" : L"exit") << L", hr = " << HEX(hr));
-	}
+	}*/
 }
 
 
@@ -1714,14 +1714,14 @@ STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fI
 		WCHAR* localString = L"WaitOne";
 		if (this->m_Container->g_FullyQualifiedMethodsToProfile->find(im) != this->m_Container->g_FullyQualifiedMethodsToProfile->end())
 		{
-			hr = RewriteIL(
+			/*hr = RewriteIL(
 				m_pICorProfilerInfo,
 				NULL,
 				moduleID,
 				methodDef,
 				nVersion,
 				moduleInfo.m_mdEnterProbeRef,
-				moduleInfo.m_mdExitProbeRef);
+				moduleInfo.m_mdExitProbeRef);*/
 
 			FILETIME HighPrecisionFileTime{ 0 };
 			GetSystemTimeAsFileTime(&HighPrecisionFileTime);
@@ -1806,7 +1806,7 @@ STDMETHODIMP Cprofilermain::ReJITError(ModuleID moduleId, mdMethodDef methodId, 
 // responsible for getting the new (instrumented) IL to be compiled.
 STDMETHODIMP Cprofilermain::GetReJITParameters(ModuleID moduleId, mdMethodDef methodId, ICorProfilerFunctionControl *pFunctionControl)
 {
-	LOG_APPEND(L"ReJITScript::GetReJITParameters called, methodDef = " << HEX(methodId));
+	/*LOG_APPEND(L"ReJITScript::GetReJITParameters called, methodDef = " << HEX(methodId));
 
 	ModuleInfo moduleInfo = m_moduleIDToInfoMap.Lookup(moduleId);
 	HRESULT hr;
@@ -1825,7 +1825,7 @@ STDMETHODIMP Cprofilermain::GetReJITParameters(ModuleID moduleId, mdMethodDef me
 
 	LOG_IFFAILEDRET(hr, L"RewriteIL failed for ModuleID = " << HEX(moduleId) <<
 		L", methodDef = " << HEX(methodId));
-
+		*/
 	return S_OK;
 }
 

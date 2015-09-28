@@ -18,28 +18,35 @@ ULONG SignatureHelper::DecompressMethodSignature(const COR_SIGNATURE * originalS
 	// Get the calling convention of this signature
 	*newSig++ = CorSigUncompressCallingConv(sigPtr);
 
-	if (callConv == IMAGE_CEE_CS_CALLCONV_GENERIC | callConv == IMAGE_CEE_CS_CALLCONV_GENERICINST)
+	ULONG addToSigGeneric = 0;
+	ULONG paramCountGeneric = 0;
+	ULONG addToSig = 0;
+	ULONG paramCount = 0;
+
+	if (callConv & IMAGE_CEE_CS_CALLCONV_GENERIC)
 	{
 		// Special case where a generic method gets a count of generic instances before the
 		// normal parameter list
-		ULONG addToSigGeneric = CorSigUncompressedDataSize(sigPtr);
-		ULONG paramCountGeneric = CorSigUncompressData(sigPtr);
+		addToSigGeneric = CorSigUncompressedDataSize(sigPtr);
+		paramCountGeneric = CorSigUncompressData(sigPtr);
 		*(ULONG*)newSig = paramCountGeneric;
 		newSig += sizeof(ULONG); // Skip the second byte telling us the number of parameters
 	}
+	if (callConv != IMAGE_CEE_CS_CALLCONV_FIELD)
+	{
+		// Get the parameter count of the signature
+		// We're forcing it to be an integer here so the compression will be the same.
+		addToSig = CorSigUncompressedDataSize(sigPtr);
+		paramCount = CorSigUncompressData(sigPtr);
+		*(ULONG*)newSig = paramCount;
+		newSig += sizeof(ULONG); // Skip the second byte telling us the number of parameters
+	}
 
-	// Get the parameter count of the signature
-	// We're forcing it to be an integer here so the compression will be the same.
-	ULONG addToSig = CorSigUncompressedDataSize(sigPtr);
-	ULONG paramCount = CorSigUncompressData(sigPtr);
-	*(ULONG*)newSig = paramCount;
 
-	newSig += sizeof(ULONG); // Skip the second byte telling us the number of parameters
-
-							 // Loop over the data decompressing it
-							 // The idea is when we reach the top of the loop we should be at the next proper spot
-							 // That means we will be at an element type, a class type, a generic type, and array, etc. 
-							 // We should never be inside the middle of something like an array without being at a proper barrier
+	// Loop over the data decompressing it
+	// The idea is when we reach the top of the loop we should be at the next proper spot
+	// That means we will be at an element type, a class type, a generic type, and array, etc. 
+	// We should never be inside the middle of something like an array without being at a proper barrier
 
 	while (sigPtr < sigEnd)
 	{
