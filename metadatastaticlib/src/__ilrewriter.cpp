@@ -1,6 +1,3 @@
-#include "..\inc\__ilrewriter.h"
-#include "..\inc\__ilrewriter.h"
-#include "..\inc\__ilrewriter.h"
 // ==++==
 // 
 //   Copyright (c) Microsoft Corporation.  All rights reserved.
@@ -24,7 +21,7 @@ ILRewriter::ILRewriter(ICorProfilerInfo * pICorProfilerInfo, ICorProfilerFunctio
 	: m_pICorProfilerInfo(pICorProfilerInfo), m_pICorProfilerFunctionControl(pICorProfilerFunctionControl),
 	m_moduleId(moduleID), m_tkMethod(tkMethod), m_fGenerateTinyHeader(false),
 	m_pEH(NULL), m_pOffsetToInstr(NULL), m_pOutputBuffer(NULL), m_pIMethodMalloc(NULL),
-	m_pMetaDataImport(NULL), m_pMetaDataEmit(NULL)
+	pMetaDataImport(NULL), pMetaDataEmit(NULL)
 {
 	m_IL.m_pNext = &m_IL;
 	m_IL.m_pPrev = &m_IL;
@@ -35,7 +32,7 @@ ILRewriter::ILRewriter(ICorProfilerInfo * pICorProfilerInfo, ICorProfilerFunctio
 ILRewriter::ILRewriter()
 	: m_fGenerateTinyHeader(false),
 	m_pEH(NULL), m_pOffsetToInstr(NULL), m_pOutputBuffer(NULL), m_pIMethodMalloc(NULL),
-	m_pMetaDataImport(NULL), m_pMetaDataEmit(NULL)
+	pMetaDataImport(NULL), pMetaDataEmit(NULL)
 {
 	m_IL.m_pNext = &m_IL;
 	m_IL.m_pPrev = &m_IL;
@@ -58,10 +55,10 @@ ILRewriter::~ILRewriter()
 
 	if (m_pIMethodMalloc)
 		m_pIMethodMalloc->Release();
-	if (m_pMetaDataImport)
-		m_pMetaDataImport->Release();
-	if (m_pMetaDataEmit)
-		m_pMetaDataEmit->Release();
+	if (pMetaDataImport)
+		pMetaDataImport.Release();
+	if (pMetaDataEmit)
+		pMetaDataEmit.Release();
 }
 
 HRESULT ILRewriter::Initialize()
@@ -69,9 +66,9 @@ HRESULT ILRewriter::Initialize()
 	// Get metadata interfaces ready
 
 	IfFailRet(m_pICorProfilerInfo->GetModuleMetaData(
-		m_moduleId, ofRead | ofWrite, IID_IMetaDataImport, (IUnknown**)&m_pMetaDataImport));
+		m_moduleId, ofRead | ofWrite, IID_IMetaDataImport, (IUnknown**)&pMetaDataImport));
 
-	IfFailRet(m_pMetaDataImport->QueryInterface(IID_IMetaDataEmit, (void **)&m_pMetaDataEmit));
+	IfFailRet(pMetaDataImport->QueryInterface(IID_IMetaDataEmit, (void **)&pMetaDataEmit));
 
 	return S_OK;
 }
@@ -118,6 +115,8 @@ HRESULT ILRewriter::Import()
 HRESULT ILRewriter::Import(ULONG pIL, std::shared_ptr<ModuleMetadataHelpers> mdHelper, mdSignature & LocalSig)
 {
 	COR_ILMETHOD_DECODER decoder((COR_ILMETHOD*)pIL);
+	pMetaDataEmit = mdHelper->pMetaDataEmit;
+	pMetaDataImport = mdHelper->pMetaDataImport;
 
 	// Import the header flags
 	m_tkLocalVarSig = decoder.GetLocalVarSigTok();
@@ -146,7 +145,12 @@ HRESULT ILRewriter::ImportIL(LPCBYTE pIL)
 	m_IL.m_opcode = -1;
 
 	bool fBranch = false;
+	bool insideBranch = false;
+	ILInstr* branchTarget = NULL;
 	unsigned offset = 0;
+
+	BYTE stackPosition = 0;
+
 	while (offset < m_CodeSize)
 	{
 		unsigned startOffset = offset;
@@ -176,6 +180,8 @@ HRESULT ILRewriter::ImportIL(LPCBYTE pIL)
 		}
 
 		BYTE flags = s_OpCodeFlags[opcode];
+		BYTE push = s_OpCodePush[opcode];
+		BYTE pop = s_OpCodePop[opcode];
 
 		int size = (flags & OPCODEFLAGS_SizeMask);
 		if (offset + size > m_CodeSize)
@@ -188,6 +194,7 @@ HRESULT ILRewriter::ImportIL(LPCBYTE pIL)
 		IfNullRet(pInstr);
 
 		pInstr->m_opcode = opcode;
+		pInstr->m_offset = offset;
 
 		InsertBefore(&m_IL, pInstr);
 
@@ -211,6 +218,7 @@ HRESULT ILRewriter::ImportIL(LPCBYTE pIL)
 			break;
 		case 1 | OPCODEFLAGS_BranchTarget:
 			pInstr->m_Arg32 = offset + 1 + *(UNALIGNED INT8 *)&(pIL[offset]);
+
 			fBranch = true;
 			break;
 		case 4 | OPCODEFLAGS_BranchTarget:
@@ -257,18 +265,146 @@ HRESULT ILRewriter::ImportIL(LPCBYTE pIL)
 			break;
 		}
 		offset += size;
+
+		if (pInstr->m_Arg32 < 0)
+		{
+			pInstr->m_branchprevious = true;
+		}
+
+
+		pInstr->m_insidebranch = true;
+		mdToken parentClass = mdTokenNil;
+		wchar_t methodDefNameBuffer[255];
+		ULONG numChars = 0;
+		DWORD attrFlags = 0;
+		PCCOR_SIGNATURE originalSignature = NULL;
+		ULONG originalMethodSignatureLen = 0;
+		ULONG RVA;
+		DWORD impFlags;
+
+		switch (opcode)
+		{
+		case CEE_CALL:
+		case CEE_CALLI:
+		case CEE_CALLVIRT:
+		case CEE_NEWOBJ:
+		case CEE_RET:
+			stackPosition = 0;
+			if (opcode == CEE_NEWOBJ)
+			{
+				stackPosition = 1;
+			}
+
+			else if (TypeFromToken(pInstr->m_Arg32) == mdtMethodDef)
+			{
+				pMetaDataImport->GetMethodProps(
+					pInstr->m_Arg32,
+					&parentClass,
+					methodDefNameBuffer,
+					_countof(methodDefNameBuffer),
+					&numChars,
+					&attrFlags,
+					&originalSignature,
+					&originalMethodSignatureLen,
+					&RVA,
+					&impFlags);
+				if (originalSignature[2] != ELEMENT_TYPE_VOID)
+				{
+					stackPosition = 1;
+				}
+			}
+			else if (TypeFromToken(pInstr->m_Arg32) == mdtMemberRef)
+			{
+
+
+				pMetaDataImport->GetMemberRefProps(
+					pInstr->m_Arg32,
+					&parentClass,
+					methodDefNameBuffer,
+					_countof(methodDefNameBuffer),
+					&numChars,
+					&originalSignature,
+					&originalMethodSignatureLen);
+				if (originalSignature[2] != ELEMENT_TYPE_VOID)
+				{
+					stackPosition = 1;
+				}
+			}
+			else if (TypeFromToken(pInstr->m_Arg32) == mdtMethodSpec)
+			{
+
+
+				pMetaDataImport->GetMethodSpecProps(
+					pInstr->m_Arg32,
+					&parentClass,
+					&originalSignature,
+					&originalMethodSignatureLen);
+
+				if (originalSignature[2] != ELEMENT_TYPE_VOID)
+				{
+					stackPosition = 1;
+				}
+			}
+			break;
+		default:
+			stackPosition += (push + (-pop));
+			break;
+		}
+		pInstr->m_stacklocation = stackPosition;
+
 	}
 	assert(offset == m_CodeSize);
-
+	std::map<int, ILInstr*> branchStack;
 	if (fBranch)
 	{
 		// Go over all control flow instructions and resolve the targets
 		for (ILInstr * pInstr = m_IL.m_pNext; pInstr != &m_IL; pInstr = pInstr->m_pNext)
 		{
 			if (s_OpCodeFlags[pInstr->m_opcode] & OPCODEFLAGS_BranchTarget)
+			{
 				pInstr->m_pTarget = GetInstrFromOffset(pInstr->m_Arg32);
+				if (pInstr->m_opcode != CEE_LEAVE | pInstr->m_opcode != CEE_LEAVE_S)
+				{
+					if (branchStack.find(pInstr->m_offset) == branchStack.end())
+					{
+						branchStack.emplace(pInstr->m_offset, pInstr);
+						if (branchStack.find(pInstr->m_pTarget->m_offset) == branchStack.end())
+						{
+							branchStack.emplace(pInstr->m_pTarget->m_offset, pInstr->m_pTarget);
+						}
+					}
+
+
+				}
+			}
+
+		}
+		int branchCounter = 0;
+
+		for (ILInstr * pInstr = m_IL.m_pNext; pInstr != &m_IL; pInstr = pInstr->m_pNext)
+		{
+			if (s_OpCodeFlags[pInstr->m_opcode] & OPCODEFLAGS_BranchTarget)
+			{
+				if (pInstr->m_opcode != CEE_BR | pInstr->m_opcode != CEE_BR_S
+					| pInstr->m_opcode != CEE_LEAVE | pInstr->m_opcode != CEE_LEAVE_S)
+				{
+					branchCounter++;
+				}
+				
+			}
+			else if (branchStack.find(pInstr->m_offset) != branchStack.end())
+			{
+				if (branchCounter > 0)
+				{
+					branchCounter--;
+				}
+			}
+			pInstr->m_insidebranch = (branchCounter > 0);
+
 		}
 	}
+
+
 
 	return S_OK;
 }
@@ -697,6 +833,15 @@ void ILRewriter::AddILEnterProbe(ILRewriter & il) {
 	ILInstr * pThisFirstIL = m_IL.m_pNext;
 	ILInstr * pInstr = il.m_IL.m_pNext;
 	ILInstr * pNewInstr = NULL;
+
+	std::vector<ILInstr*> zeroStacks;
+	for (; pThisFirstIL != &m_IL; pThisFirstIL = pThisFirstIL->m_pNext)
+	{
+		if (pThisFirstIL->m_stacklocation == 0 && pThisFirstIL->m_insidebranch == false)
+		{
+			zeroStacks.emplace_back(pThisFirstIL->m_pNext);
+		}
+	}
 	for (; pInstr != &il.m_IL; pInstr = pInstr->m_pNext)
 	{
 		pNewInstr = NewILInstr(*pInstr);

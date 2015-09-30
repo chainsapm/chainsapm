@@ -63,6 +63,13 @@ public:
 	// Create signature token for this method
 	HRESULT AddMethodLocals(std::wstring TypeName, std::wstring MethodName, PCCOR_SIGNATURE LocalsSignature, mdSignature & SigToken);
 
+	// container for ICorProfilerInfo reference
+	ATL::CComPtr<ICorProfilerInfo> pICorProfilerInfo;
+	ATL::CComPtr<IMetaDataEmit2> pMetaDataEmit;
+	ATL::CComPtr<IMetaDataImport2> pMetaDataImport;
+	ATL::CComPtr<IMetaDataAssemblyEmit> pMetaDataAssemblyEmit;
+	ATL::CComPtr<IMetaDataAssemblyImport> pMetaDataAssemblyImport;
+	ATL::CComPtr<IMetaDataInfo> pMetaDataInfo;
 	
 
 private:
@@ -73,14 +80,6 @@ private:
 	std::map<std::wstring, mdModuleRef> ModuleRefs;
 	std::map<mdToken, mdToken> TokenMapping;
 
-	// container for ICorProfilerInfo reference
-	ATL::CComPtr<ICorProfilerInfo> pICorProfilerInfo;
-	ATL::CComPtr<IMetaDataEmit2> pMetaDataEmit;
-	ATL::CComPtr<IMetaDataImport2> pMetaDataImport;
-	ATL::CComPtr<IMetaDataAssemblyEmit> pMetaDataAssemblyEmit;
-	ATL::CComPtr<IMetaDataAssemblyImport> pMetaDataAssemblyImport;
-	ATL::CComPtr<IMetaDataInfo> pMetaDataInfo;
-	
 	//boost::mutex m_ThreadIdMutex;
 
 	HRESULT GetSecuritySafeCriticalAttributeToken(mdMethodDef & pmdSafeCritical);

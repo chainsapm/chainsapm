@@ -13,7 +13,7 @@
 #include <map>
 #include <unordered_map>
 #include <stack>
-#include <array>corp
+#include <array>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -71,6 +71,9 @@ struct ILInstr
 
 	unsigned        m_opcode;
 	unsigned        m_offset;
+	signed          m_stacklocation;
+	bool			m_insidebranch;
+	bool			m_branchprevious;
 
 	union
 	{
@@ -156,6 +159,66 @@ static const BYTE s_OpCodeFlags[] =
 	4 | OPCODEFLAGS_BranchTarget,   // CEE_SWITCH_ARG
 };
 
+static const BYTE s_OpCodePush[] =
+{
+#define Push0    0
+#define Push1    1
+#define PushI    1
+#define PushI4   1
+#define PushR4   1
+#define PushI8   1
+#define PushR8   1
+#define PushRef  1
+#define VarPush  1          // Test code doesn't call vararg fcns, so this should not be used
+
+#define OPDEF(c,s,pop,push,args,type,l,s1,s2,flow) \
+			{push},
+#include "opcode.def"
+#undef OPDEF
+
+#undef Push0   
+#undef Push1   
+#undef PushI   
+#undef PushI4  
+#undef PushR4  
+#undef PushI8  
+#undef PushR8  
+#undef PushRef 
+#undef VarPush 
+
+};
+
+static const BYTE s_OpCodePop[] =
+{
+#define Pop0    0
+#define Pop1    1
+#define PopI    1
+#define PopI4   1
+#define PopR4   1
+#define PopI8   1
+#define PopR8   1
+#define PopRef  1
+#define VarPop  1          // Test code doesn't call vararg fcns, so this should not be used
+
+#define OPDEF(c,s,pop,push,args,type,l,s1,s2,flow) \
+			{pop},
+#include "opcode.def"
+#undef OPDEF
+
+#undef Pop0   
+#undef Pop1   
+#undef PopI   
+#undef PopI4  
+#undef PopR4  
+#undef PopI8  
+#undef PopR8  
+#undef PopRef 
+#undef VarPop 
+
+};
+
+
+
 
 class ILRewriter
 {
@@ -188,8 +251,8 @@ private:
 
 	IMethodMalloc * m_pIMethodMalloc;
 
-	IMetaDataImport * m_pMetaDataImport;
-	IMetaDataEmit * m_pMetaDataEmit;
+	ATL::CComPtr<IMetaDataEmit2> pMetaDataEmit;
+	ATL::CComPtr<IMetaDataImport2> pMetaDataImport;
 
 public:
 

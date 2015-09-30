@@ -22,7 +22,7 @@ namespace injectedmethods._System.Web.Hosting {
 
                 [CustomAttribute.LocalVariableFixup (0, 0, "System.Web.Hosting.IIS7WorkerRequest"), CustomAttribute.LocalVariableFixup (1, 1, "System.Web.HttpContext")]
                 public void ProcessRequestNotificationHelper_Enter_Inject () {
-                        System.Web.HttpWorkerRequest workerRequest = null;      
+                        System.Web.HttpWorkerRequest workerRequest = null;
                         System.Web.HttpContext context = null;
                         ProcessRequestNotificationHelper_Enter (workerRequest, context);
                 }
@@ -136,5 +136,40 @@ namespace injectedmethods._System.Web.Hosting {
                 public void DateTimeDummy () {
                         ulong dtutc = (ulong)DateTime.Now.ToFileTimeUtc ();
                 }
+
+                public string IfteST1 () {
+                        int i = new Random ().Next (0, 10);
+                        string s = "test";
+                        i += 2;
+                        int j = new Random ().Next (0, 10);
+                        j += i;
+                        s += j.ToString ();
+                        if ( j < 2 ) {
+                                s = "2";
+                        } else {
+                                s = (j + i).ToString ();
+                        }
+                        string s2 = s + "out_";
+                        return s2;
+                }
+                public string IfTest2 () {
+                        int i = new Random ().Next (0, 10);
+                        string s = "test";
+                        i += 2;
+                        int j = new Random ().Next (0, 10);
+                        j += i;
+                        s += j.ToString ();
+                        if ( j == 2 ) {
+                                s = "2";
+                        } else if ( j == 3 ) {
+                                s = "3";
+                        } else if ( j == 4 ) {
+                                s = "3";
+                        } else {
+                                s = (j + i).ToString ();
+                        }
+                                string s2 = s + "out_";
+                                return s2;
+                        }
+                }
         }
-}
