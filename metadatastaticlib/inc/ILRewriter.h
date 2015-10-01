@@ -11,7 +11,6 @@
 #include <assert.h>
 
 #include <map>
-#include <unordered_map>
 #include <stack>
 #include <array>
 #include <string>
@@ -171,8 +170,7 @@ static const BYTE s_OpCodePush[] =
 #define PushRef  1
 #define VarPush  1          // Test code doesn't call vararg fcns, so this should not be used
 
-#define OPDEF(c,s,pop,push,args,type,l,s1,s2,flow) \
-			{push},
+#define OPDEF(c,s,pop,push,args,type,l,s1,s2,flow) { push },
 #include "opcode.def"
 #undef OPDEF
 
@@ -185,7 +183,7 @@ static const BYTE s_OpCodePush[] =
 #undef PushR8  
 #undef PushRef 
 #undef VarPush 
-
+	0,                   // DUMMY TO CLEAR WARNING 
 };
 
 static const BYTE s_OpCodePop[] =
@@ -200,8 +198,7 @@ static const BYTE s_OpCodePop[] =
 #define PopRef  1
 #define VarPop  1          // Test code doesn't call vararg fcns, so this should not be used
 
-#define OPDEF(c,s,pop,push,args,type,l,s1,s2,flow) \
-			{pop},
+#define OPDEF(c,s,pop,push,args,type,l,s1,s2,flow) {pop},
 #include "opcode.def"
 #undef OPDEF
 
@@ -214,7 +211,7 @@ static const BYTE s_OpCodePop[] =
 #undef PopR8  
 #undef PopRef 
 #undef VarPop 
-
+	0,                   // DUMMY TO CLEAR WARNING 
 };
 
 
@@ -257,6 +254,7 @@ private:
 public:
 
 	ILRewriter(ICorProfilerInfo * pICorProfilerInfo, ICorProfilerFunctionControl * pICorProfilerFunctionControl, ModuleID moduleID, mdToken tkMethod);
+	ILRewriter(std::shared_ptr<ModuleMetadataHelpers> mdHelper);
 	ILRewriter();
 	~ILRewriter();
 	HRESULT Initialize();
@@ -306,6 +304,10 @@ public:
 
 	HRESULT ReplaceTokens(std::shared_ptr<ModuleMetadataHelpers>  mdHelper);
 
+	HRESULT FixUpLocals(std::shared_ptr<ModuleMetadataHelpers> mdHelper, std::map<ULONG, ULONG> &localsFixup);
+
+	HRESULT FixUpTypes(std::shared_ptr<ModuleMetadataHelpers> mdHelper, std::map<std::wstring, std::wstring> &typeFixup);
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	//
 	// R E W R I T E
@@ -318,6 +320,8 @@ public:
 	static void __fastcall Probe_SDSFLD(WCHAR * pFieldName);
 
 	void AddILEnterProbe(ILRewriter & il);
+
+	void AddILEnterProbe(ILRewriter & il, bool CheckOffsetFixups, bool CheckTypeFixups);
 
 	void AddILProbe(ILInstr * pFirstIL);
 

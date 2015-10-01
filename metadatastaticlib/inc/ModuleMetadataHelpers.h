@@ -29,6 +29,7 @@ public:
 	// Find a method or member for a type inside of the current module
 	HRESULT FindMemberDefOrRef(std::wstring ModuleOrAssembly, std::wstring TypeName, std::wstring MemberName, PCCOR_SIGNATURE MethodSignature, ULONG SigLength, mdToken & TypeRefOrDef);
 	
+	std::wstring GetFullyQualifiedName(mdToken);
 	// Find a token to be remapped to a proper Definition or Reference
 	mdToken GetMappedToken(mdToken);
 
@@ -79,6 +80,7 @@ private:
 	std::map<std::wstring, mdAssemblyRef> AssemblyRefs;
 	std::map<std::wstring, mdModuleRef> ModuleRefs;
 	std::map<mdToken, mdToken> TokenMapping;
+
 
 	//boost::mutex m_ThreadIdMutex;
 

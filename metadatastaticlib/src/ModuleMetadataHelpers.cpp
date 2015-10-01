@@ -207,7 +207,7 @@ mdToken ModuleMetadataHelpers::DefineSigToken(mdSignature original, PCCOR_SIGNAT
 }
 
 HRESULT ModuleMetadataHelpers::DefineTokenReference(std::wstring ModuleOrAssemblyName, std::wstring TypeName,
-	std::wstring MemberName, PCCOR_SIGNATURE MethodSignature, ULONG SigLength, mdToken mdParentToken, 
+	std::wstring MemberName, PCCOR_SIGNATURE MethodSignature, ULONG SigLength, mdToken mdParentToken,
 	mdToken tokenIn, ULONG methodAttributes, std::wstring PInvokeModuleName)
 {
 	mdToken tokenOut = mdTokenNil;
@@ -278,7 +278,7 @@ HRESULT ModuleMetadataHelpers::DefineTokenReference(std::wstring ModuleOrAssembl
 			hEnumMemberRefs = NULL;
 			// If after all of that we can't find a proper signature, let's create one
 			pMetaDataEmit->DefineMemberRef(mdParentToken, MemberName.c_str(), MethodSignature, SigLength, &tokenOut);
-			
+
 		}
 		else {
 			hr = FindMemberDefOrRef(ModuleOrAssemblyName, TypeName, MemberName, MethodSignature, SigLength, tokenOut);
@@ -363,6 +363,206 @@ HRESULT ModuleMetadataHelpers::FindMemberDefOrRef(std::wstring ModuleOrAssembly,
 	return E_FAIL;
 }
 
+std::wstring ModuleMetadataHelpers::GetFullyQualifiedName(mdToken token)
+{
+	std::wstring module;
+	std::wstring assembly;
+	std::wstring type;
+	std::wstring member;
+
+	std::wstring fullname;
+
+	mdTypeDef tkClass = mdTypeDefNil;
+	mdToken tkResolution = mdTokenNil;
+	WCHAR ModuleName[255];
+	ULONG ModuleNameLen;
+	WCHAR AssemblyName[255];
+	ULONG AssemblyNameNameLen;
+	WCHAR MethodName[255];
+	ULONG MethodNameLen;
+	WCHAR TypeName[255];
+	ULONG TypeNameLen;
+	ULONG MethodAttributes = 0;
+	PCCOR_SIGNATURE signature = NULL;
+	ULONG sigLen = 0;
+	ULONG MethodRVA = 0;
+	ULONG ImplementationFlags = 0;
+	ULONG TypeDefFlags = 0;
+	mdToken tkExtends = 0;
+
+	switch (TypeFromToken(token))
+	{
+	case mdtMethodDef:
+
+		assembly.assign(GetAssemblyName());
+		pMetaDataImport->GetMethodProps(
+			token,
+			&tkClass,
+			MethodName,
+			_countof(MethodName),
+			&MethodNameLen,
+			&MethodAttributes,
+			&signature,
+			&sigLen,
+			&MethodRVA,
+			&ImplementationFlags);
+		member.assign(MethodName);
+
+		if (tkClass != mdTypeDefNil)
+		{
+			pMetaDataImport->GetTypeDefProps(
+				tkClass,
+				TypeName,
+				_countof(TypeName),
+				&TypeNameLen,
+				&TypeDefFlags,
+				&tkExtends);
+			type.assign(TypeName);
+		}
+		break;
+	case mdtMemberRef:
+		pMetaDataImport->GetMemberRefProps(
+			token,
+			&tkClass,
+			MethodName,
+			_countof(MethodName),
+			&MethodNameLen,
+			&signature,
+			&sigLen);
+		member.assign(MethodName);
+
+		switch (TypeFromToken(tkClass))
+		{
+		case mdtTypeRef:
+			pMetaDataImport->GetTypeRefProps(
+				tkClass,
+				&tkResolution,
+				TypeName,
+				_countof(TypeName),
+				&TypeNameLen);
+			break;
+		case mdtTypeDef:
+			pMetaDataImport->GetTypeDefProps(
+				tkClass,
+				TypeName,
+				_countof(TypeName),
+				&TypeNameLen,
+				&TypeDefFlags,
+				&tkExtends);
+		case mdtTypeSpec:
+			type.assign(L"TYPESPEC");
+			break;
+		default:
+			break;
+		}
+		if (type.empty())
+		{
+			type.assign(TypeName);
+		}
+		if (tkResolution != mdTokenNil)
+		{
+			switch (TypeFromToken(tkResolution))
+			{
+			case mdtAssemblyRef:
+				pMetaDataAssemblyImport->GetAssemblyRefProps(tkResolution,
+					NULL,
+					NULL,
+					AssemblyName,
+					_countof(AssemblyName),
+					&AssemblyNameNameLen,
+					NULL,
+					NULL,
+					NULL,
+					NULL);
+				assembly.assign(AssemblyName);
+				break;
+			case mdtModuleRef:
+				pMetaDataImport->GetModuleRefProps(tkResolution,
+					ModuleName,
+					_countof(ModuleName),
+					&ModuleNameLen);
+				module.assign(ModuleName);
+				break;
+			default:
+				break;
+			}
+		}
+
+		break;
+	case mdtFieldDef:
+		break;
+	case mdtTypeDef:
+		pMetaDataImport->GetTypeDefProps(
+			token,
+			TypeName,
+			_countof(TypeName),
+			&TypeNameLen,
+			&TypeDefFlags,
+			&tkExtends);
+		type.assign(TypeName);
+	case mdtTypeRef:
+		pMetaDataImport->GetTypeRefProps(
+			token,
+			&tkResolution,
+			TypeName,
+			_countof(TypeName),
+			&TypeNameLen);
+		type.assign(TypeName);
+		if (tkResolution != mdTokenNil)
+		{
+			switch (TypeFromToken(tkResolution))
+			{
+			case mdtAssemblyRef:
+				pMetaDataAssemblyImport->GetAssemblyRefProps(tkResolution,
+					NULL,
+					NULL,
+					AssemblyName,
+					_countof(AssemblyName),
+					&AssemblyNameNameLen,
+					NULL,
+					NULL,
+					NULL,
+					NULL);
+				assembly.assign(AssemblyName);
+				break;
+			case mdtModuleRef:
+				pMetaDataImport->GetModuleRefProps(tkResolution,
+					ModuleName,
+					_countof(ModuleName),
+					&ModuleNameLen);
+				module.assign(ModuleName);
+				break;
+			default:
+				break;
+			}
+		}
+		break;
+	case mdtTypeSpec:
+		type.assign(L"TYPESPEC");
+			break;
+	case mdtMethodSpec:
+		type.assign(L"METHODSPEC");
+	default:
+		break;
+	}
+	fullname.append(L"[");
+	if (!module.empty())
+	{
+		fullname.append(module);
+		fullname.append(L"!");
+	}
+	fullname.append(assembly);
+	fullname.append(L"]");
+	fullname.append(type);
+	if (!member.empty())
+	{
+		fullname.append(L"::");
+		fullname.append(member);
+	}
+
+	return fullname;
+}
+
 HRESULT ModuleMetadataHelpers::AddAssemblyRef(std::wstring AssemblyName, mdAssemblyRef & AssemblyRef) {
 	return E_NOTIMPL;
 	//return pMetaDataAssemblyEmit->DefineAssemblyRef(AssemblyName.c_str(), &AssemblyRef);
@@ -375,7 +575,7 @@ HRESULT ModuleMetadataHelpers::AddModuleRef(std::wstring ModuleOrAssemblyName, m
 	return hr;
 }
 
-HRESULT ModuleMetadataHelpers::AddMethodDef(std::wstring TypeName, std::wstring MethodName, 
+HRESULT ModuleMetadataHelpers::AddMethodDef(std::wstring TypeName, std::wstring MethodName,
 	PCCOR_SIGNATURE MethodSignature, ULONG SigLength, mdMethodDef & MethodDef, ULONG methodAttributes, std::wstring PInvokeModuleName) {
 
 	HRESULT hr;
@@ -421,7 +621,7 @@ HRESULT ModuleMetadataHelpers::AddMethodDef(std::wstring TypeName, std::wstring 
 	if (FAILED(hr))
 		return hr;
 
-	
+
 	// Here we define the method for this type
 	// We are setting it static public for now so it can be called from any method.
 	hr = pMetaDataEmit->DefineMethod(
@@ -437,7 +637,7 @@ HRESULT ModuleMetadataHelpers::AddMethodDef(std::wstring TypeName, std::wstring 
 	// If our incoming method is a PInvoke we need to add in a reference for it.
 	if (IsMdPinvokeImpl(methodAttributes))
 	{
-		mdModuleRef clrProfilerRef; 
+		mdModuleRef clrProfilerRef;
 
 		auto match = ModuleRefs.find(PInvokeModuleName);
 		if (match == ModuleRefs.end())
@@ -449,7 +649,7 @@ HRESULT ModuleMetadataHelpers::AddMethodDef(std::wstring TypeName, std::wstring 
 		}
 		hr = pMetaDataEmit->DefinePinvokeMap(MethodDef, pmNoMangle | pmCharSetUnicode | pmCallConvCdecl, MethodName.c_str(), clrProfilerRef);
 	}
-	
+
 	// Get the security safe critical so we can execute in partial trust environments
 	mdMethodDef mdSafeCritical;
 	GetSecuritySafeCriticalAttributeToken(mdSafeCritical);

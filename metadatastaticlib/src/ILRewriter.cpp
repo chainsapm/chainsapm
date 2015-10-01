@@ -15,7 +15,7 @@
 // 
 
 #pragma once
-#include "__ilrewriter.h"
+#include "ILRewriter.h"
 
 ILRewriter::ILRewriter(ICorProfilerInfo * pICorProfilerInfo, ICorProfilerFunctionControl * pICorProfilerFunctionControl, ModuleID moduleID, mdToken tkMethod)
 	: m_pICorProfilerInfo(pICorProfilerInfo), m_pICorProfilerFunctionControl(pICorProfilerFunctionControl),
@@ -29,11 +29,13 @@ ILRewriter::ILRewriter(ICorProfilerInfo * pICorProfilerInfo, ICorProfilerFunctio
 	m_nInstrs = 0;
 }
 
-ILRewriter::ILRewriter()
+ILRewriter::ILRewriter(std::shared_ptr<ModuleMetadataHelpers> mdHelper)
 	: m_fGenerateTinyHeader(false),
-	m_pEH(NULL), m_pOffsetToInstr(NULL), m_pOutputBuffer(NULL), m_pIMethodMalloc(NULL),
-	pMetaDataImport(NULL), pMetaDataEmit(NULL)
+	m_pEH(NULL), m_pOffsetToInstr(NULL), m_pOutputBuffer(NULL), m_pIMethodMalloc(NULL)
 {
+	pMetaDataEmit = mdHelper->pMetaDataEmit;
+	pMetaDataImport = mdHelper->pMetaDataImport;
+
 	m_IL.m_pNext = &m_IL;
 	m_IL.m_pPrev = &m_IL;
 
@@ -115,8 +117,6 @@ HRESULT ILRewriter::Import()
 HRESULT ILRewriter::Import(ULONG pIL, std::shared_ptr<ModuleMetadataHelpers> mdHelper, mdSignature & LocalSig)
 {
 	COR_ILMETHOD_DECODER decoder((COR_ILMETHOD*)pIL);
-	pMetaDataEmit = mdHelper->pMetaDataEmit;
-	pMetaDataImport = mdHelper->pMetaDataImport;
 
 	// Import the header flags
 	m_tkLocalVarSig = decoder.GetLocalVarSigTok();
@@ -142,11 +142,9 @@ HRESULT ILRewriter::ImportIL(LPCBYTE pIL)
 
 	// Set the sentinel instruction
 	m_pOffsetToInstr[m_CodeSize] = &m_IL;
-	m_IL.m_opcode = -1;
+	m_IL.m_opcode = 0xFFFFFFFF;
 
 	bool fBranch = false;
-	bool insideBranch = false;
-	ILInstr* branchTarget = NULL;
 	unsigned offset = 0;
 
 	BYTE stackPosition = 0;
@@ -289,60 +287,61 @@ HRESULT ILRewriter::ImportIL(LPCBYTE pIL)
 		case CEE_CALLVIRT:
 		case CEE_NEWOBJ:
 		case CEE_RET:
-			stackPosition = 0;
-			if (opcode == CEE_NEWOBJ)
+			if (opcode == CEE_RET)
 			{
-				stackPosition = 1;
+				stackPosition = 0;
 			}
-
-			else if (TypeFromToken(pInstr->m_Arg32) == mdtMethodDef)
-			{
-				pMetaDataImport->GetMethodProps(
-					pInstr->m_Arg32,
-					&parentClass,
-					methodDefNameBuffer,
-					_countof(methodDefNameBuffer),
-					&numChars,
-					&attrFlags,
-					&originalSignature,
-					&originalMethodSignatureLen,
-					&RVA,
-					&impFlags);
-				if (originalSignature[2] != ELEMENT_TYPE_VOID)
+			else {
+				switch (TypeFromToken(pInstr->m_Arg32))
 				{
-					stackPosition = 1;
+				case mdtMethodDef:
+					pMetaDataImport->GetMethodProps(
+						pInstr->m_Arg32,
+						&parentClass,
+						methodDefNameBuffer,
+						_countof(methodDefNameBuffer),
+						&numChars,
+						&attrFlags,
+						&originalSignature,
+						&originalMethodSignatureLen,
+						&RVA,
+						&impFlags);
+					break;
+				case mdtMemberRef:
+					pMetaDataImport->GetMemberRefProps(
+						pInstr->m_Arg32,
+						&parentClass,
+						methodDefNameBuffer,
+						_countof(methodDefNameBuffer),
+						&numChars,
+						&originalSignature,
+						&originalMethodSignatureLen);
+					break;
+				case mdtMethodSpec:
+					pMetaDataImport->GetMethodSpecProps(
+						pInstr->m_Arg32,
+						&parentClass,
+						&originalSignature,
+						&originalMethodSignatureLen);
+					break;
+				default:
+					break;
 				}
-			}
-			else if (TypeFromToken(pInstr->m_Arg32) == mdtMemberRef)
-			{
-
-
-				pMetaDataImport->GetMemberRefProps(
-					pInstr->m_Arg32,
-					&parentClass,
-					methodDefNameBuffer,
-					_countof(methodDefNameBuffer),
-					&numChars,
-					&originalSignature,
-					&originalMethodSignatureLen);
-				if (originalSignature[2] != ELEMENT_TYPE_VOID)
+				if (originalMethodSignatureLen > 2)
 				{
-					stackPosition = 1;
-				}
-			}
-			else if (TypeFromToken(pInstr->m_Arg32) == mdtMethodSpec)
-			{
+					int i = 1;
+					if ((originalSignature[0] & IMAGE_CEE_CS_CALLCONV_GENERIC) | (originalSignature[0] & IMAGE_CEE_CS_CALLCONV_GENERICINST))
+					{
+						stackPosition -= originalSignature[++i];
+					}
+					else {
+						stackPosition -= originalSignature[i];
+					}
 
-
-				pMetaDataImport->GetMethodSpecProps(
-					pInstr->m_Arg32,
-					&parentClass,
-					&originalSignature,
-					&originalMethodSignatureLen);
-
-				if (originalSignature[2] != ELEMENT_TYPE_VOID)
-				{
-					stackPosition = 1;
+					if ((originalSignature[++i] != ELEMENT_TYPE_VOID) | (opcode == CEE_NEWOBJ))
+					{
+						stackPosition += 1;
+					}
 				}
 			}
 			break;
@@ -363,7 +362,7 @@ HRESULT ILRewriter::ImportIL(LPCBYTE pIL)
 			if (s_OpCodeFlags[pInstr->m_opcode] & OPCODEFLAGS_BranchTarget)
 			{
 				pInstr->m_pTarget = GetInstrFromOffset(pInstr->m_Arg32);
-				if (pInstr->m_opcode != CEE_LEAVE | pInstr->m_opcode != CEE_LEAVE_S)
+				if ((pInstr->m_opcode != CEE_LEAVE) | (pInstr->m_opcode != CEE_LEAVE_S))
 				{
 					if (branchStack.find(pInstr->m_offset) == branchStack.end())
 					{
@@ -385,12 +384,12 @@ HRESULT ILRewriter::ImportIL(LPCBYTE pIL)
 		{
 			if (s_OpCodeFlags[pInstr->m_opcode] & OPCODEFLAGS_BranchTarget)
 			{
-				if (pInstr->m_opcode != CEE_BR | pInstr->m_opcode != CEE_BR_S
-					| pInstr->m_opcode != CEE_LEAVE | pInstr->m_opcode != CEE_LEAVE_S)
+				if ((pInstr->m_opcode != CEE_BR) | (pInstr->m_opcode != CEE_BR_S)
+					| (pInstr->m_opcode != CEE_LEAVE) | (pInstr->m_opcode != CEE_LEAVE_S))
 				{
 					branchCounter++;
 				}
-				
+
 			}
 			else if (branchStack.find(pInstr->m_offset) != branchStack.end())
 			{
@@ -493,7 +492,6 @@ void ILRewriter::AdjustState(ILInstr * pNewInstr)
 {
 	m_maxStack += k_rgnStackPushes[pNewInstr->m_opcode];
 }
-
 
 ILInstr * ILRewriter::GetILList()
 {
@@ -626,10 +624,10 @@ again:
 						fTryAgain = true;
 						continue;
 					}
-					*(UNALIGNED INT8 *)&(pIL[pInstr->m_pNext->m_offset - sizeof(INT8)]) = delta;
+					*(UNALIGNED INT8 *)&(pIL[pInstr->m_pNext->m_offset - sizeof(INT8)]) = (INT8)delta;
 					break;
 				case 4 | OPCODEFLAGS_BranchTarget:
-					*(UNALIGNED INT32 *)&(pIL[pInstr->m_pNext->m_offset - sizeof(INT32)]) = delta;
+					*(UNALIGNED INT32 *)&(pIL[pInstr->m_pNext->m_offset - sizeof(INT32)]) = (INT8)delta;
 					break;
 				default:
 					assert(false);
@@ -811,6 +809,87 @@ HRESULT ILRewriter::ReplaceTokens(std::shared_ptr<ModuleMetadataHelpers> mdHelpe
 	return S_OK;
 }
 
+HRESULT ILRewriter::FixUpLocals(std::shared_ptr<ModuleMetadataHelpers> mdHelper, std::map<ULONG, ULONG> &localsFixup)
+{
+	m_tkLocalVarSig = mdHelper->GetMappedToken(m_tkLocalVarSig);
+	for (ILInstr * pInstr = m_IL.m_pNext; pInstr != &m_IL; pInstr = pInstr->m_pNext)
+	{
+		switch (pInstr->m_opcode)
+		{
+		case CEE_LDLOC:
+		case CEE_LDLOC_0:
+		case CEE_LDLOC_1:
+		case CEE_LDLOC_2:
+		case CEE_LDLOC_3:
+		case CEE_STLOC_0:
+		case CEE_STLOC_1:
+		case CEE_STLOC_2:
+		case CEE_STLOC_3:
+		case CEE_LDLOC_S:
+		case CEE_LDLOCA_S:
+		case CEE_STLOC_S:
+			pInstr->m_Arg32 = mdHelper->GetMappedToken(pInstr->m_Arg32);
+			break;
+		default:
+			break;
+		}
+	}
+	return S_OK;
+}
+
+HRESULT ILRewriter::FixUpTypes(std::shared_ptr<ModuleMetadataHelpers> mdHelper, std::map<std::wstring, std::wstring> &typeFixup)
+{
+	m_tkLocalVarSig = mdHelper->GetMappedToken(m_tkLocalVarSig);
+	std::wstring fullname;
+	for (ILInstr * pInstr = m_IL.m_pNext; pInstr != &m_IL; pInstr = pInstr->m_pNext)
+	{
+		switch (pInstr->m_opcode)
+		{
+		case CEE_BOX:
+		case CEE_CALL:
+		case CEE_CALLI:
+		case CEE_CALLVIRT:
+		case CEE_CASTCLASS:
+		case CEE_CPOBJ:
+		case CEE_INITOBJ:
+		case CEE_ISINST:
+		case CEE_JMP:
+		case CEE_LDELEM:
+		case CEE_LDFTN:
+		case CEE_LDOBJ:
+		case CEE_LDSFLD:
+		case CEE_LDSFLDA:
+		case CEE_LDTOKEN:
+		case CEE_LDVIRTFTN:
+		case CEE_NEWARR:
+		case CEE_NEWOBJ:
+		case CEE_REFANYVAL:
+		case CEE_SIZEOF:
+		case CEE_STELEM:
+		case CEE_STFLD:
+		case CEE_STOBJ:
+		case CEE_STSFLD:
+		case CEE_UNBOX:
+		case CEE_UNBOX_ANY:
+			fullname = mdHelper->GetFullyQualifiedName(pInstr->m_Arg32);
+			switch (TypeFromToken(pInstr->m_Arg32))
+			{
+			case mdtTypeDef:
+			case mdtTypeRef:
+				//TODO: ModuleMetadataHelper to search for token of type.
+				break;
+			case mdtMethodDef:
+			case mdtMemberRef:
+			default:
+				break;
+			}
+		default:
+			break;
+		}
+	}
+	return S_OK;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // R E W R I T E
@@ -850,6 +929,30 @@ void ILRewriter::AddILEnterProbe(ILRewriter & il) {
 
 }
 
+void ILRewriter::AddILEnterProbe(ILRewriter & il, bool CheckOffsetFixups, bool CheckTypeFixups) {
+	ILInstr * pThisFirstIL = m_IL.m_pNext;
+	ILInstr * pInstr = il.m_IL.m_pNext;
+	ILInstr * pNewInstr = NULL;
+
+	UNREFERENCED_PARAMETER(CheckOffsetFixups);
+	UNREFERENCED_PARAMETER(CheckTypeFixups);
+
+	std::vector<ILInstr*> zeroStacks;
+	for (; pThisFirstIL != &m_IL; pThisFirstIL = pThisFirstIL->m_pNext)
+	{
+		if (pThisFirstIL->m_stacklocation == 0 && pThisFirstIL->m_insidebranch == false)
+		{
+			zeroStacks.emplace_back(pThisFirstIL->m_pNext);
+		}
+	}
+	for (; pInstr != &il.m_IL; pInstr = pInstr->m_pNext)
+	{
+		pNewInstr = NewILInstr(*pInstr);
+		InsertBefore(pThisFirstIL, pNewInstr);
+	}
+
+}
+
 void ILRewriter::AddILProbe(ILInstr * pFirstIL) {
 
 	for (ILInstr * pInstr = pFirstIL; pInstr != NULL; pInstr = pInstr->m_pNext)
@@ -860,7 +963,6 @@ void ILRewriter::AddILProbe(ILInstr * pFirstIL) {
 }
 
 void ILRewriter::AddILExitProbe(ILRewriter & il) {
-	HRESULT hr;
 	BOOL fAtLeastOneProbeAdded = FALSE;
 
 	// Find all RETs, and insert a call to the exit probe before each one.
@@ -883,12 +985,13 @@ void ILRewriter::AddILExitProbe(ILRewriter & il) {
 			ILInstr * pNewRet = NewILInstr();
 			pNewRet->m_opcode = CEE_RET;
 			InsertAfter(pInstr, pNewRet);
-			ILInstr * pThisFirstIL = m_IL.m_pNext;
-			ILInstr * pInstr = il.m_IL.m_pNext;
+
+			ILInstr * pThisFirstIL = pNewRet;
+			ILInstr * pInstrOver = il.m_IL.m_pNext;
 			ILInstr * pNewInstr = NULL;
-			for (; pInstr != &il.m_IL; pInstr = pInstr->m_pNext)
+			for (; pInstrOver != &il.m_IL; pInstrOver = pInstrOver->m_pNext)
 			{
-				pNewInstr = NewILInstr(*pInstr);
+				pNewInstr = NewILInstr(*pInstrOver);
 				InsertBefore(pThisFirstIL, pNewInstr);
 			}
 			fAtLeastOneProbeAdded = TRUE;
@@ -908,6 +1011,6 @@ UINT ILRewriter::AddNewULONGLocal() { return 0; }
 
 UINT ILRewriter::AddNewDateTimeLocal() { return 0; }
 
-WCHAR* ILRewriter::GetNameFromToken(mdToken tk) { return L""; }
+WCHAR* ILRewriter::GetNameFromToken(mdToken tk) { UNREFERENCED_PARAMETER(tk); return L""; }
 
-ILInstr * ILRewriter::NewLDC(LPVOID p) { return NULL; }
+ILInstr * ILRewriter::NewLDC(LPVOID p) { UNREFERENCED_PARAMETER(p);  return NULL; }
