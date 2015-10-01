@@ -57,10 +57,7 @@
     <ClInclude Include="inc\SignatureHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\ILInjectionHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="inc\__ilrewriter.h">
+    <ClInclude Include="inc\ILRewriter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -92,16 +89,13 @@
     <ClCompile Include="src\infoclasses\TypeInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\__ilrewriter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\SignatureHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ILInjectionHelper.cpp">
+    <ClCompile Include="src\corhlpr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\corhlpr.cpp">
+    <ClCompile Include="src\ILRewriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

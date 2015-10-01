@@ -162,7 +162,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="inc\ILInjectionHelper.h" />
     <ClInclude Include="inc\infoclasses\AgentInfo.h" />
     <ClInclude Include="inc\allinfo.h" />
     <ClInclude Include="inc\infoclasses\AssemblyInfo.h" />
@@ -177,16 +176,15 @@
     <ClInclude Include="inc\SignatureHelper.h" />
     <ClInclude Include="inc\stdafx.h" />
     <ClInclude Include="inc\targetver.h" />
-    <ClInclude Include="inc\__ilrewriter.h" />
+    <ClInclude Include="inc\ILRewriter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\corhlpr.cpp" />
-    <ClCompile Include="src\ILInjectionHelper.cpp" />
     <ClCompile Include="src\infoclasses\AgentInfo.cpp" />
     <ClCompile Include="src\infoclasses\AssemblyInfo.cpp" />
     <ClCompile Include="src\infoclasses\TypeInfo.cpp" />
     <ClCompile Include="src\infoclasses\FunctionInfo.cpp" />
-    <ClCompile Include="src\__ilrewriter.cpp" />
+    <ClCompile Include="src\ILRewriter.cpp" />
     <ClCompile Include="src\ModuleMetadataHelpers.cpp" />
     <ClCompile Include="src\infoclasses\ModuleInfo.cpp" />
     <ClCompile Include="src\infoclasses\ParameterInfo.cpp" />
