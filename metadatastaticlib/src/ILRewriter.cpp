@@ -840,7 +840,27 @@ HRESULT ILRewriter::FixUpLocals(std::shared_ptr<ModuleMetadataHelpers> mdHelper,
 HRESULT ILRewriter::FixUpTypes(std::shared_ptr<ModuleMetadataHelpers> mdHelper, std::map<std::wstring, std::wstring> &typeFixup)
 {
 	m_tkLocalVarSig = mdHelper->GetMappedToken(m_tkLocalVarSig);
+	std::wstringstream namebuffer;
+	std::wstringstream originalmemberbuffer;
+	std::wstring originalfullname;
+	std::wstring originalmodandtype;
+	std::wstring originalmember;
 	std::wstring fullname;
+	std::wstring module;
+	std::wstring assembly;
+	std::wstring type;
+	std::wstring member;
+	char throwAway;
+	WCHAR mod[255];
+	WCHAR assem[255];
+	WCHAR typ[255];
+	WCHAR mem[255];
+	PCCOR_SIGNATURE signature = NULL;
+	ULONG sigLen = 0;
+	mdToken newTokenOut;
+	bool matchFound = false;
+	bool replaceAllTypes = false;
+
 	for (ILInstr * pInstr = m_IL.m_pNext; pInstr != &m_IL; pInstr = pInstr->m_pNext)
 	{
 		switch (pInstr->m_opcode)
@@ -871,21 +891,78 @@ HRESULT ILRewriter::FixUpTypes(std::shared_ptr<ModuleMetadataHelpers> mdHelper, 
 		case CEE_STSFLD:
 		case CEE_UNBOX:
 		case CEE_UNBOX_ANY:
-			fullname = mdHelper->GetFullyQualifiedName(pInstr->m_Arg32);
-			switch (TypeFromToken(pInstr->m_Arg32))
+
+			originalfullname.assign(mdHelper->GetFullyQualifiedName(pInstr->m_Arg32, &signature, &sigLen));
+			originalmemberbuffer << originalfullname;
+			std::getline(originalmemberbuffer, originalmodandtype, L':');
+			originalmemberbuffer.get();
+			std::getline(originalmemberbuffer, originalmember);
+			if (typeFixup.find(originalfullname) != typeFixup.end())
 			{
-			case mdtTypeDef:
-			case mdtTypeRef:
-				//TODO: ModuleMetadataHelper to search for token of type.
-				break;
-			case mdtMethodDef:
-			case mdtMemberRef:
-			default:
-				break;
+				matchFound = true;
 			}
+			else {
+				if (typeFixup.find(originalmodandtype) != typeFixup.end())
+				{
+					matchFound = true;
+					replaceAllTypes = true;
+				}
+			}
+		
+			if (matchFound)
+			{
+				namebuffer << typeFixup[fullname];
+				namebuffer.get(); // Adavance 1 characater to remove '['
+				if (fullname.find(L"!", 0) != std::wstring::npos)
+				{
+					std::getline(namebuffer, module, L'!');
+				}
+				std::getline(namebuffer, assembly, L']');
+
+				if (fullname.find(L"::", 0) != std::wstring::npos)
+				{
+					std::getline(namebuffer, type, L':');
+					namebuffer.get(); // Adavance 1 characater to remove ':'
+					std::getline(namebuffer, member);
+				}
+				else {
+					std::getline(namebuffer, type);
+				}
+				if (!member.empty())
+				{
+					if (mdHelper->FindMemberDefOrRef(module, type, member, signature, sigLen, newTokenOut) != S_OK)
+					{
+						mdHelper->AddMemberRefOrDef(type, member, signature, sigLen, newTokenOut, module, NULL, std::wstring());
+					};
+				}
+				else {
+					if (!originalmember.empty())
+					{
+						if (mdHelper->FindMemberDefOrRef(module, type, originalmember, signature, sigLen, newTokenOut) != S_OK)
+						{
+							mdHelper->AddMemberRefOrDef(type, originalmember, signature, sigLen, newTokenOut, module, NULL, std::wstring());
+						};
+					}
+					if (mdHelper->FindTypeDefOrRef(module, type, newTokenOut) != S_OK)
+					{
+						mdHelper->AddTypeDefOrRef(type, newTokenOut, module);
+					}
+				}
+			}
+
+
 		default:
 			break;
 		}
+		originalmemberbuffer.clear();
+		originalfullname.clear();
+		originalmodandtype.clear();
+		originalmember.clear();
+		fullname.clear();
+		module.clear();
+		assembly.clear();
+		type.clear();
+		member.clear();
 	}
 	return S_OK;
 }

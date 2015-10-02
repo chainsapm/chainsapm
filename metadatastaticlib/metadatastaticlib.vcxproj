@@ -162,6 +162,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="inc\IMetadataHelper.h" />
     <ClInclude Include="inc\infoclasses\AgentInfo.h" />
     <ClInclude Include="inc\allinfo.h" />
     <ClInclude Include="inc\infoclasses\AssemblyInfo.h" />
@@ -169,6 +170,7 @@
     <ClInclude Include="inc\infoclasses\commonstructures.h" />
     <ClInclude Include="inc\infoclasses\ContainerClass.h" />
     <ClInclude Include="inc\infoclasses\FunctionInfo.h" />
+    <ClInclude Include="inc\Method.h" />
     <ClInclude Include="inc\ModuleMetadataHelpers.h" />
     <ClInclude Include="inc\infoclasses\ModuleInfo.h" />
     <ClInclude Include="inc\infoclasses\ParameterInfo.h" />

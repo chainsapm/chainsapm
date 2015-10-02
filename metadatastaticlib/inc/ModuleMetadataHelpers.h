@@ -7,11 +7,12 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlctl.h>
-
+#include "IMetadataHelper.h"
+#include "Method.h"
 
 #define MAX_LENGTH 2048
 
-class ModuleMetadataHelpers
+class ModuleMetadataHelpers : public IMetadataHelper
 {
 public:
 	ModuleMetadataHelpers(ATL::CComPtr<ICorProfilerInfo> profilerInfo, ModuleID moduleID);
@@ -28,8 +29,9 @@ public:
 	HRESULT FindTypeDefOrRef(std::wstring ModuleName, std::wstring TypeName, mdToken &TypeRefOrDef);
 	// Find a method or member for a type inside of the current module
 	HRESULT FindMemberDefOrRef(std::wstring ModuleOrAssembly, std::wstring TypeName, std::wstring MemberName, PCCOR_SIGNATURE MethodSignature, ULONG SigLength, mdToken & TypeRefOrDef);
+
+	std::wstring GetFullyQualifiedName(mdToken token, PCCOR_SIGNATURE * Signature, ULONG * SigLength);
 	
-	std::wstring GetFullyQualifiedName(mdToken);
 	// Find a token to be remapped to a proper Definition or Reference
 	mdToken GetMappedToken(mdToken);
 
@@ -64,6 +66,8 @@ public:
 	// Create signature token for this method
 	HRESULT AddMethodLocals(std::wstring TypeName, std::wstring MethodName, PCCOR_SIGNATURE LocalsSignature, mdSignature & SigToken);
 
+	Method& AddMethodToRewriteList(mdMethodDef MethodToAdd);
+
 	// container for ICorProfilerInfo reference
 	ATL::CComPtr<ICorProfilerInfo> pICorProfilerInfo;
 	ATL::CComPtr<IMetaDataEmit2> pMetaDataEmit;
@@ -71,7 +75,8 @@ public:
 	ATL::CComPtr<IMetaDataAssemblyEmit> pMetaDataAssemblyEmit;
 	ATL::CComPtr<IMetaDataAssemblyImport> pMetaDataAssemblyImport;
 	ATL::CComPtr<IMetaDataInfo> pMetaDataInfo;
-	
+
+	std::map<mdToken, Method> RewriteMethodsByToken;
 
 private:
 	ModuleID ThisModuleID;

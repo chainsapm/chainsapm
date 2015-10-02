@@ -26,4 +26,12 @@ namespace injectedmethods.CustomAttribute {
                         TargetLocalType = TargetType;
                 }
         }
+
+        [System.AttributeUsage (AttributeTargets.Method, AllowMultiple = true)]
+        public class InsertOffset : Attribute {
+                public int SafePointOffset { get; set; }
+                public InsertOffset (int Offset) {
+                        SafePointOffset = Offset;
+                }
+        }
 }

@@ -363,7 +363,7 @@ HRESULT ModuleMetadataHelpers::FindMemberDefOrRef(std::wstring ModuleOrAssembly,
 	return E_FAIL;
 }
 
-std::wstring ModuleMetadataHelpers::GetFullyQualifiedName(mdToken token)
+std::wstring ModuleMetadataHelpers::GetFullyQualifiedName(mdToken token, PCCOR_SIGNATURE *Signature, ULONG *SigLength)
 {
 	std::wstring module;
 	std::wstring assembly;
@@ -402,8 +402,8 @@ std::wstring ModuleMetadataHelpers::GetFullyQualifiedName(mdToken token)
 			_countof(MethodName),
 			&MethodNameLen,
 			&MethodAttributes,
-			&signature,
-			&sigLen,
+			Signature,
+			SigLength,
 			&MethodRVA,
 			&ImplementationFlags);
 		member.assign(MethodName);
@@ -688,7 +688,7 @@ HRESULT ModuleMetadataHelpers::AddTypeDef(std::wstring TypeName, mdTypeDef & Typ
 	return pMetaDataEmit->DefineTypeDef(TypeName.c_str(), 0, mdTokenNil, NULL, &TypeDef);
 }
 
-HRESULT ModuleMetadataHelpers::GetSecuritySafeCriticalAttributeToken(mdMethodDef  & pmdSafeCritical)
+HRESULT ModuleMetadataHelpers::GetSecuritySafeCriticalAttributeToken(mdMethodDef & pmdSafeCritical)
 {
 	mdToken matchToken = mdTokenNil;
 	HRESULT hr = E_FAIL;
@@ -728,4 +728,14 @@ HRESULT ModuleMetadataHelpers::GetSecuritySafeCriticalAttributeToken(mdMethodDef
 		&pmdSafeCritical);
 
 	return hr;
+}
+
+HRESULT ModuleMetadataHelpers::AddMethodLocals(std::wstring TypeName, std::wstring MethodName, PCCOR_SIGNATURE LocalsSignature, mdSignature & SigToken)
+{
+	return E_NOTIMPL;
+}
+
+Method& ModuleMetadataHelpers::AddMethodToRewriteList(mdMethodDef MethodToAdd)
+{
+	return Method();
 }

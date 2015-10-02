@@ -82,6 +82,7 @@ namespace injectedmethods._System.Web.Hosting {
                                        httpQueryString, body, headers.ToArray (), cookies.ToArray (), session.ToArray ());
                         }
                 }
+                [CustomAttribute.InsertOffset(1)]
                 public void ProcessRequestNotificationHelper_Enter (System.Web.HttpWorkerRequest workerRequest, System.Web.HttpContext context) {
                         if ( context != null ) {
                                 List<string> headers = new List<string> ();

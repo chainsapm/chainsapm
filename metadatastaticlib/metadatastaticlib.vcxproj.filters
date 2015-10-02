@@ -60,6 +60,12 @@
     <ClInclude Include="inc\ILRewriter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\Method.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\IMetadataHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stdafx.cpp">
