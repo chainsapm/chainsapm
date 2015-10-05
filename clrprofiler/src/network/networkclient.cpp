@@ -4,9 +4,6 @@
 #include "NetworkClient.h"
 #include "critsec_helper.h"
 
-
-
-
 // Initialize the socket to NULL.
 SOCKET NetworkClient::m_SocketConnection = NULL;
 HANDLE NetworkClient::DataReceived = NULL;

@@ -6,3 +6,5 @@
 #include "commands\MethodEnter.h"
 #include "commands\MethodExit.h"
 #include "commands\MethodsToInstrument.h"
+#include "commands\DefineInstrumentationMethods.h"
+#include "commands\SendInjectionMetadata.h"

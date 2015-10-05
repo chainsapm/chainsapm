@@ -426,11 +426,13 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClCompile Include="src\commands\AgentInformation.cpp" />
     <ClCompile Include="src\commands\commandprocessor.cpp" />
     <ClCompile Include="src\commands\DefineClass.cpp" />
+    <ClCompile Include="src\commands\DefineInstrumentationMethods.cpp" />
     <ClCompile Include="src\commands\DefineMethod.cpp" />
     <ClCompile Include="src\commands\DefineModule.cpp" />
     <ClCompile Include="src\commands\MethodEnter.cpp" />
     <ClCompile Include="src\commands\MethodExit.cpp" />
     <ClCompile Include="src\commands\MethodsToInstrument.cpp" />
+    <ClCompile Include="src\commands\SendInjectionMetadata.cpp" />
     <ClCompile Include="src\helpers\bit_converter.cpp" />
     <ClCompile Include="src\dllmain\clrprofiler.cpp" />
     <ClCompile Include="src\clrprofiler_i.c">
@@ -523,11 +525,13 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="inc\commands\ACK.h" />
     <ClInclude Include="inc\commands\AgentInformation.h" />
     <ClInclude Include="inc\commands\DefineClass.h" />
+    <ClInclude Include="inc\commands\DefineInstrumentationMethods.h" />
     <ClInclude Include="inc\commands\DefineMethod.h" />
     <ClInclude Include="inc\commands\DefineModule.h" />
     <ClInclude Include="inc\commands\MethodEnter.h" />
     <ClInclude Include="inc\commands\MethodExit.h" />
     <ClInclude Include="inc\commands\MethodsToInstrument.h" />
+    <ClInclude Include="inc\commands\SendInjectionMetadata.h" />
     <ClInclude Include="inc\commonstructures.h" />
     <ClInclude Include="inc\ContainerClass.h" />
     <ClInclude Include="inc\CorProfilerCallbackImplementation.h" />

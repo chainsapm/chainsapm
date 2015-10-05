@@ -15,8 +15,8 @@
 
 namespace Commands
 {
-	DefineInstrumentationMethods::DefineInstrumentationMethods(__int64 timestamp, std::wstring assemblyname, std::wstring typename, std::wstring methodname, std::wstring injectionmethodname, std::vector<char> injectionmethodilbytes)
-		: timestamp(timestamp), code(0x0008), hasEncoded(false), AssemblyName(assemblyname), TypeName(typename), MethodName(methodname), InjectionMethodName(injectionmethodname), InjectionMethodILBytes(injectionmethodilbytes) 
+	DefineInstrumentationMethods::DefineInstrumentationMethods(__int64 timestamp, std::wstring assemblyname, std::wstring m_typename, std::wstring methodname, std::wstring injectionmethodname, std::vector<char> injectionmethodilbytes)
+		: timestamp(timestamp), code(0x0008), hasEncoded(false), AssemblyName(assemblyname), TypeName(m_typename), MethodName(methodname), InjectionMethodName(injectionmethodname), InjectionMethodILBytes(injectionmethodilbytes) 
 	{
 	}
 

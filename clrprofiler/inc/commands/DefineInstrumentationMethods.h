@@ -19,7 +19,7 @@ namespace Commands
 
     public:
     
-        DefineInstrumentationMethods(__int64 timestamp, std::wstring assemblyname, std::wstring typename, std::wstring methodname, std::wstring injectionmethodname, std::vector<char> injectionmethodilbytes); 
+        DefineInstrumentationMethods(__int64 timestamp, std::wstring assemblyname, std::wstring m_typename, std::wstring methodname, std::wstring injectionmethodname, std::vector<char> injectionmethodilbytes);
         ~DefineInstrumentationMethods();
         virtual std::shared_ptr<std::vector<char>> Encode();
         virtual std::shared_ptr<ICommand> Decode(std::shared_ptr<std::vector<char>> &data);  
