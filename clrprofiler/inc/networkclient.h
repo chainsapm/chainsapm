@@ -3,9 +3,7 @@
 
 #pragma once
 #include "INetworkClient.h"
-
-class Cprofilermain;
-
+#include "commands\commandprocessor.h"
 
 #define _SECOND ((__int64) 10000000)
 #define _MINUTE (60 * _SECOND)
@@ -24,11 +22,11 @@ enum NetworkCommands
 };
 
 
-
 class NetworkClient : public INetworkClient
 {
 public:
-	NetworkClient(std::wstring hostName, std::wstring port);
+	NetworkClient(std::wstring hostName, std::wstring port, 
+		std::shared_ptr<CommandProcessor> commandProc);
 	~NetworkClient();
 	static SOCKET m_SocketConnection;
 	PTP_IO m_ptpIO;
@@ -67,6 +65,10 @@ private:
 
 	PTP_TIMER sendTimer;
 
+	PTP_WAIT dataReceived;
+
+	std::shared_ptr<CommandProcessor> CommandProc;
+
 	static VOID CALLBACK SendTimerCallback(
 		PTP_CALLBACK_INSTANCE pInstance, // See "Callback Termination Actions" section
 		PVOID pvContext,
@@ -76,6 +78,12 @@ private:
 		PTP_CALLBACK_INSTANCE pInstance, // See "Callback Termination Actions" section
 		PVOID pvContext,
 		PTP_TIMER pTimer);
+
+	static VOID CALLBACK DataReceivedCallback(
+		PTP_CALLBACK_INSTANCE Instance,
+		PVOID                 Context,
+		PTP_WAIT              Wait,
+		TP_WAIT_RESULT        WaitResult);
 
 	bool insideSendLock;
 	bool insideReceiveLock;

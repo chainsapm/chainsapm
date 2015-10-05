@@ -157,7 +157,7 @@ namespace CommandCreator {
                 public string ProjectRoot {
                         get {
                                 if ( string.IsNullOrEmpty (m_ProjectRoot) ) {
-                                        return @"C:\Users\James\Source\Repos\chainsapm";
+                                        return @"..\\..\\..";
                                 }
                                 return m_ProjectRoot;
                         }

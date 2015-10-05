@@ -13,7 +13,8 @@ HANDLE NetworkClient::DataReceived = NULL;
 HANDLE NetworkClient::DataSent = NULL;
 HANDLE NetworkClient::DataToBeSent = NULL;
 
-NetworkClient::NetworkClient(std::wstring hostName, std::wstring port)
+NetworkClient::NetworkClient(std::wstring hostName, std::wstring port, 
+	std::shared_ptr<CommandProcessor> commandProc)
 {
 	// TODO: Complete the network client.
 	// TODO: Create packet structure to allow ease of transmission of data.
@@ -24,6 +25,8 @@ NetworkClient::NetworkClient(std::wstring hostName, std::wstring port)
 	InitializeCriticalSection(&FrontOutboundLock);
 	InitializeCriticalSection(&BackOutboundLock);
 	InitializeCriticalSection(&OverflowBufferLock);
+
+	CommandProc = commandProc;
 
 	OverflowBuffer.reserve(10 * 1024 * 1024);
 
@@ -99,7 +102,8 @@ void NetworkClient::Start()
 {
 	recvTimer = CreateThreadpoolTimer(&NetworkClient::ReceiveTimerCallback, this, NULL); // See "Customized Thread Pools" section
 	sendTimer = CreateThreadpoolTimer(&NetworkClient::SendTimerCallback, this, NULL); // See "Customized Thread Pools" section
-
+	dataReceived = CreateThreadpoolWait(&NetworkClient::DataReceivedCallback, this, NULL);
+	
 	__int64 dueFileTime = -1 * _SECOND;
 
 	FILETIME ftDue;
@@ -107,6 +111,7 @@ void NetworkClient::Start()
 	ftDue.dwHighDateTime = (DWORD)(dueFileTime >> 32);
 	SetThreadpoolTimer(recvTimer, &ftDue, 500, 0);
 	SetThreadpoolTimer(sendTimer, &ftDue, 250, 0);
+	SetThreadpoolWait(dataReceived, &NetworkClient::DataReceived, NULL);
 }
 
 // Start the network client when we're ready.
@@ -322,6 +327,21 @@ VOID CALLBACK NetworkClient::ReceiveTimerCallback(
 	}
 }
 
+VOID NetworkClient::DataReceivedCallback(PTP_CALLBACK_INSTANCE Instance, PVOID Context, PTP_WAIT Wait, TP_WAIT_RESULT WaitResult)
+{
+	auto netClient = static_cast<NetworkClient*>(Context);
+	auto cmdList = netClient->ReceiveCommands();
+	for (auto &cmd : cmdList)
+	{
+		if (std::dynamic_pointer_cast<Commands::MethodsToInstrument>(cmd) != nullptr)
+		{
+			netClient->CommandProc->Process(std::dynamic_pointer_cast<Commands::MethodsToInstrument>(cmd));
+		}
+	}
+	cmdList.clear();
+	
+}
+
 
 VOID CALLBACK NetworkClient::IoCompletionCallback(
 	_Inout_     PTP_CALLBACK_INSTANCE Instance,
@@ -369,7 +389,6 @@ VOID CALLBACK NetworkClient::IoCompletionCallback(
 		try
 		{
 			SetEventWhenCallbackReturns(Instance, NetworkClient::DataReceived);
-
 		}
 		catch (...)
 		{

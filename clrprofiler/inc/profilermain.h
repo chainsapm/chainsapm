@@ -4,9 +4,6 @@
 #ifndef PROFILERMAIN_H
 #define PROFILERMAIN_H
 
-
-
-
 #include "resource.h"       // main symbols
 
 #include "../../metadatastaticlib/inc/infoclasses/commonstructures.h"
@@ -19,17 +16,13 @@
 #include "CorProfilerCallbackImplementation.h"
 #include "Commands.h"
 #include "networkclient.h"
-
-
-struct ContainerClass;
-class tp_helper;
+#include "tphelper.h"
+#include "ContainerClass.h"
 
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
 #endif
-
-
 
 extern std::wofstream g_wLogFile;
 
@@ -148,7 +141,7 @@ typedef IDToInfoMap<mdMethodDef, int> MethodDefToLatestVersionMap;
 struct ModuleInfo
 {
 	WCHAR                               m_wszModulePath[512];
-	IMetaDataImport *                   m_pImport;
+	ModuleMetadataHelpers *             m_pImport;
 	mdToken                             m_mdEnterProbeRef;
 	mdToken                             m_mdExitProbeRef;
 	mdToken                             m_mdEnterProbeRef2;
@@ -204,44 +197,6 @@ namespace std{
 typedef std::unordered_map<ModInfoFunctionMap, FunctionID> ModFuncMap;
 
 typedef IDToInfoMap<ModuleID, ModuleInfo> ModuleIDToInfoMap;
-
-template <class MetaInterface>
-class COMPtrHolder
-{
-public:
-	COMPtrHolder()
-	{
-		m_ptr = NULL;
-	}
-
-	~COMPtrHolder()
-	{
-		if (m_ptr != NULL)
-		{
-			m_ptr->Release();
-			m_ptr = NULL;
-		}
-	}
-
-	MetaInterface* operator->()
-	{
-		return m_ptr;
-	}
-
-	MetaInterface** operator&()
-	{
-		return &m_ptr;
-	}
-
-	operator MetaInterface*()
-	{
-		return m_ptr;
-	}
-
-private:
-	MetaInterface* m_ptr;
-};
-
 
 using namespace ATL;
 
@@ -313,8 +268,7 @@ public:
 	STDMETHOD(ThreadDestroyed)(ThreadID threadId);
 	STDMETHOD(ThreadNameChanged)(ThreadID threadId, ULONG cchName, _In_reads_opt_(cchName) WCHAR name[]);
 	STDMETHOD(SetMask)();
-	STDMETHOD(GetFullMethodName)(FunctionID functionID, std::wstring &methodName);
-	STDMETHOD(GetFuncArgs)(FunctionID functionID, COR_PRF_FRAME_INFO frameinfo);
+	
 	STDMETHOD(ModuleLoadStarted)(ModuleID moduleId);
 	STDMETHOD(ModuleLoadFinished)(ModuleID moduleId, HRESULT hrStatus);
 	STDMETHOD(ClassLoadFinished)(ClassID classId, HRESULT hrStatus);
@@ -417,6 +371,13 @@ public:
 
 	NetworkClient* m_NetworkClient = NULL;
 
+	// This is the all encompasing container class used by this class
+	ContainerClass * m_Container;
+
+	HANDLE ReceievedMethodsToInstrument;
+	HANDLE ReceievedILForInjection;
+	HANDLE ReceievedMetaDataForInjection;
+
 	/************************************************************************************
 	!!!NOTE!!!!
 
@@ -467,8 +428,7 @@ private:
 
 	HMODULE m_webengineHandle;
 
-	// This is the all encompasing container class used by this class
-	ContainerClass * m_Container;
+	
 
 	//Thread Pool Helper
 	tp_helper * tp = nullptr;
@@ -497,95 +457,6 @@ private:
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(profilermain), Cprofilermain)
-
-
-
-class tp_helper
-{
-
-private:
-	static Cprofilermain * m_cprof;
-
-	PTP_POOL m_customThreadPool = nullptr;
-	PTP_CALLBACK_ENVIRON m_ptpcbe = nullptr;
-	PTP_CLEANUP_GROUP m_ptpcug = nullptr;
-
-	template <class C>
-	static VOID CALLBACK SendEventCallBack(PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WORK Work)
-	{
-		UNREFERENCED_PARAMETER(Instance);
-		UNREFERENCED_PARAMETER(Work);
-		std::shared_ptr<C> shrd(static_cast<C*>(Parameter));
-		m_cprof->m_NetworkClient->SendCommand<C>(shrd);
-	}
-
-
-
-public:
-
-	tp_helper(Cprofilermain * profiler, int min, int max);
-	~tp_helper();
-
-	template <class C>
-	void SendEvent(C* param)
-	{
-		auto tpw = CreateThreadpoolWork(&tp_helper::SendEventCallBack<C>, param, m_ptpcbe);
-		SubmitThreadpoolWork(tpw);
-		CloseThreadpoolWork(tpw);
-	}
-
-	void CreateNetworkIoThreadPool(NetworkClient* NetClient);
-	
-};
-
-
-
-Cprofilermain * tp_helper::m_cprof = nullptr;
-
-tp_helper::tp_helper(Cprofilermain * cpmain, int min, int max)
-{
-	tp_helper::m_cprof = cpmain;
-	m_ptpcbe = new TP_CALLBACK_ENVIRON();
-	InitializeThreadpoolEnvironment(m_ptpcbe);
-	HMODULE _ignore;
-	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, TEXT("clrprofiler.dll"), &_ignore);
-	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, TEXT("msvcrt.dll"), &_ignore);
-	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, TEXT("msvcrtd.dll"), &_ignore);
-	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, TEXT("ucrtbase.dll"), &_ignore);
-	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN, TEXT("ucrtbased.dll"), &_ignore);
-
-	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("clrprofiler.dll")));
-	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("msvcrt.dll")));
-	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("msvcrtd.dll")));
-	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("ucrtbase.dll")));
-	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("ucrtbased.dll")));
-	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("MSVCR120_CLR0400.dll")));
-	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("MSVCP140D.dll")));
-	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("VCRUNTIME140D.dll")));
-	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("MSVCP140.dll")));
-	SetThreadpoolCallbackLibrary(m_ptpcbe, GetModuleHandle(TEXT("VCRUNTIME140.dll")));
-	
-	m_customThreadPool = CreateThreadpool(NULL);
-	SetThreadpoolThreadMinimum(m_customThreadPool, min);
-	SetThreadpoolThreadMaximum(m_customThreadPool, max);
-	m_ptpcug = CreateThreadpoolCleanupGroup();
-	SetThreadpoolCallbackPool(m_ptpcbe, m_customThreadPool);
-	SetThreadpoolCallbackCleanupGroup(m_ptpcbe, m_ptpcug, NULL);
-}
-
-
-void tp_helper::CreateNetworkIoThreadPool(NetworkClient* NetClient)
-{
-
-	NetClient->SetThreadPoolIO(CreateThreadpoolIo(reinterpret_cast<HANDLE>(NetworkClient::m_SocketConnection),
-		NetworkClient::IoCompletionCallback, NetClient, m_ptpcbe));
-
-}
-
-
-tp_helper::~tp_helper()
-{
-}
 
 EXTERN_C void FunctionEnter2_Wrapper_x64(FunctionID funcId, UINT_PTR clientData, COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentInfo);
 

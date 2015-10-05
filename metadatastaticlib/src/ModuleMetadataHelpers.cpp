@@ -739,3 +739,82 @@ Method& ModuleMetadataHelpers::AddMethodToRewriteList(mdMethodDef MethodToAdd)
 {
 	return Method();
 }
+
+
+//STDMETHODIMP Cprofilermain::GetFullMethodName(FunctionID functionID, std::wstring &methodName)
+//{
+//	// CRITICAL 8 Move this to the metadata helpers class.
+//	IMetaDataImport* pIMetaDataImport = 0;
+//	HRESULT hr = S_OK;
+//	mdToken funcToken = 0;
+//	WCHAR szFunction[NAME_BUFFER_SIZE];
+//	WCHAR szClass[NAME_BUFFER_SIZE];
+//	WCHAR wszMethod[NAME_BUFFER_SIZE];
+//	ClassID clsID;
+//
+//
+//	// get the token for the function which we will use to get its name
+//	hr = this->m_pICorProfilerInfo->GetFunctionInfo(functionID,  &funcToken);
+//	this->m_pICorProfilerInfo->function
+//
+//	if (SUCCEEDED(hr))
+//	{
+//		mdTypeDef classTypeDef;
+//		ULONG cchFunction;
+//		ULONG cchClass;
+//
+//		// retrieve the function properties based on the token
+//		hr = pIMetaDataImport->GetMethodProps(funcToken, &classTypeDef, szFunction, NAME_BUFFER_SIZE, &cchFunction, 0, 0, 0, 0, 0);
+//		if (SUCCEEDED(hr))
+//		{
+//			// get the function name
+//			hr = pIMetaDataImport->GetTypeDefProps(classTypeDef, szClass, NAME_BUFFER_SIZE, &cchClass, 0, 0);
+//			if (SUCCEEDED(hr))
+//			{
+//				// create the fully qualified name
+//				_snwprintf_s<NAME_BUFFER_SIZE>(wszMethod, NAME_BUFFER_SIZE, L"%s.%s", szClass, szFunction);
+//				methodName.assign(std::wstring(wszMethod));
+//			}
+//		}
+//		// release our reference to the metadata
+//		pIMetaDataImport->Release();
+//	}
+//
+//	return hr;
+//}
+//
+//STDMETHODIMP Cprofilermain::GetFuncArgs(FunctionID functionID, COR_PRF_FRAME_INFO frameinfo)
+//{
+//	// CRITICAL 8 Move this to the metadata helpers class.
+//	HRESULT hr = S_OK;
+//	ClassID classID;
+//	ModuleID modId;
+//	mdToken token;
+//	ULONG32 typeArgsMax = 1024;
+//	ULONG32 typeArgsOut = 0;
+//	ClassID typeArgs[1024];
+//
+//
+//	switch (this->m_HighestProfileInfo)
+//	{
+//	case 1:
+//		this->m_pICorProfilerInfo->GetFunctionInfo(functionID,
+//			&classID,
+//			&modId,
+//			&token);
+//	default:
+//		hr = this->m_pICorProfilerInfo2->GetFunctionInfo2(
+//			functionID,
+//			frameinfo,
+//			&classID,
+//			&modId,
+//			&token,
+//			typeArgsMax,
+//			&typeArgsOut,
+//			typeArgs);
+//		break;
+//	}
+//	// get the token for the function which we will use to get its name
+//
+//	return hr;
+//}

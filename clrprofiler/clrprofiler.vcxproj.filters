@@ -136,6 +136,12 @@
     <ClCompile Include="src\commands\DefineClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\commands\commandprocessor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tphelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\clrprofiler_i.h">
@@ -229,6 +235,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inc\commands\DefineClass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\commands\commandprocessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\tphelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\ItemMapping.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

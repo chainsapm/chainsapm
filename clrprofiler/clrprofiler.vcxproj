@@ -424,6 +424,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <ItemGroup>
     <ClCompile Include="src\commands\ACK.cpp" />
     <ClCompile Include="src\commands\AgentInformation.cpp" />
+    <ClCompile Include="src\commands\commandprocessor.cpp" />
     <ClCompile Include="src\commands\DefineClass.cpp" />
     <ClCompile Include="src\commands\DefineMethod.cpp" />
     <ClCompile Include="src\commands\DefineModule.cpp" />
@@ -490,6 +491,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\common\ThreadStackItem.cpp" />
+    <ClCompile Include="src\tphelper.cpp" />
     <ClCompile Include="src\xdlldata.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'">false</CompileAsManaged>
@@ -516,6 +518,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="inc\bit_converter.h" />
     <ClInclude Include="inc\ClassInfo.h" />
     <ClInclude Include="inc\clrprofiler_i.h" />
+    <ClInclude Include="inc\commands\commandprocessor.h" />
     <ClInclude Include="inc\Commands.h" />
     <ClInclude Include="inc\commands\ACK.h" />
     <ClInclude Include="inc\commands\AgentInformation.h" />
@@ -533,6 +536,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="inc\FunctionInfo.h" />
     <ClInclude Include="inc\ICommand.h" />
     <ClInclude Include="inc\INetworkClient.h" />
+    <ClInclude Include="inc\ItemMapping.h" />
     <ClInclude Include="inc\ModuleInfo.h" />
     <ClInclude Include="inc\networkclient.h" />
     <ClInclude Include="inc\ParameterInfo.h" />
@@ -542,6 +546,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="inc\stdafx.h" />
     <ClInclude Include="inc\targetver.h" />
     <ClInclude Include="inc\stackitems.h" />
+    <ClInclude Include="inc\tphelper.h" />
     <ClInclude Include="inc\xdlldata.h" />
   </ItemGroup>
   <ItemGroup>

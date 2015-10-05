@@ -616,8 +616,8 @@
     },
     {
       "NetworkCommand": {
-        "Name": "DefineInstrumentationMethods",
-        "Description": "This command will define a single set of instrumentation methods",
+        "Name": "Define Instrumentation Method",
+        "Description": "This command will define a single instrumentation method.",
         "Code": 8,
         "Namespace": "Agent",
         "ClassName": "DefineInstrumentationMethods",
@@ -625,7 +625,7 @@
         "ClassProperties": [
           {
             "TypeName": "System.String",
-            "Name": "ModuleName",
+            "Name": "AssemblyName",
             "IsList": false,
             "IsArray": false
           },
@@ -641,46 +641,42 @@
             "IsList": false,
             "IsArray": false
           },
-          {
+		  {
             "TypeName": "System.String",
-            "Name": "EntryMethodLocals",
-            "IsList": true,
-            "IsArray": false
-          },
-          {
-            "TypeName": "System.String",
-            "Name": "EntryMethodSignature",
-            "IsList": true,
-            "IsArray": false
-          },
-          {
-            "TypeName": "System.Byte",
-            "Name": "EntryMethodILBytes",
+            "Name": "InjectionMethodName",
             "IsList": false,
-            "IsArray": true
-          }
-          {
-            "TypeName": "System.String",
-            "Name": "ExitMethodLocals",
-            "IsList": true,
-            "IsArray": false
-          },
-          {
-            "TypeName": "System.String",
-            "Name": "ExitMethodSignature",
-            "IsList": true,
             "IsArray": false
           },
           {
             "TypeName": "System.Byte",
-            "Name": "ExitMethodILBytes",
+            "Name": "InjectionMethodILBytes",
             "IsList": false,
             "IsArray": true
           }
         ],
         "EnumerationList": []
       },
-      "CommandName": "DefineInstrumentationMethods"
+      "CommandName": "Define Instrumentation Method"
+    },
+    {
+      "NetworkCommand": {
+        "Name": "Send Injection Metadata",
+        "Description": "Sends the Metadata blob across the wire",
+        "Code": 9,
+        "Namespace": "Agent",
+        "ClassName": "SendInjectionMetadata",
+        "CommandType": null,
+        "ClassProperties": [
+          {
+            "TypeName": "System.Byte",
+            "Name": "InjectionMetadata",
+            "IsList": false,
+            "IsArray": true
+          }
+        ],
+        "EnumerationList": []
+      },
+      "CommandName": "Send Injection Metadata"
     }
   ]
 }

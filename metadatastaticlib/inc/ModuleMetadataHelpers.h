@@ -93,6 +93,7 @@ private:
 
 	CRITICAL_SECTION m_ThreadCS;
 	// Saving reference to the containers in order to provide specific function lookups, eg. Is this method an entry point
-
+	/*STDMETHOD(GetFullMethodName)(FunctionID functionID, std::wstring &methodName);
+	STDMETHOD(GetFuncArgs)(FunctionID functionID, COR_PRF_FRAME_INFO frameinfo);*/
 };
 

@@ -166,5 +166,13 @@ namespace ChainsAPM.Agent {
                 public void Process(ACK cmd) {
                         throw new NotImplementedException();
                 }
+
+                public void Process (DefineInstrumentationMethods cmd) {
+                        throw new NotImplementedException ();
+                }
+
+                public void Process (SendInjectionMetadata cmd) {
+                        throw new NotImplementedException ();
+                }
         }
 }
