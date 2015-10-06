@@ -5,22 +5,28 @@
 ModuleMetadataHelpers::ModuleMetadataHelpers(std::vector<char> &InjectionMetadata)
 {
 	CComPtr<IMetaDataDispenserEx> pMetaDispense;
-	CoCreateInstance(
+
+	CoInitialize(NULL);
+	HRESULT hr = CoCreateInstance(
 		CLSID_CorMetaDataDispenser,
 		NULL,
 		CLSCTX_INPROC,
 		IID_IMetaDataDispenser,
 		(LPVOID *)&pMetaDispense);
 
-	void *MetadataInMemory = &InjectionMetadata[0];
-	ULONG Length = InjectionMetadata.size();
+	if (hr == S_OK)
+	{
+		void *MetadataInMemory = &InjectionMetadata[0];
+		ULONG Length = InjectionMetadata.size();
 
-	pMetaDispense->OpenScopeOnMemory(MetadataInMemory, Length, ofReadOnly, IID_IMetaDataImport2, (IUnknown**)&pMetaDataImport);
-	pMetaDispense->OpenScopeOnMemory(MetadataInMemory, Length, ofReadOnly, IID_IMetaDataAssemblyImport, (IUnknown**)&pMetaDataEmit);
-	pMetaDispense->OpenScopeOnMemory(MetadataInMemory, Length, ofRead, IID_IMetaDataEmit2, (IUnknown**)&pMetaDataAssemblyImport);
-	pMetaDispense->OpenScopeOnMemory(MetadataInMemory, Length, ofRead, IID_IMetaDataAssemblyEmit, (IUnknown**)&pMetaDataAssemblyEmit);
+		pMetaDispense->OpenScopeOnMemory(MetadataInMemory, Length, ofReadOnly, IID_IMetaDataImport2, (IUnknown**)&pMetaDataImport);
+		pMetaDispense->OpenScopeOnMemory(MetadataInMemory, Length, ofReadOnly, IID_IMetaDataAssemblyImport, (IUnknown**)&pMetaDataEmit);
+		pMetaDispense->OpenScopeOnMemory(MetadataInMemory, Length, ofRead, IID_IMetaDataEmit2, (IUnknown**)&pMetaDataAssemblyImport);
+		pMetaDispense->OpenScopeOnMemory(MetadataInMemory, Length, ofRead, IID_IMetaDataAssemblyEmit, (IUnknown**)&pMetaDataAssemblyEmit);
 
-	pMetaDispense.Release();
+		pMetaDispense.Release();
+	}
+	CoUninitialize();
 }
 
 ModuleMetadataHelpers::ModuleMetadataHelpers(ATL::CComPtr<ICorProfilerInfo> profilerInfo, ModuleID moduleID) :
@@ -555,7 +561,7 @@ std::wstring ModuleMetadataHelpers::GetFullyQualifiedName(mdToken token, PCCOR_S
 		break;
 	case mdtTypeSpec:
 		type.assign(L"TYPESPEC");
-			break;
+		break;
 	case mdtMethodSpec:
 		type.assign(L"METHODSPEC");
 	default:

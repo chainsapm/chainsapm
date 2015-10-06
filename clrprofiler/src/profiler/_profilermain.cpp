@@ -88,23 +88,20 @@ void Cprofilermain::SetUpAgent()
 	auto def = std::make_shared<Commands::DefineMethod>(0, 0, 0, 0, 0, L"");
 	auto methodEnter = std::make_shared<Commands::MethodEnter>(0, 0, 0, 0);
 	auto methodExit = std::make_shared<Commands::MethodExit>(0, 0, 0, 0);
-	auto defineMethod = std::make_shared<Commands::DefineInstrumentationMethods>(0, L"", L"", L"", L"", std::vector<char>());
-	auto defineMetadata = std::make_shared<Commands::SendInjectionMetadata>(0, std::vector<char>());
+	auto defineMetadata = std::make_shared<Commands::SendInjectionMetadata>(0, std::vector<char>(), std::vector<char>());
 
 
 	m_NetworkClient->m_CommandList.emplace(def->Code(), def);
 	m_NetworkClient->m_CommandList.emplace(methodEnter->Code(), methodEnter);
 	m_NetworkClient->m_CommandList.emplace(methodExit->Code(), methodExit);
-	m_NetworkClient->m_CommandList.emplace(defineMethod->Code(), defineMethod);
 	m_NetworkClient->m_CommandList.emplace(defineMetadata->Code(), defineMetadata);
 
 	m_NetworkClient->Start(); // Ready for normal unblocked operation
 	SendAgentInformation();
 
 	//TODO: Add code to log for timeouts and failures
+	ResetEvent(ReceievedMetaDataForInjection);
 	WaitForSingleObject(ReceievedMetaDataForInjection, 20000);
-	WaitForSingleObject(ReceievedMethodsToInstrument, 20000);
-	WaitForSingleObject(ReceievedILForInjection, 20000);
 
 }
 

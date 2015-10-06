@@ -16,8 +16,10 @@ using ChainsAPM.Server;
 namespace ChainsAPM.Agent {
         partial class Agent : ICommandProcessor {
 
-                [DllImport("MetadataDispenser.dll", ExactSpelling = false)]
+                [DllImport("MetadataDispenser.dll", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
                 static extern void GetMetadataBytes ([MarshalAs (UnmanagedType.BStr)]string injectiondll, [MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_UI1)] out byte[] sr);
+                [DllImport ("MetadataDispenser.dll", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
+                static extern void GetILBytes ([MarshalAs (UnmanagedType.BStr)]string injectiondll, [MarshalAs (UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_UI1)] out byte [] sr, out int RVAStart);
 
                 public void Process(DefineMethod cmd) {
                         Class refClass = null;
@@ -144,8 +146,11 @@ namespace ChainsAPM.Agent {
                         AgentSubscription.OnNext(this);
 
                         byte[] size;
+                        byte [] il;
+                        int rvasize = 0;
                         GetMetadataBytes(@".\injectedmethods.dll", out size);
-                        var metadatatoinject = new ChainsAPM.Commands.Agent.SendInjectionMetadata (DateTime.Now.ToFileTimeUtc (), size);
+                        GetILBytes (@".\injectedmethods.dll", out il, out rvasize);
+                        var metadatatoinject = new ChainsAPM.Commands.Agent.SendInjectionMetadata (DateTime.Now.ToFileTimeUtc (), size, il);
 
                         ConnectionHandler.SendCommand(metadatatoinject);
                 }

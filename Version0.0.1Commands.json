@@ -672,6 +672,12 @@
             "Name": "InjectionMetadata",
             "IsList": false,
             "IsArray": true
+          },
+		  {
+            "TypeName": "System.Byte",
+            "Name": "InjectionIL",
+            "IsList": false,
+            "IsArray": true
           }
         ],
         "EnumerationList": []

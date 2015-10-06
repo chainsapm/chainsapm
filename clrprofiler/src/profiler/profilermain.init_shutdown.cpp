@@ -6,7 +6,7 @@
 
 STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
 {
-	ReceievedMethodsToInstrument = CreateEvent(NULL, TRUE, FALSE, L"MethodsToInstrumentReceived");
+	ReceievedMetaDataForInjection = CreateEvent(NULL, TRUE, FALSE, L"ReceievedMetaDataForInjection");
 	// Get things like the process name, working directory, command line, etc.
 	this->SetProcessName();
 

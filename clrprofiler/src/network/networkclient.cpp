@@ -10,6 +10,8 @@ HANDLE NetworkClient::DataReceived = NULL;
 HANDLE NetworkClient::DataSent = NULL;
 HANDLE NetworkClient::DataToBeSent = NULL;
 
+#define SOCKET_BUFFER_MAX 1 * 1024 * 1024
+
 NetworkClient::NetworkClient(std::wstring hostName, std::wstring port,
 	std::shared_ptr<CommandProcessor> commandProc)
 {
@@ -25,7 +27,7 @@ NetworkClient::NetworkClient(std::wstring hostName, std::wstring port,
 
 	CommandProc = commandProc;
 
-	OverflowBuffer.reserve(10 * 1024 * 1024);
+	OverflowBuffer.reserve(SOCKET_BUFFER_MAX);
 
 	DataSent = CreateEvent(NULL, TRUE, FALSE, TEXT("DataSentEvent"));
 	DataReceived = CreateEvent(NULL, TRUE, FALSE, TEXT("DataReceivedEvent"));
@@ -296,11 +298,11 @@ VOID CALLBACK NetworkClient::ReceiveTimerCallback(
 	{
 		ResetEvent(NetworkClient::DataReceived);
 		netClient->insideReceiveLock = true;
-		auto bigBufferChars = new char[10 * 1024];
+		auto bigBufferChars = new char[SOCKET_BUFFER_MAX];
 		LPWSABUF bigBuffer = new WSABUF;
 		bigBuffer->buf = bigBufferChars;
-		bigBuffer->len = 10 * 1024;
-		SecureZeroMemory(bigBufferChars, 10 * 1024);
+		bigBuffer->len = SOCKET_BUFFER_MAX;
+		SecureZeroMemory(bigBufferChars, SOCKET_BUFFER_MAX);
 		DWORD bytesRecvd = 0;
 		DWORD flags = 0;
 		WSAOVERLAPPED overlapped;
@@ -338,11 +340,7 @@ VOID NetworkClient::DataReceivedCallback(PTP_CALLBACK_INSTANCE Instance, PVOID C
 	auto cmdList = netClient->ReceiveCommands();
 	for (auto &cmd : cmdList)
 	{
-		if (std::dynamic_pointer_cast<Commands::DefineInstrumentationMethods>(cmd) != nullptr)
-		{
-			netClient->CommandProc->Process(std::dynamic_pointer_cast<Commands::DefineInstrumentationMethods>(cmd));
-		}
-		else if (std::dynamic_pointer_cast<Commands::SendInjectionMetadata>(cmd) != nullptr)
+		if (std::dynamic_pointer_cast<Commands::SendInjectionMetadata>(cmd) != nullptr)
 		{
 			netClient->CommandProc->Process(std::dynamic_pointer_cast<Commands::SendInjectionMetadata>(cmd));
 		}
@@ -398,10 +396,8 @@ VOID CALLBACK NetworkClient::IoCompletionCallback(
 					charBuff = lpOverlapped->netclient->OverflowBuffer.data();
 					iterBuff = lpOverlapped->netclient->OverflowBuffer.data();
 					lpOverlapped->netclient->AddItemsToBackBuffer(term, iterBuff, totalBuffSize);
-					lpOverlapped->netclient->OverflowBuffer.clear();
 				}
 			}
-
 		}
 		try
 		{
@@ -411,6 +407,7 @@ VOID CALLBACK NetworkClient::IoCompletionCallback(
 		{
 			auto s = L"TEST";
 		}
+		delete lpOverlapped->queue->buf;
 		delete lpOverlapped->queue;
 	}
 	else {
@@ -420,8 +417,6 @@ VOID CALLBACK NetworkClient::IoCompletionCallback(
 		lpOverlapped->sendqueue->clear();
 		delete lpOverlapped->sendqueue;
 	}
-
-
 }
 
 void NetworkClient::AddItemsToBackBuffer(unsigned int term, char * &iterBuff, const DWORD &totalBuffSize)

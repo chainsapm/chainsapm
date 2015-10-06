@@ -39,18 +39,36 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 
 	//TOOD: Add logging
 
-	//STEP 1 - Create a mapping for the ModuleMetadataHelper and this module.
-	ModuleMetadataHelpers * helper = new ModuleMetadataHelpers(m_pICorProfilerInfo, moduleID);
-
-	//STEP 2 - Merge in Metadata from injected methods
-
-
 	if ((dwModuleFlags & COR_PRF_MODULE_WINDOWS_RUNTIME) != 0)
 	{
 		// Ignore any Windows Runtime modules.  We cannot obtain writeable metadata
 		// interfaces on them or instrument their IL
 		return S_OK;
 	}
+
+	//STEP 1 - Create a mapping for the ModuleMetadataHelper and this module.
+	ModuleMetadataHelpers * helper = new ModuleMetadataHelpers(m_pICorProfilerInfo, moduleID);
+
+	//STEP 2 - Merge in Metadata from injected methods
+	// - Loop all methods that match [injectedmethods]injectedmethods._XXXX::XXXX_Enter
+	// - Loop all methods that match [injectedmethods]injectedmethods._XXXX::XXXX_Exit
+	// - Loop all methods that match [injectedmethods]injectedmethods._XXXX::XXXX_Info
+	// - Loop all methods that match [injectedmethods]injectedmethods._XXXX::XXXX_Inject
+	// - Find and define mappings for types and methods
+	
+	//STEP 3 - Rewrite new members to use mapped tokens
+	// - Rewrite Signatures
+	// - Rewrite Tokens in IL
+
+	//STEP 4 - Define new members (methods)
+	// - Define Signatures
+	// - Define Method Bodies
+
+	//STEP 5 - Rewite IL for methods matched in Step 1
+	// - Add Enter Probe
+	// - Add Exit Probe
+
+	
 
 	BOOL fPumpHelperMethodsIntoThisModule = FALSE;
 	if (std::wstring(wszName).find(L"mscorlib.dll") != std::wstring::npos)

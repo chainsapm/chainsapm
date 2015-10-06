@@ -216,6 +216,8 @@ public:
 
 	IDToInfoMap<ModuleID, ModuleInfo> m_moduleIDToInfoMap;
 
+	std::vector<char> m_InjectedMethodIL;
+
 	/*
 	//MgdGetRequestBasics(
 	class W3_MGD_HANDLER *,

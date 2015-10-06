@@ -19,7 +19,7 @@ namespace Commands
 
     public:
     
-        SendInjectionMetadata(__int64 timestamp, std::vector<char> injectionmetadata); 
+        SendInjectionMetadata(__int64 timestamp, std::vector<char> injectionmetadata, std::vector<char> injectionil); 
         ~SendInjectionMetadata();
         virtual std::shared_ptr<std::vector<char>> Encode();
         virtual std::shared_ptr<ICommand> Decode(std::shared_ptr<std::vector<char>> &data);  
@@ -27,6 +27,7 @@ namespace Commands
         virtual std::wstring Description();
         virtual short Code() { return code; }
         std::vector<char> InjectionMetadata;
+        std::vector<char> InjectionIL;
       private:
         __int64 timestamp; // Always use a 64bit so the message doesn't change
         std::shared_ptr<std::vector<char>> internalvector;
