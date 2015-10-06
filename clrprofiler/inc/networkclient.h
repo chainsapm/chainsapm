@@ -4,6 +4,7 @@
 #pragma once
 #include "INetworkClient.h"
 #include "commands\commandprocessor.h"
+#include "critsec_helper.h"
 
 #define _SECOND ((__int64) 10000000)
 #define _MINUTE (60 * _SECOND)
@@ -100,21 +101,13 @@ public:
 
 
 	// Send a single command to the buffer to be processed.
-	template<typename C>
-	HRESULT SendCommand(std::shared_ptr<C> packet)
-	{
-		auto cshFQ = critsec_helper::critsec_helper(&FrontOutboundLock);
-		m_OutboundQueueFront.emplace(packet);
-		cshFQ.leave_early();
-		return S_OK;
-	}
-
+	HRESULT SendCommand(std::shared_ptr<Commands::ICommand> packet);
 
 	std::shared_ptr<Commands::ICommand> ReceiveCommand();
 
 	HRESULT SendCommands(std::vector<Commands::ICommand*> &packet);
 
-	std::vector<std::shared_ptr<Commands::ICommand>>& ReceiveCommands();
+	std::vector<std::shared_ptr<Commands::ICommand>> ReceiveCommands();
 
 	static HANDLE DataReceived;
 	static HANDLE DataSent;

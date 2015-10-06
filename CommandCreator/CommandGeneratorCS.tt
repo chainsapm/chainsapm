@@ -188,14 +188,24 @@ if (cpItem.IsList == true) { #>
             byteSize += sizeof(System.Int16); // Zero Terminated String
 <# } #>
 <# } else if (typeName == typeof(Int32).FullName) { #>
+			<# if (cpItem.IsArray == true | cpItem.IsList == true) { #> byteSize += sizeof (Int32);<# } #>
+
             byteSize += sizeof(<#= typeName #>)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Length<# } #>;
 <# } else if (typeName == typeof(Int16).FullName) { #>
+	        <# if (cpItem.IsArray == true | cpItem.IsList == true) { #> byteSize += sizeof (Int32);<# } #>
+
             byteSize += sizeof(<#= typeName #>)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Length<# } #>;
 <# } else if (typeName == typeof(Int64).FullName) { #>
+            <# if (cpItem.IsArray == true | cpItem.IsList == true) { #> byteSize += sizeof (Int32);<# } #>
+
             byteSize += sizeof(<#= typeName #>)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Length<# } #>;
 <# } else if (typeName == typeof(byte).FullName) { #>
+            <# if (cpItem.IsArray == true | cpItem.IsList == true) { #> byteSize += sizeof (Int32);<# } #>
+
             byteSize += sizeof(<#= typeName #>)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Length<# } #>;
 <# } else { #>
+			<# if (cpItem.IsArray == true | cpItem.IsList == true) { #> byteSize += sizeof (Int32);<# } #>
+
             byteSize += sizeof(Int32)<# if (cpItem.IsList == true) { #> * <#= cpItem.Name #>.Count<# } #><# if (cpItem.IsArray == true) { #> * <#= cpItem.Name #>.Length<# } #>;
 <# } #>
 <# } #>

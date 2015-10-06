@@ -16,7 +16,7 @@ private:
 		UNREFERENCED_PARAMETER(Instance);
 		UNREFERENCED_PARAMETER(Work);
 		std::shared_ptr<C> shrd(static_cast<C*>(Parameter));
-		m_NetworkClient->SendCommand<C>(shrd);
+		m_NetworkClient->SendCommand(shrd);
 	}
 
 public:

@@ -15,6 +15,7 @@
 class ModuleMetadataHelpers : public IMetadataHelper
 {
 public:
+	ModuleMetadataHelpers(std::vector<char> &InjectionMetadata);
 	ModuleMetadataHelpers(ATL::CComPtr<ICorProfilerInfo> profilerInfo, ModuleID moduleID);
 	void SetupClass();
 	ModuleMetadataHelpers(ATL::CComPtr<IMetaDataImport2> MetaDataImport, 

@@ -8,8 +8,8 @@ public:
 	CommandProcessor();
 	CommandProcessor(Cprofilermain *profiler);
 	void Process(std::shared_ptr<Commands::ACK> mti);
-	void Process(std::shared_ptr<Commands::MethodsToInstrument> mti);
-
+	void Process(std::shared_ptr<Commands::DefineInstrumentationMethods> mti);
+	void Process(std::shared_ptr<Commands::SendInjectionMetadata> cmd);
 private:
 	Cprofilermain *m_profiler;
 };

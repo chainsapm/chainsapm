@@ -6,27 +6,9 @@
 #include "srw_helper.h"
 #include "critsec_helper.h"
 #include "../../metadatastaticlib/inc/allinfo.h"
-#include "../../metadatastaticlib/inc/ModuleMetadataHelpers.h"
-
-
 
 // Maximum buffer size for input from file
 #define BUFSIZE 2048
-
-// String for mscorlib methods or not.
-#define MSCORLIBCOMMAND L"Inserting into mscorlib: %c\r\n"
-
-// Command strings for communicating out-of-process.
-#define CMD_REJITFUNC L"pf"
-#define CMD_REVERTFUNC L"rf"
-#define CMD_QUIT L"qa"
-
-// Response strings for communicating out-of-process.
-#define RSP_REJITSUCCESS L"ps"
-#define RSP_REVERTSUCCESS L"rs"
-#define RSP_REJITFAILURE L"pf"
-#define RSP_REVERTFAILURE L"rf"
-#define RSP_QUITSUCCESS L"qs"
 
 // Make sure the probe type matches the computer's architecture
 #ifdef _WIN64
@@ -48,108 +30,6 @@ LPCWSTR k_wszExitedFunctionProbeName2 = L"MgdExitedFunction32_2";
 // When pumping managed helpers into mscorlib, stick them into this pre-existing mscorlib type
 LPCWSTR k_wszHelpersContainerType = L"System.CannotUnloadAppDomainException";
 
-IDToInfoMap<ModuleID, ModuleInfo> m_moduleIDToInfoMap;
-
-BOOL g_bShouldExit = FALSE;
-BOOL g_bSafeToExit = FALSE;
-UINT g_nLastRefid = 0;
-BOOL g_fLogFilePathsInitiailized = FALSE;
-
-// I read this file written by GUI to tell me what to do
-WCHAR g_wszCmdFilePath[MAX_PATH] = { L'\0' };
-
-// I write to this file to respond to the GUI
-WCHAR g_wszResponseFilePath[MAX_PATH] = { L'\0' };
-
-// I write additional diagnostic info to this file
-WCHAR g_wszLogFilePath[MAX_PATH] = { L'\0' };
-
-// I write the human-readable profiling results to this (HTML) file
-WCHAR g_wszResultFilePath[MAX_PATH] = { L'\0' };
-
-
-#define HEX(HR) L"0x" << std::hex << std::uppercase << HR << std::dec
-#define RESULT_APPEND(EXPR) ;
-#define RESPONSE_LITERAL(EXPR) ;
-#define RESPONSE_APPEND(EXPR) RESPONSE_LITERAL(g_nLastRefid << L">" << EXPR << L"\n")
-#define RESPONSE_IS(REFID, EXPR, MODULE, CLASS, FUNC) RESPONSE_LITERAL(REFID << L">" << EXPR << L"\t" << MODULE << L"\t" << CLASS << L"\t" << FUNC << L"\n")
-#define RESPONSE_ERROR(EXPR) ;
-#define LOG_APPEND(EXPR) ;
-#define LOG_IFFAILEDRET(HR, EXPR) ;
-
-// [extern] ilrewriter function for rewriting a module's IL
-extern HRESULT RewriteIL(
-	ICorProfilerInfo * pICorProfilerInfo,
-	ICorProfilerFunctionControl * pICorProfilerFunctionControl,
-	ModuleID moduleID,
-	mdMethodDef methodDef,
-	int nVersion,
-	mdToken mdEnterProbeRef,
-	mdToken mdExitProbeRef);
-
-// [extern] ilrewriter function for rewriting a module's IL
-extern HRESULT RewriteIL2(
-	ICorProfilerInfo * pICorProfilerInfo,
-	ICorProfilerFunctionControl * pICorProfilerFunctionControl,
-	ModuleID moduleID,
-	mdMethodDef methodDef,
-	int nVersion,
-	mdToken mdEnterProbeRef,
-	mdToken mdExitProbeRef);
-
-// [extern] ilrewriter function for setting helper IL
-extern HRESULT SetILForManagedHelper(
-	ICorProfilerInfo * pICorProfilerInfo,
-	ModuleID moduleID,
-	mdMethodDef mdHelperToAdd,
-	mdMethodDef mdIntPtrExplicitCast,
-	mdMethodDef mdPInvokeToCall);
-
-// [extern] ilrewriter function for setting helper IL
-extern HRESULT SetILForManagedHelper2(
-	ICorProfilerInfo * pICorProfilerInfo,
-	ModuleID moduleID,
-	mdMethodDef mdHelperToAdd,
-	mdMethodDef mdIntPtrExplicitCast,
-	mdMethodDef mdPInvokeToCall);
-
-// [extern] ilrewriter function for setting helper IL
-extern HRESULT SetILForManagedHelperAddNumbers(
-	ICorProfilerInfo * pICorProfilerInfo,
-	ModuleID moduleID,
-	mdMethodDef mdHelperToAdd,
-	mdMethodDef mdIntPtrExplicitCast,
-	mdMethodDef mdPInvokeToCall);
-
-
-// Struct used to hold the arguments for creating the file watcher thread. 
-// Used since threadstart uses a LPVOID parameter for the called function.
-struct threadargs
-{
-	ICorProfilerCallback * m_pCallback;
-	LPCWSTR m_wszpath;
-	IDToInfoMap<ModuleID, ModuleInfo> * m_iMap;
-};
-
-//************************************************************************************************//
-
-//******************                    Forward Declarations                    ******************//            
-
-//************************************************************************************************//
-
-// [private] Checks to see if the given file has any changes, and if so executes the new commands.
-DWORD WINAPI MonitorFile(LPVOID pFileAndModuleMap);
-
-// [private] Checks to see if the given file exists.
-bool FileExists(const PCWSTR wszFilepath);
-
-// [private] Reads and executes a command from the file.
-void ReadFile(FILE * fFile, LPVOID args);
-
-// [private] Returns TRUE iff wszContainer ends with wszProspectiveEnding (case-insensitive).
-BOOL ContainsAtEnd(LPCWSTR wszContainer, LPCWSTR wszProspectiveEnding);
-
-
 
 
 std::map<UINT_PTR, Cprofilermain*> * Cprofilermain::g_StaticContainerClass =
@@ -157,42 +37,6 @@ new std::map<UINT_PTR, Cprofilermain*>();
 
 CRITICAL_SECTION Cprofilermain::g_StaticContainerClassCritSec;
 
-//---------------------------------------------------------------------------------------
-// Exports that managed code from ProfilerHelper.dll will P/Invoke into
-// 
-// NOTE: Must keep these signatures in sync with the DllImports in ProfilerHelper.cs!
-//---------------------------------------------------------------------------------------
-
-
-EXTERN_C void STDAPICALLTYPE NtvEnteredHttp(
-	unsigned __int64 moduleIDCur,
-	unsigned __int64 mdCur,
-	WCHAR* httpString)
-{
-	Cprofilermain * pContainerClass = nullptr;
-	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
-	pContainerClass->NtvEnteredFunction(moduleIDCur, mdCur, 0);
-}
-
-EXTERN_C void STDAPICALLTYPE NtvEnteredFunction(
-	unsigned __int64 moduleIDCur,
-	unsigned __int64 mdCur,
-	int nVersionCur)
-{
-	Cprofilermain * pContainerClass = nullptr;
-	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
-	pContainerClass->NtvEnteredFunction(moduleIDCur, mdCur, nVersionCur);
-}
-
-EXTERN_C void STDAPICALLTYPE NtvExitedFunction(
-	unsigned __int64 moduleIDCur,
-	unsigned __int64 mdCur,
-	int nVersionCur)
-{
-	Cprofilermain * pContainerClass = nullptr;
-	pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
-	pContainerClass->NtvExitedFunction(moduleIDCur, mdCur, nVersionCur);
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Remove the separator (,) and digit grouping on numbers like 1,000,000
@@ -204,64 +48,6 @@ protected:
 		return "\000";
 	} // groups of 0 (disable)
 };
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Global methods for specific profiler callbacks. Namely the Mapper and Enter/Leave/Tail
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Enter hook function for creating shadow stacks
-EXTERN_C void FunctionEnter2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
-	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_INFO *argumentInfo)
-{
-	Cprofilermain * pContainerClass = (Cprofilermain*)clientData;
-	if (funcId == clientData)
-	{
-		pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
-	}
-
-	pContainerClass->FunctionEnterHook2(funcId, clientData, func, argumentInfo);
-	//pContainerClass->FunctionEnterHook2(funcId, clientData, func, argumentInfo);
-}
-
-// Leave hook function for creating shadow stacks
-EXTERN_C void FunctionLeave2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
-	COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentRange)
-{
-	Cprofilermain * pContainerClass = (Cprofilermain*)clientData;
-	if (funcId == clientData)
-	{
-		pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
-	}
-
-	pContainerClass->FunctionLeaveHook2(funcId, clientData, func, argumentRange);
-}
-
-// Tail hook function for creating shadow stacks
-EXTERN_C void FunctionTail2_CPP_STUB(FunctionID funcId, UINT_PTR clientData,
-	COR_PRF_FRAME_INFO func)
-{
-
-	Cprofilermain * pContainerClass = (Cprofilermain*)clientData;
-	if (funcId == clientData)
-	{
-		pContainerClass = Cprofilermain::g_StaticContainerClass->at(0x0);
-	}
-
-	pContainerClass->FunctionTailHook2(funcId, clientData, func);
-}
-
-
-
-#if X64
-#else
-#pragma warning( disable : 4102 )
-#include "../src/asm/etl_enter_x86.inc"
-#include "../src/asm/etl_tail_x86.inc"
-#include "../src/asm/etl_leave_x86.inc"
-#pragma warning( default : 4102 )
-#endif
 
 
 
@@ -280,7 +66,6 @@ Cprofilermain::Cprofilermain() :
 	m_refCount(0),
 	m_dwShadowStackTlsIndex(0)
 {
-
 
 	if (!TryEnterCriticalSection(&Cprofilermain::g_StaticContainerClassCritSec))
 	{
@@ -301,20 +86,24 @@ void Cprofilermain::SetUpAgent()
 	tp->CreateNetworkIoThreadPool(m_NetworkClient);
 
 	auto def = std::make_shared<Commands::DefineMethod>(0, 0, 0, 0, 0, L"");
-	auto listOfCommands = std::make_shared<Commands::MethodsToInstrument>(0, std::vector<Commands::MethodsToInstrument::MethodProperties>(), std::vector<std::wstring>(), std::vector<std::wstring>());
 	auto methodEnter = std::make_shared<Commands::MethodEnter>(0, 0, 0, 0);
 	auto methodExit = std::make_shared<Commands::MethodExit>(0, 0, 0, 0);
+	auto defineMethod = std::make_shared<Commands::DefineInstrumentationMethods>(0, L"", L"", L"", L"", std::vector<char>());
+	auto defineMetadata = std::make_shared<Commands::SendInjectionMetadata>(0, std::vector<char>());
+
 
 	m_NetworkClient->m_CommandList.emplace(def->Code(), def);
-	m_NetworkClient->m_CommandList.emplace(listOfCommands->Code(), listOfCommands);
 	m_NetworkClient->m_CommandList.emplace(methodEnter->Code(), methodEnter);
 	m_NetworkClient->m_CommandList.emplace(methodExit->Code(), methodExit);
+	m_NetworkClient->m_CommandList.emplace(defineMethod->Code(), defineMethod);
+	m_NetworkClient->m_CommandList.emplace(defineMetadata->Code(), defineMetadata);
 
 	m_NetworkClient->Start(); // Ready for normal unblocked operation
 	SendAgentInformation();
 
-	WaitForSingleObject(ReceievedMethodsToInstrument, 20000);
+	//TODO: Add code to log for timeouts and failures
 	WaitForSingleObject(ReceievedMetaDataForInjection, 20000);
+	WaitForSingleObject(ReceievedMethodsToInstrument, 20000);
 	WaitForSingleObject(ReceievedILForInjection, 20000);
 
 }
@@ -340,12 +129,13 @@ void Cprofilermain::SendAgentInformation()
 	ainfo->MachineNameHash = strhasher(this->m_ComputerName);
 	ainfo->Code = 5;
 
-	ResetEvent(NetworkClient::DataReceived);
+	ResetEvent(&NetworkClient::DataReceived);
 
-	m_NetworkClient->SendCommand<Commands::AgentInformation>(std::make_shared<Commands::AgentInformation>(
+	m_NetworkClient->SendCommand(std::make_shared<Commands::AgentInformation>(
 		0, m_AgentName, m_ComputerName, L"C:\\", L"Command Line", L"test.exe", 3000, L"4.0"
 		));
-	if (WaitForSingleObject(NetworkClient::DataReceived, 5000) == 0)
+
+	if (WaitForSingleObject(&NetworkClient::DataReceived, 5000) == 0)
 	{
 	}
 
@@ -380,9 +170,9 @@ Cprofilermain::~Cprofilermain()
 void Cprofilermain::AddCommonFunctions()
 {
 
-	
 
-	
+
+
 }
 
 void Cprofilermain::SetProcessName()
@@ -609,136 +399,6 @@ STDMETHODIMP Cprofilermain::DoWeProfile()
 // Possibly we will eventually move all of these .NET profiling methods to base classes for clarity
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-STDMETHODIMP Cprofilermain::Initialize(IUnknown *pICorProfilerInfoUnk)
-{
-	ReceievedMethodsToInstrument = CreateEvent(NULL, TRUE, FALSE, L"MethodsToInstrumentReceived");
-	// Get things like the process name, working directory, command line, etc.
-	this->SetProcessName();
-
-	this->m_Container = new ContainerClass();
-
-	// We're using this as a quick exit so the profiler doesn't actually load.
-	if (this->DoWeProfile() == S_OK)
-	{
-		//_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);
-		//_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
-		//_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
-		SetUpAgent();
-
-		
-
-		this->m_HighestProfileInfo = 1; // If we don't fail, start off by assuming we're at the highest version we support
-
-		// get the ICorProfilerInfo interface
-
-		HRESULT hr;
-
-		// determine if this object implements ICorProfilerInfo4
-		hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo4, (LPVOID*)&this->m_pICorProfilerInfo4);
-		if (FAILED(hr))
-		{
-			// we still want to work if this call fails, might be an older .NET version
-			this->m_pICorProfilerInfo4 = nullptr;
-			// determine if this object implements ICorProfilerInfo3
-			hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo3, (LPVOID*)&this->m_pICorProfilerInfo3);
-			if (FAILED(hr))
-			{
-				// we still want to work if this call fails, might be an older .NET version
-				this->m_pICorProfilerInfo3 = nullptr;
-				// determine if this object implements ICorProfilerInfo2
-				hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo2, (LPVOID*)&this->m_pICorProfilerInfo2);
-				if (FAILED(hr))
-				{
-					// we still want to work if this call fails, might be an older .NET version
-					this->m_pICorProfilerInfo2 = nullptr;
-					hr = pICorProfilerInfoUnk->QueryInterface(IID_ICorProfilerInfo, (LPVOID*)&this->m_pICorProfilerInfo);
-					if (FAILED(hr))
-						return E_FAIL;
-				}
-				else {
-					this->m_HighestProfileInfo = 2;
-					this->m_pICorProfilerInfo = m_pICorProfilerInfo2;
-				}
-			}
-			else {
-				this->m_HighestProfileInfo = 3;
-				this->m_pICorProfilerInfo2 = m_pICorProfilerInfo3;
-				this->m_pICorProfilerInfo = m_pICorProfilerInfo3;
-			}
-		}
-		else {
-			this->m_HighestProfileInfo = 4;
-			this->m_pICorProfilerInfo3 = m_pICorProfilerInfo4;
-			this->m_pICorProfilerInfo2 = m_pICorProfilerInfo4;
-			this->m_pICorProfilerInfo = m_pICorProfilerInfo4;
-		}
-
-
-		UINT_PTR * clientData = new UINT_PTR(0xDEADBEEF); // We should never see this in our map. This is basically a bounds checker.
-
-		if (m_pICorProfilerInfo2 != NULL)
-		{
-			clientData = new UINT_PTR(20); // Obviously we're not using any 
-			m_pICorProfilerInfo2->SetFunctionIDMapper((FunctionIDMapper*)&Cprofilermain::Mapper1);
-#ifdef _WIN64 
-			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_Wrapper_x64, (FunctionLeave2*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall2*)&FunctionTail2_Wrapper_x64);
-#else
-			m_pICorProfilerInfo2->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_x86, (FunctionLeave2*)&FunctionLeave2_x86, (FunctionTailcall2*)&FunctionTail2_x86);
-#endif
-		}
-
-		if (m_pICorProfilerInfo3 != NULL)
-		{
-			// .NET40
-			clientData = new UINT_PTR(40);
-			m_pICorProfilerInfo3->SetFunctionIDMapper2((FunctionIDMapper2*)&Cprofilermain::Mapper2, this);
-#ifdef _WIN64 
-
-			m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_Wrapper_x64, (FunctionLeave2*)&FunctionLeave2_Wrapper_x64, (FunctionTailcall2*)&FunctionTail2_Wrapper_x64);
-#else
-
-			m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks2((FunctionEnter2*)&FunctionEnter2_x86, (FunctionLeave2*)&FunctionLeave2_x86, (FunctionTailcall2*)&FunctionTail2_x86);
-			//m_pICorProfilerInfo3->SetEnterLeaveFunctionHooks3();
-#endif
-		}
-		Cprofilermain::g_StaticContainerClass->insert(std::pair<UINT_PTR, Cprofilermain*>(0x0, this));
-
-		SetMask();
-
-		return S_OK;
-	}
-	else {
-		return E_FAIL;
-	}
-
-	
-}
-
-STDMETHODIMP Cprofilermain::AppDomainCreationStarted(AppDomainID appDomainId)
-{
-	UNREFERENCED_PARAMETER(appDomainId);
-	return S_OK;
-}
-
-STDMETHODIMP Cprofilermain::ThreadCreated(ThreadID threadId)
-{
-	UNREFERENCED_PARAMETER(threadId);
-	return S_OK;
-}
-
-STDMETHODIMP Cprofilermain::ThreadDestroyed(ThreadID threadId)
-{
-	UNREFERENCED_PARAMETER(threadId);
-	return S_OK;
-}
-
-STDMETHODIMP Cprofilermain::ThreadNameChanged(ThreadID threadId, ULONG cchName, _In_reads_opt_(cchName) WCHAR name[])
-{
-	UNREFERENCED_PARAMETER(threadId);
-	UNREFERENCED_PARAMETER(cchName);
-	UNREFERENCED_PARAMETER(name);
-	return S_OK;
-}
 
 STDMETHODIMP Cprofilermain::AssemblyLoadFinished(AssemblyID assemblyId, HRESULT hrStatus)
 {
@@ -763,11 +423,7 @@ STDMETHODIMP Cprofilermain::AssemblyLoadFinished(AssemblyID assemblyId, HRESULT 
 	return S_OK;
 }
 
-STDMETHODIMP Cprofilermain::ModuleLoadStarted(ModuleID moduleId)
-{
-	UNREFERENCED_PARAMETER(moduleId);
-	return S_OK;
-}
+
 
 STDMETHODIMP Cprofilermain::ClassLoadFinished(ClassID classId, HRESULT hrStatus)
 {
@@ -833,14 +489,7 @@ STDMETHODIMP Cprofilermain::RuntimeResumeFinished(void)
 	return S_OK;
 }
 
-STDMETHODIMP Cprofilermain::Shutdown(void)
-{
 
-	WaitForSingleObject(&NetworkClient::DataToBeSent, 5000); // Wait for data to be sent or 5 seconds
-	WaitForSingleObject(&NetworkClient::DataSent, 5000); // Wait for data to be sent or 5 seconds
-	m_NetworkClient->Shutdown();
-	return S_OK;
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1064,6 +713,7 @@ void Cprofilermain::SetILFunctionBodyForManagedHelper2(ModuleID moduleID, mdMeth
 			((methodDef == m_mdEnter) ? L"enter" : L"exit") << L", hr = " << HEX(hr));
 	}*/
 }
+
 void Cprofilermain::SetILFunctionBodyForManagedHelperAdd(ModuleID moduleID, mdMethodDef methodDef)
 {
 	/*assert(!m_fInstrumentationHooksInSeparateAssembly);
@@ -1084,600 +734,12 @@ void Cprofilermain::SetILFunctionBodyForManagedHelperAdd(ModuleID moduleID, mdMe
 	}*/
 }
 
-
-// [public] 
-// A lot of work needs to happen when modules load.  Here, we
-//      - add the module to the list of tracked modules for ReJIT
-//      - add metadata refs to this module (in case we want to rewrite methods
-//          in this module)
-//      - add new methodDefs to this module if it's mscorlib.dll AND we're running
-//          in the mode where we add probe implementations into mscorlib.dll rather
-//          than using ProfilerHelper.dll
-//      - create new ReJIT requests in case we're loading another copy of a module
-//          (this time into a new unshared AppDomain), for which we'd previously
-//          submitted a ReJIT request for the prior copy of the module
-STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStatus)
-{
-	UNREFERENCED_PARAMETER(hrStatus);
-	LPCBYTE pbBaseLoadAddr;
-	WCHAR wszName[300];
-	ULONG cchNameIn = _countof(wszName);
-	ULONG cchNameOut;
-	AssemblyID assemblyID;
-	DWORD dwModuleFlags;
-
-	HRESULT hr = m_pICorProfilerInfo3->GetModuleInfo2(
-		moduleID,
-		&pbBaseLoadAddr,
-		cchNameIn,
-		&cchNameOut,
-		wszName,
-		&assemblyID,
-		&dwModuleFlags);
-
-	LOG_IFFAILEDRET(hr, L"GetModuleInfo2 failed for ModuleID = " << HEX(moduleID));
-
-	if ((dwModuleFlags & COR_PRF_MODULE_WINDOWS_RUNTIME) != 0)
-	{
-		// Ignore any Windows Runtime modules.  We cannot obtain writeable metadata
-		// interfaces on them or instrument their IL
-		return S_OK;
-	}
-
-	BOOL fPumpHelperMethodsIntoThisModule = FALSE;
-	if (::ContainsAtEnd(wszName, L"mscorlib.dll"))
-	{
-		m_modidMscorlib = moduleID;
-		if (!m_fInstrumentationHooksInSeparateAssembly)
-		{
-			fPumpHelperMethodsIntoThisModule = TRUE;
-		}
-	}
-
-	ModuleMetadataHelpers * helper = new ModuleMetadataHelpers(m_pICorProfilerInfo, moduleID);
-
-	// Grab metadata interfaces 
-
-	CComPtr<IMetaDataEmit> pEmit;
-	{
-		CComPtr<IUnknown> pUnk;
-
-		hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofWrite, IID_IMetaDataEmit, &pUnk);
-		LOG_IFFAILEDRET(hr, L"IID_IMetaDataEmit: GetModuleMetaData failed for ModuleID = " <<
-			HEX(moduleID) << L" (" << wszName << L")");
-
-		hr = pUnk->QueryInterface(IID_IMetaDataEmit, (LPVOID *)&pEmit);
-		LOG_IFFAILEDRET(hr, L"IID_IMetaDataEmit: QueryInterface failed for ModuleID = " <<
-			HEX(moduleID) << L" (" << wszName << L")");
-	}
-
-	//std::unique_ptr<IMetaDataImport> pImport;
-	CComPtr<IMetaDataImport> pImport;
-	{
-		CComPtr<IUnknown> pUnk;
-
-		hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataImport, &pUnk);
-		LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: GetModuleMetaData failed for ModuleID = " <<
-			HEX(moduleID) << L" (" << wszName << L")");
-
-		hr = pUnk->QueryInterface(IID_IMetaDataImport, (LPVOID *)&pImport);
-		LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: QueryInterface failed for ModuleID = " <<
-			HEX(moduleID) << L" (" << wszName << L")");
-	}
-
-
-	CComPtr<IMetaDataAssemblyImport> pAssemblyImport;
-	{
-		CComPtr<IUnknown> pUnk;
-
-		hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataAssemblyImport, &pUnk);
-		LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: GetModuleMetaData failed for ModuleID = " <<
-			HEX(moduleID) << L" (" << wszName << L")");
-
-		hr = pUnk->QueryInterface(IID_IMetaDataAssemblyImport, (LPVOID *)&pAssemblyImport);
-		LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: QueryInterface failed for ModuleID = " <<
-			HEX(moduleID) << L" (" << wszName << L")");
-
-	}
-
-
-
-	//pImport->EnumTypeDefs()
-
-	HCORENUM hEnumAssembly = NULL;
-	HCORENUM hEnumModule = NULL;
-	HCORENUM hEnumTypeRefs = NULL;
-	HCORENUM hEnumTypeDefs = NULL;
-	mdTypeDef rgTypeDefs[1024]{ 0 };
-	mdTypeRef rgTypeRefs[1024]{ 0 };
-	mdModuleRef rgModuleRefs[1024]{ 0 };
-	mdAssemblyRef rgAssemblyRefs[1024]{ 0 };
-	ULONG numberOfTokens;
-
-	wchar_t typeDeffNameBuffer[255];
-	wchar_t modRefNameBuffer[255];
-	wchar_t assemblyRefNameBuffer[255];
-
-	ULONG numChars = 0;
-	DWORD attrFlags = 0;
-	mdToken tkExtends = mdTokenNil;
-	mdToken resolutionScope;
-
-	if (::ContainsAtEnd(wszName, L".exe"))
-	{
-		CComPtr<IMetaDataAssemblyImport> pAssemblyImportUP;
-		{
-			CComPtr<IUnknown> pUnk;
-
-			hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataAssemblyImport, &pUnk);
-			LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: GetModuleMetaData failed for ModuleID = " <<
-				HEX(moduleID) << L" (" << wszName << L")");
-
-			hr = pUnk->QueryInterface(IID_IMetaDataAssemblyImport, (LPVOID *)&pAssemblyImportUP);
-			LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: QueryInterface failed for ModuleID = " <<
-				HEX(moduleID) << L" (" << wszName << L")");
-
-		}
-
-		mdTypeRef httpRefPtr = mdTokenNil;
-		// Enum Assembly Refs
-		do
-		{
-			hr = pAssemblyImportUP->EnumAssemblyRefs(
-				&hEnumAssembly,
-				rgAssemblyRefs,
-				_countof(rgAssemblyRefs),
-				&numberOfTokens);
-
-			for (size_t i = 0; i < numberOfTokens; i++)
-			{
-				char *publicKeyToken = NULL;
-				char *hashVal = NULL;
-				ULONG pktLen = 0;
-				ULONG hashLen = 0;
-				DWORD flags = 0;
-				ASSEMBLYMETADATA amd{ 0 };
-				pAssemblyImportUP->GetAssemblyRefProps(rgAssemblyRefs[i],
-					(const void**)&publicKeyToken,
-					&pktLen,
-					assemblyRefNameBuffer,
-					_countof(assemblyRefNameBuffer),
-					&numChars,
-					&amd,
-					(const void**)&hashVal,
-					&hashLen,
-					&flags);
-
-				auto s2 = std::wstring(assemblyRefNameBuffer);
-			}
-		} while (hr == S_OK);
-
-		pImport->CloseEnum(hEnumAssembly);
-
-		// Enum Module Refs
-		do {
-			hr = pImport->EnumModuleRefs(
-				&hEnumModule,
-				rgModuleRefs,
-				_countof(rgModuleRefs),
-				&numberOfTokens);
-
-		} while (hr == S_OK);
-
-		pImport->CloseEnum(hEnumModule);
-
-		//Enum TypeRefs
-		do {
-			hr = pImport->EnumTypeRefs(
-				&hEnumTypeRefs,
-				rgTypeRefs,
-				_countof(rgTypeRefs),
-				&numberOfTokens);
-
-			for (size_t i = 0; i < numberOfTokens; i++)
-			{
-				pImport->GetTypeRefProps(rgTypeRefs[i],
-					&resolutionScope,
-					typeDeffNameBuffer,
-					255,
-					&numChars);
-				if ((resolutionScope & 0x1A000000) == 0x1A000000)
-				{
-					pImport->GetModuleRefProps(resolutionScope,
-						modRefNameBuffer,
-						255,
-						&numChars);
-					auto s2 = std::wstring(typeDeffNameBuffer);
-				}
-
-				if ((resolutionScope & 0x23000000) == 0x23000000)
-				{
-					char publicKeyToken[1024];
-					char hashVal[1024];
-					ULONG pktLen = 0;
-					ULONG hashLen = 0;
-					DWORD flags = 0;
-					ASSEMBLYMETADATA amd{ 0 };
-					pAssemblyImport->GetAssemblyRefProps(resolutionScope,
-						(const void**)&publicKeyToken,
-						&pktLen,
-						modRefNameBuffer,
-						255,
-						&numChars,
-						&amd,
-						(const void**)&hashVal,
-						&hashLen,
-						&flags);
-
-					auto s2 = std::wstring(typeDeffNameBuffer);
-				}
-
-			}
-
-		} while (hr == S_OK);
-
-		pImport->CloseEnum(hEnumTypeRefs);
-
-		// Enum Type Defs
-		do
-		{
-			hr = pImport->EnumTypeDefs(
-				&hEnumTypeDefs,
-				rgTypeDefs,
-				_countof(rgTypeDefs),
-				&numberOfTokens);
-
-			for (size_t i = 0; i < numberOfTokens; i++)
-			{
-				pImport->GetTypeDefProps(rgTypeDefs[i],
-					typeDeffNameBuffer,
-					255,
-					&numChars,
-					&attrFlags,
-					&tkExtends);
-				auto s = std::wstring(typeDeffNameBuffer);
-			}
-
-		} while (hr == S_OK);
-
-		pImport->CloseEnum(hEnumTypeDefs);
-	}
-
-	if (fPumpHelperMethodsIntoThisModule)
-	{
-		AddHelperMethodDefs(pImport, pEmit);
-	}
-
-	// Store module info in our list
-
-	LOG_APPEND(L"Adding module to list...");
-
-	ModuleInfo moduleInfo = { 0 };
-	if (wcscpy_s(moduleInfo.m_wszModulePath, _countof(moduleInfo.m_wszModulePath), wszName) != 0)
-	{
-		LOG_IFFAILEDRET(E_FAIL, L"Failed to store module path '" << wszName << L"'");
-	}
-
-	// Store metadata reader alongside the module in the list.
-	moduleInfo.m_pImport = helper;
-
-	moduleInfo.m_pMethodDefToLatestVersionMap = new MethodDefToLatestVersionMap();
-
-	if (fPumpHelperMethodsIntoThisModule)
-	{
-		// We're operating on mscorlib and the helper methods are being pumped directly into it.
-		// So we reference (from within mscorlib) the helpers via methodDefs, not memberRefs.
-
-		assert(m_mdEnter != mdTokenNil);
-		assert(m_mdExit != mdTokenNil);
-		moduleInfo.m_mdEnterProbeRef = m_mdEnter;
-		moduleInfo.m_mdExitProbeRef = m_mdExit;
-	}
-	else
-	{
-		// Add the references to our helper methods.
-
-		CComPtr<IMetaDataAssemblyEmit> pAssemblyEmit;
-		{
-			CComPtr<IUnknown> pUnk;
-
-			hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofWrite, IID_IMetaDataAssemblyEmit, &pUnk);
-			LOG_IFFAILEDRET(hr, L"IID_IMetaDataEmit: GetModuleMetaData failed for ModuleID = " <<
-				HEX(moduleID) << L" (" << wszName << L")");
-
-			hr = pUnk->QueryInterface(IID_IMetaDataAssemblyEmit, (LPVOID *)&pAssemblyEmit);
-			LOG_IFFAILEDRET(hr, L"IID_IMetaDataEmit: QueryInterface failed for ModuleID = " <<
-				HEX(moduleID) << L" (" << wszName << L")");
-		}
-
-		CComPtr<IMetaDataAssemblyImport> pAssemblyImport;
-		{
-			CComPtr<IUnknown> pUnk;
-
-			hr = m_pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataAssemblyImport, &pUnk);
-			LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: GetModuleMetaData failed for ModuleID = " <<
-				HEX(moduleID) << L" (" << wszName << L")");
-
-			hr = pUnk->QueryInterface(IID_IMetaDataAssemblyImport, (LPVOID *)&pAssemblyImport);
-			LOG_IFFAILEDRET(hr, L"IID_IMetaDataImport: QueryInterface failed for ModuleID = " <<
-				HEX(moduleID) << L" (" << wszName << L")");
-		}
-
-		AddMemberRefs(pAssemblyImport, pAssemblyEmit, pEmit, &moduleInfo);
-	}
-
-	// Append to the list!
-	m_moduleIDToInfoMap.Update(moduleID, moduleInfo);
-	LOG_APPEND(L"Successfully added module to list.");
-
-	// If we already rejitted functions in other modules with a matching path, then
-	// pre-rejit those functions in this module as well.  This takes care of the case
-	// where we rejitted functions in a module loaded in one domain, and we just now
-	// loaded the same module (unshared) into another domain.  We must explicitly ask to
-	// rejit those functions in this domain's copy of the module, since it's identified
-	// by a different ModuleID.
-
-	std::vector<ModuleID> rgModuleIDs;
-	std::vector<mdToken> rgMethodDefs;
-
-	// Find all modules matching the name in this script entry
-	{
-		ModuleIDToInfoMap::LockHolder lockHolder(&m_moduleIDToInfoMap);
-
-		// Get the methodDef map for the Module just loaded handy
-		MethodDefToLatestVersionMap * pMethodDefToLatestVersionMap =
-			m_moduleIDToInfoMap.Lookup(moduleID).m_pMethodDefToLatestVersionMap;
-		assert(pMethodDefToLatestVersionMap != NULL);
-
-		ModuleIDToInfoMap::Const_Iterator iterator;
-		for (iterator = m_moduleIDToInfoMap.Begin();
-		iterator != m_moduleIDToInfoMap.End();
-			++iterator)
-		{
-			// Skip the entry we just added for this module
-			if (iterator->first == moduleID)
-			{
-				continue;
-			}
-
-			const ModuleInfo * pModInfo = &(iterator->second);
-			LPCWSTR wszModulePathCur = &(pModInfo->m_wszModulePath[0]);
-
-			// We only care if the full path of the module from our internal
-			// module list == full path of module just loaded
-			if (_wcsicmp(wszModulePathCur, wszName) != 0)
-			{
-				continue;
-			}
-
-			// The module is a match!
-			MethodDefToLatestVersionMap::Const_Iterator iterMethodDef;
-			for (iterMethodDef = pModInfo->m_pMethodDefToLatestVersionMap->Begin();
-			iterMethodDef != pModInfo->m_pMethodDefToLatestVersionMap->End();
-				iterMethodDef++)
-			{
-				if (iterMethodDef->second == 0)
-				{
-					// We have reverted this method, do not pre-rejit.
-					continue;
-				}
-
-				// NOTE: We may have already added this methodDef if it was rejitted in
-				// multiple modules.  That means the array will have dupes.  It would be
-				// wise to eliminate dupes before forcing the CLR to iterate over the
-				// same methodDef multiple times (for performance reasons), but this is
-				// just a sample.  Real profilers should be better than this.
-				rgModuleIDs.push_back(moduleID);
-				rgMethodDefs.push_back(iterMethodDef->first);
-
-				// Remember the latest version number for this mdMethodDef
-				pMethodDefToLatestVersionMap->Update(iterMethodDef->first, iterMethodDef->second);
-			}
-		}
-	}
-
-	if (rgMethodDefs.size() > 0)
-	{
-		LOG_APPEND(L"Auto-pre-rejitting " << rgMethodDefs.size() << L"  methods for modules that have just loaded into an AppDomain different from that containing a module from a prior ReJIT request.");
-		CallRequestReJIT((UINT)rgMethodDefs.size(), rgModuleIDs.data(), rgMethodDefs.data());
-	}
-
-	return S_OK;
-}
-
-// Don't forget--modules can unload!  Remove it from our records when it does.
-STDMETHODIMP Cprofilermain::ModuleUnloadStarted(ModuleID moduleID)
-{
-	LOG_APPEND(L"ModuleUnloadStarted: ModuleID = " << HEX(moduleID) << L".");
-
-	ModuleIDToInfoMap::LockHolder lockHolder(&m_moduleIDToInfoMap);
-	ModuleInfo moduleInfo;
-
-	if (m_moduleIDToInfoMap.LookupIfExists(moduleID, &moduleInfo))
-	{
-		LOG_APPEND(L"Module found in list.  Removing...");
-		m_moduleIDToInfoMap.Erase(moduleID);
-	}
-	else
-	{
-		LOG_APPEND(L"Module not found in list.  Do nothing.");
-	}
-
-	return S_OK;
-}
-
-// [public] Checks if the module is mscorlib, and if the CLR is trying to JIT a probe we
-// dynamically added to mscorlib.  If so, this function provides the IL for the probe.
-STDMETHODIMP Cprofilermain::JITCompilationStarted(FunctionID functionID, BOOL fIsSafeToBlock)
-{
-	UNREFERENCED_PARAMETER(fIsSafeToBlock);
-	HRESULT hr;
-	mdToken methodDef;
-	ClassID classID;
-	ModuleID moduleID;
-
-	hr = m_pICorProfilerInfo->GetFunctionInfo(functionID, &classID, &moduleID, &methodDef);
-	LOG_IFFAILEDRET(hr, L"GetFunctionInfo failed for FunctionID = " << HEX(functionID));
-	WCHAR wszTypeDefName[512];
-	WCHAR wszMethodDefName[512];
-
-	ModuleInfo moduleInfo__ = m_moduleIDToInfoMap.Lookup(moduleID);
-
-	int nVersion = 1;
-	moduleInfo__.m_pMethodDefToLatestVersionMap->LookupIfExists(methodDef, &nVersion);
-
-	/*GetClassAndFunctionNamesFromMethodDef(
-		moduleInfo__.m_pImport,
-		moduleID,
-		methodDef,
-		wszTypeDefName,
-		_countof(wszTypeDefName),
-		wszMethodDefName,
-		_countof(wszMethodDefName));
-*/
-
-	// printf("JITCompile: %S::%S\t\t\r\nmethodDef = %#8x | m_mdEnter2 = %#8x | m_mdExit2= %#8x\r\n", wszTypeDefName, wszMethodDefName, methodDef, m_mdEnter2, m_mdExit2);
-
-	if ((moduleID == m_modidMscorlib) &&
-		((methodDef == m_mdEnter) || (methodDef == m_mdExit)))
-	{
-
-		SetILFunctionBodyForManagedHelper(moduleID, methodDef);
-	}
-
-	else {
-		ModuleInfo moduleInfo = m_moduleIDToInfoMap.Lookup(moduleID);
-
-		moduleInfo.m_pMethodDefToLatestVersionMap->LookupIfExists(methodDef, &nVersion);
-
-		auto im = ItemMapping();
-		im.FunctionName = wszMethodDefName;
-		im.ClassName = wszTypeDefName;
-		this->m_Container->g_FullyQualifiedMethodsToProfile->find(im);
-		WCHAR* localString = L"WaitOne";
-		if (this->m_Container->g_FullyQualifiedMethodsToProfile->find(im) != this->m_Container->g_FullyQualifiedMethodsToProfile->end())
-		{
-			/*hr = RewriteIL(
-				m_pICorProfilerInfo,
-				NULL,
-				moduleID,
-				methodDef,
-				nVersion,
-				moduleInfo.m_mdEnterProbeRef,
-				moduleInfo.m_mdExitProbeRef);*/
-
-			FILETIME HighPrecisionFileTime{ 0 };
-			GetSystemTimeAsFileTime(&HighPrecisionFileTime);
-			__int64 timestamp = (((__int64)HighPrecisionFileTime.dwHighDateTime) << 32) + HighPrecisionFileTime.dwLowDateTime;
-
-			ModInfoFunctionMap mifm;
-			mifm.m_ClassDef = methodDef;
-			mifm.m_ModuleID = moduleID;
-			m_ModFuncMap.emplace(mifm, functionID);
-
-			auto defclass = new Commands::DefineClass(timestamp, classID, wszTypeDefName);
-			tp->SendEvent<Commands::DefineClass>(defclass);
-
-			auto defp = new Commands::DefineMethod(timestamp, moduleID, classID, methodDef, functionID, wszMethodDefName);
-			tp->SendEvent<Commands::DefineMethod>(defp);
-
-
-
-		}
-
-
-
-	}
-
-	//LOG_APPEND(L"ReJITScript::GetReJITParameters called, methodDef = " << HEX(methodId));
-
-
-
-
-	return S_OK;
-}
-
-// [public] When a ReJIT starts, profilers don't typically need to do much in this
-// method.  Here, we just do some light validation and logging.
-STDMETHODIMP Cprofilermain::ReJITCompilationStarted(FunctionID functionID, ReJITID rejitId, BOOL fIsSafeToBlock)
-{
-	UNREFERENCED_PARAMETER(fIsSafeToBlock);
-	UNREFERENCED_PARAMETER(rejitId);
-	LOG_APPEND(L"ReJITScript::ReJITCompilationStarted for FunctionID '" << HEX(functionID) <<
-		L"' - RejitID '" << HEX(rejitId) << L"' called");
-
-	HRESULT hr;
-	mdToken methodDef;
-	ClassID classID;
-	ModuleID moduleID;
-
-	hr = m_pICorProfilerInfo->GetFunctionInfo(functionID, &classID, &moduleID, &methodDef);
-	LOG_IFFAILEDRET(hr, L"GetFunctionInfo failed for FunctionID =" << HEX(functionID));
-
-	ModuleInfo moduleInfo = m_moduleIDToInfoMap.Lookup(moduleID);
-	int nVersion = moduleInfo.m_pMethodDefToLatestVersionMap->Lookup(methodDef);
-	if (nVersion == 0)
-	{
-		LOG_APPEND(L"ReJITCompilationStarted called for FunctionID = " << HEX(functionID) <<
-			L", which should have been reverted.");
-		return E_FAIL;
-	}
-
-	LOG_APPEND(L"Found latest version number of " << nVersion <<
-		L" for rejitting function. Associating it with rejitID. (FunctionID = " << HEX(functionID) <<
-		L", RejitID = " << HEX(rejitId) << L", mdMethodDef = " << HEX(methodDef) << L").");
-
-
-	return S_OK;
-}
-
-// [public] Logs any errors encountered during ReJIT.
-STDMETHODIMP Cprofilermain::ReJITError(ModuleID moduleId, mdMethodDef methodId, FunctionID functionId, HRESULT hrStatus)
-{
-	UNREFERENCED_PARAMETER(functionId);
-	UNREFERENCED_PARAMETER(methodId);
-	UNREFERENCED_PARAMETER(moduleId);
-	UNREFERENCED_PARAMETER(hrStatus);
-
-	LOG_IFFAILEDRET(hrStatus, L"ReJITError called.  ModuleID = " << HEX(moduleId) <<
-		L", methodDef = " << HEX(methodId) << L", FunctionID = " << HEX(functionId));
-
-	return S_OK;
-}
-
-// [public] Here's where the real work happens when a method gets ReJITed.  This is
-// responsible for getting the new (instrumented) IL to be compiled.
-STDMETHODIMP Cprofilermain::GetReJITParameters(ModuleID moduleId, mdMethodDef methodId, ICorProfilerFunctionControl *pFunctionControl)
-{
-	/*LOG_APPEND(L"ReJITScript::GetReJITParameters called, methodDef = " << HEX(methodId));
-
-	ModuleInfo moduleInfo = m_moduleIDToInfoMap.Lookup(moduleId);
-	HRESULT hr;
-
-	int nVersion;
-	moduleInfo.m_pMethodDefToLatestVersionMap->LookupIfExists(methodId, &nVersion);
-
-	hr = RewriteIL(
-		m_pICorProfilerInfo,
-		pFunctionControl,
-		moduleId,
-		methodId,
-		nVersion,
-		moduleInfo.m_mdEnterProbeRef,
-		moduleInfo.m_mdExitProbeRef);
-
-	LOG_IFFAILEDRET(hr, L"RewriteIL failed for ModuleID = " << HEX(moduleId) <<
-		L", methodDef = " << HEX(methodId));
-		*/
-	return S_OK;
-}
-
 // [private] Adds memberRefs to the managed helper into the module so that we can ReJIT later.
 void Cprofilermain::AddMemberRefs(IMetaDataAssemblyImport * pAssemblyImport, IMetaDataAssemblyEmit * pAssemblyEmit, IMetaDataEmit * pEmit, ModuleInfo * pModuleInfo)
 {
 	assert(pModuleInfo != NULL);
 
-	LOG_APPEND(L"Adding memberRefs in this module to point to the helper managed methods");
+	// TODO: Add Logging
 
 	//IMetaDataImport * pImport = pModuleInfo->m_pImport;
 
@@ -1738,7 +800,7 @@ void Cprofilermain::AddMemberRefs(IMetaDataAssemblyImport * pAssemblyImport, IMe
 
 		if (FAILED(hr))
 		{
-			LOG_APPEND(L"DefineAssemblyRef failed, hr = " << HEX(hr));
+			// TODO: Add Logging
 		}
 	}
 	else
@@ -1760,13 +822,13 @@ void Cprofilermain::AddMemberRefs(IMetaDataAssemblyImport * pAssemblyImport, IMe
 
 			if (FAILED(hr))
 			{
-				LOG_APPEND(L"EnumAssemblyRefs failed, hr = " << HEX(hr));
+				// TODO: Add Logging
 				return;
 			}
 
 			if (cAssemblyRefsReturned == 0)
 			{
-				LOG_APPEND(L"Could not find an AssemblyRef to mscorlib");
+				// TODO: Add Logging
 				return;
 			}
 		} while (!FindMscorlibReference(
@@ -1796,7 +858,7 @@ void Cprofilermain::AddMemberRefs(IMetaDataAssemblyImport * pAssemblyImport, IMe
 
 	if (FAILED(hr))
 	{
-		LOG_APPEND(L"DefineTypeRefByName to " << wszTypeToReference << L" failed, hr = " << HEX(hr));
+		// TODO: Add Logging
 	}
 
 	hr = pEmit->DefineMemberRef(
@@ -1808,8 +870,7 @@ void Cprofilermain::AddMemberRefs(IMetaDataAssemblyImport * pAssemblyImport, IMe
 
 	if (FAILED(hr))
 	{
-		LOG_APPEND(L"DefineMemberRef to " << k_wszEnteredFunctionProbeName <<
-			L" failed, hr = " << HEX(hr));
+		// TODO: Add Logging
 	}
 
 	hr = pEmit->DefineMemberRef(
@@ -1822,8 +883,7 @@ void Cprofilermain::AddMemberRefs(IMetaDataAssemblyImport * pAssemblyImport, IMe
 
 	if (FAILED(hr))
 	{
-		LOG_APPEND(L"DefineMemberRef to " << k_wszExitedFunctionProbeName <<
-			L" failed, hr = " << HEX(hr));
+		// TODO: Add Logging
 	}
 }
 
@@ -1858,11 +918,11 @@ BOOL Cprofilermain::FindMscorlibReference(IMetaDataAssemblyImport * pAssemblyImp
 
 		if (FAILED(hr))
 		{
-			LOG_APPEND(L"GetAssemblyRefProps failed, hr = " << HEX(hr));
+			// TODO: Add Logging
 			return FALSE;
 		}
 
-		if (::ContainsAtEnd(wszName, L"mscorlib"))
+		if (std::wstring(wszName).find(L"mscorlib") != std::wstring::npos)
 		{
 			*parMscorlib = rgAssemblyRefs[i];
 			return TRUE;
@@ -1879,7 +939,7 @@ void Cprofilermain::AddHelperMethodDefs(IMetaDataImport * pImport, IMetaDataEmit
 
 	assert(!m_fInstrumentationHooksInSeparateAssembly);
 
-	LOG_APPEND(L"Adding methodDefs to mscorlib metadata for managed helper probes");
+	// TODO: Add Logging
 
 	// The helpers will need to call into System.IntPtr::op_Explicit(int64), so get methodDef now
 	mdTypeDef tdSystemIntPtr;
@@ -1887,7 +947,7 @@ void Cprofilermain::AddHelperMethodDefs(IMetaDataImport * pImport, IMetaDataEmit
 
 	if (FAILED(hr))
 	{
-		LOG_APPEND(L"FindTypeDefByName(System.IntPtr) failed, hr = " << HEX(hr));
+		// TODO: Add Logging
 		return;
 	}
 
@@ -1907,7 +967,7 @@ void Cprofilermain::AddHelperMethodDefs(IMetaDataImport * pImport, IMetaDataEmit
 
 	if (FAILED(hr))
 	{
-		LOG_APPEND(L"FindMethod(System.IntPtr.op_Explicit(int64)) failed, hr = " << HEX(hr));
+		// TODO: Add Logging
 		return;
 	}
 
@@ -1917,8 +977,7 @@ void Cprofilermain::AddHelperMethodDefs(IMetaDataImport * pImport, IMetaDataEmit
 
 	if (FAILED(hr))
 	{
-		LOG_APPEND(L"FindTypeDefByName(" << k_wszHelpersContainerType <<
-			L") failed, hr = " << HEX(hr));
+		// TODO: Add Logging
 		return;
 	}
 
@@ -1941,8 +1000,7 @@ void Cprofilermain::AddHelperMethodDefs(IMetaDataImport * pImport, IMetaDataEmit
 
 	if (FAILED(hr))
 	{
-		LOG_APPEND(L"FindMethod(" << k_wszHelpersContainerType <<
-			L"..ctor) failed, hr = " << HEX(hr));
+		// TODO: Add Logging
 		return;
 	}
 
@@ -1961,8 +1019,7 @@ void Cprofilermain::AddHelperMethodDefs(IMetaDataImport * pImport, IMetaDataEmit
 
 	if (FAILED(hr))
 	{
-		LOG_APPEND(L"GetMethodProps(" << k_wszHelpersContainerType <<
-			L"..ctor) failed, hr = " << HEX(hr));
+		// TODO: Add Logging
 		return;
 	}
 
@@ -1972,7 +1029,7 @@ void Cprofilermain::AddHelperMethodDefs(IMetaDataImport * pImport, IMetaDataEmit
 
 	if (FAILED(hr))
 	{
-		LOG_APPEND(L"DefineModuleRef against the native profiler DLL failed, hr = " << HEX(hr));
+		// TODO: Add Logging
 		return;
 	}
 
@@ -2053,7 +1110,7 @@ HRESULT Cprofilermain::AddPInvoke(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR w
 		miPreserveSig,
 		pmdPInvoke);
 
-	LOG_IFFAILEDRET(hr, L"Failed in DefineMethod when creating P/Invoke method " << wszName);
+	// TODO: Add Logging
 
 	hr = pEmit->DefinePinvokeMap(
 		*pmdPInvoke,
@@ -2062,7 +1119,7 @@ HRESULT Cprofilermain::AddPInvoke(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR w
 		modrefTarget);
 
 
-	LOG_IFFAILEDRET(hr, L"Failed in DefinePinvokeMap when creating P/Invoke method " << wszName);
+	// TODO: Add Logging
 
 	return hr;
 }
@@ -2077,7 +1134,7 @@ HRESULT Cprofilermain::GetSecuritySafeCriticalAttributeToken(IMetaDataImport * p
 		mdTokenNil,
 		&tdSafeCritical);
 
-	LOG_IFFAILEDRET(hr, L"FindTypeDefByName(System.Security.SecuritySafeCriticalAttribute) failed");
+	// TODO: Add Logging
 
 	COR_SIGNATURE sigSafeCriticalCtor[] = {
 		IMAGE_CEE_CS_CALLCONV_HASTHIS,
@@ -2092,7 +1149,7 @@ HRESULT Cprofilermain::GetSecuritySafeCriticalAttributeToken(IMetaDataImport * p
 		sizeof(sigSafeCriticalCtor),
 		pmdSafeCritical);
 
-	LOG_IFFAILEDRET(hr, L"FindMember(System.Security.SecuritySafeCriticalAttribute..ctor) failed");
+	// TODO: Add Logging
 
 	return hr;
 }
@@ -2128,7 +1185,7 @@ HRESULT Cprofilermain::AddManagedHelperMethod(IMetaDataEmit * pEmit, mdTypeDef t
 		miIL | miNoInlining,
 		pmdHelperMethod);
 
-	LOG_IFFAILEDRET(hr, L"Failed in DefineMethod when creating managed helper method " << wszName);
+	// TODO: Add Logging
 
 	mdToken tkCustomAttribute;
 	hr = pEmit->DefineCustomAttribute(
@@ -2138,8 +1195,7 @@ HRESULT Cprofilermain::AddManagedHelperMethod(IMetaDataEmit * pEmit, mdTypeDef t
 		0,             //Size of the blob
 		&tkCustomAttribute);
 
-	LOG_IFFAILEDRET(hr, L"Failed in DefineCustomAttribute when applying SecuritySafeCritical to " <<
-		L"new managed helper method " << wszName);
+	// TODO: Add Logging
 
 	return hr;
 }
@@ -2170,8 +1226,7 @@ void Cprofilermain::GetClassAndFunctionNamesFromMethodDef(IMetaDataImport * pImp
 
 	if (FAILED(hr))
 	{
-		LOG_APPEND(L"GetMethodProps failed in ModuleID = " <<
-			HEX(moduleID) << L" for methodDef = " << HEX(methodDef) << L", hr = " << HEX(hr));
+		// TODO: Add Logging
 	}
 
 	hr = pImport->GetTypeDefProps(
@@ -2184,10 +1239,39 @@ void Cprofilermain::GetClassAndFunctionNamesFromMethodDef(IMetaDataImport * pImp
 
 	if (FAILED(hr))
 	{
-		LOG_APPEND(L"GetTypeDefProps failed in ModuleID = " << HEX(moduleID) <<
-			L" for typeDef = " << HEX(typeDef) << L", hr = " << HEX(hr));
+		// TODO: Add Logging
 	}
 }
+
+// [private] Wrapper method for the ICorProfilerCallback::RequestReJIT method, managing its errors.
+HRESULT Cprofilermain::CallRequestReJIT(UINT cFunctionsToRejit, ModuleID * rgModuleIDs, mdMethodDef * rgMethodDefs)
+{
+	HRESULT hr = m_pICorProfilerInfo4->RequestReJIT(cFunctionsToRejit, rgModuleIDs, rgMethodDefs);
+
+	// TODO: Add Logging
+
+	// TODO: Add Logging
+	return hr;
+}
+
+// [private] Wrapper method for the ICorProfilerCallback::RequestRevert method, managing its errors.
+HRESULT Cprofilermain::CallRequestRevert(UINT cFunctionsToRejit, ModuleID * rgModuleIDs, mdMethodDef * rgMethodDefs)
+{
+	HRESULT results[10];
+
+	HRESULT hr = m_pICorProfilerInfo4->RequestRevert(cFunctionsToRejit, rgModuleIDs, rgMethodDefs, results);
+
+	// TODO: Add Logging
+
+	// TODO: Add Logging
+	return hr;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Non-static callbacks into specific version of profiler
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 // [private] Launches the listener for file changes to ILRWP_watchercommands.log.
 // [public] Instrumented code eventually calls into here (when function is entered)
@@ -2245,56 +1329,4 @@ void Cprofilermain::NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, i
 
 
 
-}
-
-// [private] Wrapper method for the ICorProfilerCallback::RequestReJIT method, managing its errors.
-HRESULT Cprofilermain::CallRequestReJIT(UINT cFunctionsToRejit, ModuleID * rgModuleIDs, mdMethodDef * rgMethodDefs)
-{
-	HRESULT hr = m_pICorProfilerInfo4->RequestReJIT(cFunctionsToRejit, rgModuleIDs, rgMethodDefs);
-
-	LOG_IFFAILEDRET(hr, L"RequestReJIT failed");
-
-	LOG_APPEND(L"RequestReJIT successfully called with " << cFunctionsToRejit << L" methods.");
-	return hr;
-}
-
-// [private] Wrapper method for the ICorProfilerCallback::RequestRevert method, managing its errors.
-HRESULT Cprofilermain::CallRequestRevert(UINT cFunctionsToRejit, ModuleID * rgModuleIDs, mdMethodDef * rgMethodDefs)
-{
-	HRESULT results[10];
-
-	HRESULT hr = m_pICorProfilerInfo4->RequestRevert(cFunctionsToRejit, rgModuleIDs, rgMethodDefs, results);
-
-	LOG_IFFAILEDRET(hr, L"RequestRevert failed");
-
-	LOG_APPEND(L"RequestRevert successfully called with " << cFunctionsToRejit << L" methods.");
-	return hr;
-}
-
-void Cprofilermain::LaunchLogListener(LPCWSTR wszPathCommandFile)
-{
-	UNREFERENCED_PARAMETER(wszPathCommandFile);
-	// NO LOG LISTENER
-}
-
-// [private] Returns TRUE iff wszContainer ends with wszProspectiveEnding (case-insensitive).
-BOOL ContainsAtEnd(LPCWSTR wszContainer, LPCWSTR wszProspectiveEnding)
-{
-	size_t cchContainer = wcslen(wszContainer);
-	size_t cchEnding = wcslen(wszProspectiveEnding);
-
-	if (cchContainer < cchEnding)
-		return FALSE;
-
-	if (cchEnding == 0)
-		return FALSE;
-
-	if (_wcsicmp(
-		wszProspectiveEnding,
-		&(wszContainer[cchContainer - cchEnding])) != 0)
-	{
-		return FALSE;
-	}
-
-	return TRUE;
 }

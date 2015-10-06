@@ -5,7 +5,6 @@
 #define PROFILERMAIN_H
 
 #include "resource.h"       // main symbols
-
 #include "../../metadatastaticlib/inc/infoclasses/commonstructures.h"
 #include "clrprofiler_i.h"
 #include <cor.h>
@@ -215,6 +214,7 @@ public:
 	void SendAgentInformation();
 	~Cprofilermain();
 
+	IDToInfoMap<ModuleID, ModuleInfo> m_moduleIDToInfoMap;
 
 	/*
 	//MgdGetRequestBasics(
@@ -312,6 +312,7 @@ public:
 	void SetProcessName();
 
 
+
 	// Attach / Embed Events
 	void AddMemberRefs(
 		IMetaDataAssemblyImport * pAssemblyImport,
@@ -374,9 +375,13 @@ public:
 	// This is the all encompasing container class used by this class
 	ContainerClass * m_Container;
 
+	// Handles to continue loading the CLR profiler when all data has been received
 	HANDLE ReceievedMethodsToInstrument;
 	HANDLE ReceievedILForInjection;
 	HANDLE ReceievedMetaDataForInjection;
+
+	// Injected Method metadata helper
+	std::shared_ptr<ModuleMetadataHelpers> m_InjectedMethodHelper;
 
 	/************************************************************************************
 	!!!NOTE!!!!

@@ -1,5 +1,6 @@
 #pragma once
-
+#ifndef COMMONSTRUCTURESH
+#define COMMONSTRUCTURESH
 #include <cor.h>
 #include <corprof.h>
 
@@ -30,12 +31,4 @@ struct GC_REASON
 	int maxGenerationCollected;
 };
 
-
-struct WCharStringData
-{
-	__int32 StringLength;
-	__int64 StringHash;
-	wchar_t String[0];
-};
-
-
+#endif

@@ -29,7 +29,7 @@ public:
 	// Recv single command from the buffer
 	virtual std::shared_ptr<Commands::ICommand> ReceiveCommand() = 0;
 	// Recv a list of commands
-	virtual std::vector<std::shared_ptr<Commands::ICommand>>& ReceiveCommands() = 0;
+	virtual std::vector<std::shared_ptr<Commands::ICommand>> ReceiveCommands() = 0;
 };
 
 #endif // !NETCLIENT

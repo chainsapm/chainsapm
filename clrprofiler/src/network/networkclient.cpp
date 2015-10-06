@@ -10,7 +10,7 @@ HANDLE NetworkClient::DataReceived = NULL;
 HANDLE NetworkClient::DataSent = NULL;
 HANDLE NetworkClient::DataToBeSent = NULL;
 
-NetworkClient::NetworkClient(std::wstring hostName, std::wstring port, 
+NetworkClient::NetworkClient(std::wstring hostName, std::wstring port,
 	std::shared_ptr<CommandProcessor> commandProc)
 {
 	// TODO: Complete the network client.
@@ -100,7 +100,7 @@ void NetworkClient::Start()
 	recvTimer = CreateThreadpoolTimer(&NetworkClient::ReceiveTimerCallback, this, NULL); // See "Customized Thread Pools" section
 	sendTimer = CreateThreadpoolTimer(&NetworkClient::SendTimerCallback, this, NULL); // See "Customized Thread Pools" section
 	dataReceived = CreateThreadpoolWait(&NetworkClient::DataReceivedCallback, this, NULL);
-	
+
 	__int64 dueFileTime = -1 * _SECOND;
 
 	FILETIME ftDue;
@@ -108,7 +108,7 @@ void NetworkClient::Start()
 	ftDue.dwHighDateTime = (DWORD)(dueFileTime >> 32);
 	SetThreadpoolTimer(recvTimer, &ftDue, 500, 0);
 	SetThreadpoolTimer(sendTimer, &ftDue, 250, 0);
-	SetThreadpoolWait(dataReceived, &NetworkClient::DataReceived, NULL);
+	SetThreadpoolWait(dataReceived, NetworkClient::DataReceived, NULL);
 }
 
 // Start the network client when we're ready.
@@ -129,6 +129,14 @@ HRESULT NetworkClient::SendCommand(Commands::ICommand* packet)
 	return S_OK;
 };
 
+HRESULT NetworkClient::SendCommand(std::shared_ptr<Commands::ICommand> packet)
+{
+	auto cshFQ = critsec_helper::critsec_helper(&FrontOutboundLock);
+	m_OutboundQueueFront.emplace(packet);
+	cshFQ.leave_early();
+	return S_OK;
+}
+
 // Receive a single command from the buffer to be processed.
 std::shared_ptr<Commands::ICommand> NetworkClient::ReceiveCommand()
 {
@@ -145,10 +153,11 @@ std::shared_ptr<Commands::ICommand> NetworkClient::ReceiveCommand()
 			if (!m_InboundQueueFront.empty())
 			{
 				auto itemtodecodeout = m_InboundQueueFront.front();
-				auto cmdnumber = *(short*)(itemtodecodeout->data()+4);
+				auto cmdnumber = *(short*)(itemtodecodeout->data() + 4);
 				if (m_CommandList[cmdnumber] != nullptr)
 				{
 					itemout = m_CommandList[cmdnumber]->Decode(itemtodecodeout);
+					m_InboundQueueFront.pop();
 					return itemout;
 				}
 			}
@@ -171,7 +180,7 @@ HRESULT NetworkClient::SendCommands(std::vector<Commands::ICommand*> &packet)
 	return S_OK;
 }
 // Receive a list of commands from the buffer to be processed.
-std::vector<std::shared_ptr<Commands::ICommand>>& NetworkClient::ReceiveCommands()
+std::vector<std::shared_ptr<Commands::ICommand>> NetworkClient::ReceiveCommands()
 {
 	auto cmdlist = std::vector<std::shared_ptr<Commands::ICommand>>();
 	{
@@ -190,12 +199,11 @@ std::vector<std::shared_ptr<Commands::ICommand>>& NetworkClient::ReceiveCommands
 				auto itemout = m_CommandList[cmdnumber]->Decode(itemtodecodeout);
 				cmdlist.emplace_back(itemout);
 			}
-			m_InboundQueueBack.pop();
+			m_InboundQueueFront.pop();
 		}
 	}
 	return cmdlist;
 }
-
 
 VOID CALLBACK NetworkClient::SendTimerCallback(
 	PTP_CALLBACK_INSTANCE pInstance, // See "Callback Termination Actions" section
@@ -205,7 +213,7 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 	auto netClient = static_cast<NetworkClient*>(pvContext);
 	if (!netClient->insideSendLock)
 	{
-		ResetEvent(&NetworkClient::DataSent);
+		ResetEvent(NetworkClient::DataSent);
 		std::vector<std::shared_ptr<std::vector<char>>> * m_Passable = new std::vector<std::shared_ptr<std::vector<char>>>();
 		netClient->insideSendLock = true;
 		WSABUF *bufs = NULL;
@@ -214,7 +222,7 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 			auto cshFQ = critsec_helper::critsec_helper(&netClient->FrontOutboundLock);
 			auto cshBQ = critsec_helper::critsec_helper(&netClient->BackOutboundLock);
 			netClient->m_OutboundQueueBack.swap(netClient->m_OutboundQueueFront);
-			
+
 			cshBQ.leave_early();
 			cshFQ.leave_early();
 		}
@@ -273,7 +281,7 @@ VOID CALLBACK NetworkClient::SendTimerCallback(
 			}
 		}
 		//WaitForThreadpoolIoCallbacks(netClient->m_ptpIO, FALSE);
-		SetEvent(&NetworkClient::DataToBeSent); // Let any waiters know that the data was sent to the completion port
+		SetEvent(NetworkClient::DataToBeSent); // Let any waiters know that the data was sent to the completion port
 		netClient->insideSendLock = false;
 	}
 }
@@ -286,7 +294,7 @@ VOID CALLBACK NetworkClient::ReceiveTimerCallback(
 	auto netClient = static_cast<NetworkClient*>(pvContext);
 	if (!netClient->insideReceiveLock)
 	{
-		ResetEvent(&NetworkClient::DataReceived);
+		ResetEvent(NetworkClient::DataReceived);
 		netClient->insideReceiveLock = true;
 		auto bigBufferChars = new char[10 * 1024];
 		LPWSABUF bigBuffer = new WSABUF;
@@ -330,13 +338,25 @@ VOID NetworkClient::DataReceivedCallback(PTP_CALLBACK_INSTANCE Instance, PVOID C
 	auto cmdList = netClient->ReceiveCommands();
 	for (auto &cmd : cmdList)
 	{
-		if (std::dynamic_pointer_cast<Commands::MethodsToInstrument>(cmd) != nullptr)
+		if (std::dynamic_pointer_cast<Commands::DefineInstrumentationMethods>(cmd) != nullptr)
 		{
-			netClient->CommandProc->Process(std::dynamic_pointer_cast<Commands::MethodsToInstrument>(cmd));
+			netClient->CommandProc->Process(std::dynamic_pointer_cast<Commands::DefineInstrumentationMethods>(cmd));
+		}
+		else if (std::dynamic_pointer_cast<Commands::SendInjectionMetadata>(cmd) != nullptr)
+		{
+			netClient->CommandProc->Process(std::dynamic_pointer_cast<Commands::SendInjectionMetadata>(cmd));
+		}
+		else {
+			// TODO: Add logging for command not found
 		}
 	}
 	cmdList.clear();
-	
+	if (WaitForSingleObject(NetworkClient::DataReceived, 1) == WAIT_OBJECT_0)
+	{
+		ResetEvent(NetworkClient::DataReceived);
+	}
+	SetThreadpoolWait(Wait, NetworkClient::DataReceived, NULL);
+
 }
 
 

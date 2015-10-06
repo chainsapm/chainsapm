@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using ChainsAPM.Commands;
@@ -14,6 +15,10 @@ using ChainsAPM.Server;
 
 namespace ChainsAPM.Agent {
         partial class Agent : ICommandProcessor {
+
+                [DllImport("MetadataDispenser.dll", ExactSpelling = false)]
+                static extern void GetMetadataBytes ([MarshalAs (UnmanagedType.BStr)]string injectiondll, [MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_UI1)] out byte[] sr);
+
                 public void Process(DefineMethod cmd) {
                         Class refClass = null;
                         if ( ClassList.ContainsKey(cmd.ClassID) ) {
@@ -34,17 +39,6 @@ namespace ChainsAPM.Agent {
                         }
                 }
 
-                public void Process(DefineClass cmd) {
-                        if ( !ClassList.ContainsKey(cmd.ClassID) ) {
-                                ClassList.Add(cmd.ClassID, new Class()
-                                {
-                                        ClassId = cmd.ClassID,
-                                        ClassName = cmd.ClassName
-                                });
-                        }
-
-
-                }
                 public void Process(MethodEnter cmd) {
                         if ( MethodList[cmd.MethodDef].ToString().Contains("Response") )
                                 Console.WriteLine("Entered {0}\r\n", MethodList[cmd.MethodDef].ToString());
@@ -148,19 +142,12 @@ namespace ChainsAPM.Agent {
                         AgentConfig = ConfigAdapter.ReadAgentConfig(cmd);
 
                         AgentSubscription.OnNext(this);
-                        var ListOfMethods = new List<string>();
-                        var ListOfClasses = new List<string>();
-                        var ListOfMethodSettings = new List<MethodsToInstrument.MethodProperties>();
-                        var commandsList = new ChainsAPM.Commands.Agent.MethodsToInstrument(DateTime.Now.ToFileTimeUtc(), ListOfMethodSettings, ListOfClasses, ListOfMethods);
 
-                        foreach ( var MethodToInstrument in AgentConfig.InstrumentationPointCollection ) {
-                                commandsList.MethodClassList.Add(MethodToInstrument.Key.Class.ClassName);
-                                commandsList.MethodList.Add(MethodToInstrument.Key.MethodName);
-                                commandsList.MethodPropList.Add(MethodsToInstrument.MethodProperties.Public);
-                        }
+                        byte[] size;
+                        GetMetadataBytes(@".\injectedmethods.dll", out size);
+                        var metadatatoinject = new ChainsAPM.Commands.Agent.SendInjectionMetadata (DateTime.Now.ToFileTimeUtc (), size);
 
-
-                        ConnectionHandler.SendCommand(commandsList);
+                        ConnectionHandler.SendCommand(metadatatoinject);
                 }
 
                 public void Process(ACK cmd) {

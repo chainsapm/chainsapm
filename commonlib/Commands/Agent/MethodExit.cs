@@ -106,8 +106,11 @@ namespace ChainsAPM.Commands.Agent
              byteSize += sizeof (Int16); // Length Of Code
              byteSize += sizeof (Int64); // Length Of Timestamp
 
+            
             byteSize += sizeof(System.Int64);
+            
             byteSize += sizeof(System.Int64);
+            
             byteSize += sizeof(System.Int64);
             byteSize += sizeof (short); // Length Of Terminator
             var buffer = new List<byte>(byteSize);

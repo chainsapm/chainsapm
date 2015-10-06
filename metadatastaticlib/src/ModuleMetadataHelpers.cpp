@@ -2,6 +2,27 @@
 #include "ModuleMetadataHelpers.h"
 
 
+ModuleMetadataHelpers::ModuleMetadataHelpers(std::vector<char> &InjectionMetadata)
+{
+	CComPtr<IMetaDataDispenserEx> pMetaDispense;
+	CoCreateInstance(
+		CLSID_CorMetaDataDispenser,
+		NULL,
+		CLSCTX_INPROC,
+		IID_IMetaDataDispenser,
+		(LPVOID *)&pMetaDispense);
+
+	void *MetadataInMemory = &InjectionMetadata[0];
+	ULONG Length = InjectionMetadata.size();
+
+	pMetaDispense->OpenScopeOnMemory(MetadataInMemory, Length, ofReadOnly, IID_IMetaDataImport2, (IUnknown**)&pMetaDataImport);
+	pMetaDispense->OpenScopeOnMemory(MetadataInMemory, Length, ofReadOnly, IID_IMetaDataAssemblyImport, (IUnknown**)&pMetaDataEmit);
+	pMetaDispense->OpenScopeOnMemory(MetadataInMemory, Length, ofRead, IID_IMetaDataEmit2, (IUnknown**)&pMetaDataAssemblyImport);
+	pMetaDispense->OpenScopeOnMemory(MetadataInMemory, Length, ofRead, IID_IMetaDataAssemblyEmit, (IUnknown**)&pMetaDataAssemblyEmit);
+
+	pMetaDispense.Release();
+}
+
 ModuleMetadataHelpers::ModuleMetadataHelpers(ATL::CComPtr<ICorProfilerInfo> profilerInfo, ModuleID moduleID) :
 	pICorProfilerInfo(profilerInfo), ThisModuleID(moduleID)
 {
@@ -9,19 +30,14 @@ ModuleMetadataHelpers::ModuleMetadataHelpers(ATL::CComPtr<ICorProfilerInfo> prof
 	// Grab metadata interfaces 
 	HRESULT hr = E_FAIL;
 	{
-		ATL::CComPtr<IUnknown> pUnk;
 
-		hr = pICorProfilerInfo->GetModuleMetaData(moduleID, ofWrite, IID_IMetaDataEmit2, (IUnknown**)&pUnk);
-		hr = pUnk->QueryInterface(IID_IMetaDataEmit2, (LPVOID *)&pMetaDataEmit);
+		hr = pICorProfilerInfo->GetModuleMetaData(moduleID, ofWrite, IID_IMetaDataEmit2, (IUnknown**)&pMetaDataEmit);
 
-		hr = pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataImport2, (IUnknown**)&pUnk);
-		hr = pUnk->QueryInterface(IID_IMetaDataImport2, (LPVOID *)&pMetaDataImport);
+		hr = pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataImport2, (IUnknown**)&pMetaDataImport);
 
-		hr = pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataAssemblyImport, (IUnknown**)&pUnk);
-		hr = pUnk->QueryInterface(IID_IMetaDataAssemblyImport, (LPVOID *)&pMetaDataAssemblyImport);
+		hr = pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataAssemblyImport, (IUnknown**)&pMetaDataAssemblyImport);
 
-		hr = pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataAssemblyEmit, (IUnknown**)&pUnk);
-		hr = pUnk->QueryInterface(IID_IMetaDataAssemblyEmit, (LPVOID *)&pMetaDataAssemblyEmit);
+		hr = pICorProfilerInfo->GetModuleMetaData(moduleID, ofRead, IID_IMetaDataAssemblyEmit, (IUnknown**)&pMetaDataAssemblyEmit);
 
 	}
 

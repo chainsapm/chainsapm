@@ -158,6 +158,7 @@ namespace ChainsAPM.Commands.Agent
             byteSize += sizeof(System.Int64); // Hash Bytes
             byteSize += ProcessName.Length; // StringLength Bytes
             byteSize += sizeof(System.Int16); // Zero Terminated String
+	        
             byteSize += sizeof(System.Int16);
             byteSize += sizeof(System.Int32); // Length Bytes
             byteSize += sizeof(System.Int64); // Hash Bytes

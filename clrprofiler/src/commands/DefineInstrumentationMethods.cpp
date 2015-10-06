@@ -15,8 +15,8 @@
 
 namespace Commands
 {
-	DefineInstrumentationMethods::DefineInstrumentationMethods(__int64 timestamp, std::wstring assemblyname, std::wstring m_typename, std::wstring methodname, std::wstring injectionmethodname, std::vector<char> injectionmethodilbytes)
-		: timestamp(timestamp), code(0x0008), hasEncoded(false), AssemblyName(assemblyname), TypeName(m_typename), MethodName(methodname), InjectionMethodName(injectionmethodname), InjectionMethodILBytes(injectionmethodilbytes) 
+	DefineInstrumentationMethods::DefineInstrumentationMethods(__int64 timestamp, std::wstring assemblyname, std::wstring typenamestring, std::wstring methodname, std::wstring injectionmethodname, std::vector<char> injectionmethodilbytes)
+		: timestamp(timestamp), code(0x0008), hasEncoded(false), AssemblyName(assemblyname), TypeNameString(typenamestring), MethodName(methodname), InjectionMethodName(injectionmethodname), InjectionMethodILBytes(injectionmethodilbytes) 
 	{
 	}
 
@@ -55,11 +55,11 @@ namespace Commands
 			size += sizeof(__int64); // String Hash
 			size += strbytes_AssemblyNamelen; // String Bytes
 
-			size_t strlen_TypeNamelen = TypeName.length();
-			size_t strbytes_TypeNamelen = (strlen_TypeNamelen * sizeof(wchar_t)) + sizeof(wchar_t);
+			size_t strlen_TypeNameStringlen = TypeNameString.length();
+			size_t strbytes_TypeNameStringlen = (strlen_TypeNameStringlen * sizeof(wchar_t)) + sizeof(wchar_t);
 			size += sizeof(__int32); // String Length 
 			size += sizeof(__int64); // String Hash
-			size += strbytes_TypeNamelen; // String Bytes
+			size += strbytes_TypeNameStringlen; // String Bytes
 
 			size_t strlen_MethodNamelen = MethodName.length();
 			size_t strbytes_MethodNamelen = (strlen_MethodNamelen * sizeof(wchar_t)) + sizeof(wchar_t);
@@ -101,17 +101,17 @@ namespace Commands
 			v2 += sizeof(__int64);
 			memcpy(v2, AssemblyName.data(), strbytes_AssemblyNamedata);
 			v2 += strbytes_AssemblyNamedata;
-			size_t strlen_TypeNamedata = TypeName.length();
-			size_t strbytes_TypeNamedata = (strlen_TypeNamedata * sizeof(wchar_t)) + sizeof(wchar_t);
-			hashout = hash(TypeName);
+			size_t strlen_TypeNameStringdata = TypeNameString.length();
+			size_t strbytes_TypeNameStringdata = (strlen_TypeNameStringdata * sizeof(wchar_t)) + sizeof(wchar_t);
+			hashout = hash(TypeNameString);
 			 
 			
-			memcpy(v2, &strlen_TypeNamedata, sizeof(__int32));
+			memcpy(v2, &strlen_TypeNameStringdata, sizeof(__int32));
 			v2 += sizeof(__int32);
 			memcpy(v2, &hashout, sizeof(size_t));
 			v2 += sizeof(__int64);
-			memcpy(v2, TypeName.data(), strbytes_TypeNamedata);
-			v2 += strbytes_TypeNamedata;
+			memcpy(v2, TypeNameString.data(), strbytes_TypeNameStringdata);
+			v2 += strbytes_TypeNameStringdata;
 			size_t strlen_MethodNamedata = MethodName.length();
 			size_t strbytes_MethodNamedata = (strlen_MethodNamedata * sizeof(wchar_t)) + sizeof(wchar_t);
 			hashout = hash(MethodName);
@@ -178,14 +178,14 @@ namespace Commands
 		auto local_AssemblyName = (wchar_t*)ptr;
 		ptr += strlenAssemblyName * 2;
 		
-		auto strlenTypeName = *(__int32*)ptr;
+		auto strlenTypeNameString = *(__int32*)ptr;
 		ptr += sizeof(__int32);
 		
-		auto hashTypeName = *(__int64*)ptr;
+		auto hashTypeNameString = *(__int64*)ptr;
 		ptr += sizeof(__int64);
 		
-		auto local_TypeName = (wchar_t*)ptr;
-		ptr += strlenTypeName * 2;
+		auto local_TypeNameString = (wchar_t*)ptr;
+		ptr += strlenTypeNameString * 2;
 		
 		auto strlenMethodName = *(__int32*)ptr;
 		ptr += sizeof(__int32);
@@ -220,7 +220,7 @@ namespace Commands
 		// Terminator
 		auto term = *(short*)ptr;
 		ptr += sizeof(short);
-		return std::make_shared<DefineInstrumentationMethods>(local_timestamp,  local_AssemblyName ,  local_TypeName ,  local_MethodName ,  local_InjectionMethodName ,  local_InjectionMethodILBytes );
+		return std::make_shared<DefineInstrumentationMethods>(local_timestamp,  local_AssemblyName ,  local_TypeNameString ,  local_MethodName ,  local_InjectionMethodName ,  local_InjectionMethodILBytes );
 	}
 }
 

@@ -20,7 +20,7 @@ namespace ChainsAPM.Commands.Agent
          public DateTime TimeStamp { get; set; }
 
         public System.String AssemblyName { get; set; }
-        public System.String TypeName { get; set; }
+        public System.String TypeNameString { get; set; }
         public System.String MethodName { get; set; }
         public System.String InjectionMethodName { get; set; }
         public System.Byte[] InjectionMethodILBytes { get; set; }
@@ -30,11 +30,11 @@ namespace ChainsAPM.Commands.Agent
             hashhelper = new Helpers.Fnv1a64();
         }
 
-        public DefineInstrumentationMethods(System.Int64 timestamp, System.String _assemblyname, System.String _typename, System.String _methodname, System.String _injectionmethodname, System.Byte[] _injectionmethodilbytes) : this()
+        public DefineInstrumentationMethods(System.Int64 timestamp, System.String _assemblyname, System.String _typenamestring, System.String _methodname, System.String _injectionmethodname, System.Byte[] _injectionmethodilbytes) : this()
         {
             TimeStamp = timestamp == 0 ? DateTime.Now : DateTime.FromFileTimeUtc(timestamp);
             AssemblyName = _assemblyname;
-            TypeName = _typename;
+            TypeNameString = _typenamestring;
             MethodName = _methodname;
             InjectionMethodName = _injectionmethodname;
             InjectionMethodILBytes = _injectionmethodilbytes;
@@ -74,9 +74,9 @@ namespace ChainsAPM.Commands.Agent
                     var decodeAssemblyName = segstream.GetUnicode(stringlenAssemblyName + 1);
 
      
-                    var stringlenTypeName = segstream.GetInt32();
-                    var decodeTypeNameHash = segstream.GetInt64();
-                    var decodeTypeName = segstream.GetUnicode(stringlenTypeName + 1);
+                    var stringlenTypeNameString = segstream.GetInt32();
+                    var decodeTypeNameStringHash = segstream.GetInt64();
+                    var decodeTypeNameString = segstream.GetUnicode(stringlenTypeNameString + 1);
 
      
                     var stringlenMethodName = segstream.GetInt32();
@@ -106,7 +106,7 @@ namespace ChainsAPM.Commands.Agent
                     {
                         throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
                     }
-                    return new DefineInstrumentationMethods(timestamp, decodeAssemblyName, decodeTypeName, decodeMethodName, decodeInjectionMethodName, arrayOfInjectionMethodILBytes);
+                    return new DefineInstrumentationMethods(timestamp, decodeAssemblyName, decodeTypeNameString, decodeMethodName, decodeInjectionMethodName, arrayOfInjectionMethodILBytes);
                     }
                     else
                     {
@@ -137,7 +137,7 @@ namespace ChainsAPM.Commands.Agent
             byteSize += sizeof(System.Int16); // Zero Terminated String
             byteSize += sizeof(System.Int32); // Length Bytes
             byteSize += sizeof(System.Int64); // Hash Bytes
-            byteSize += TypeName.Length; // StringLength Bytes
+            byteSize += TypeNameString.Length; // StringLength Bytes
             byteSize += sizeof(System.Int16); // Zero Terminated String
             byteSize += sizeof(System.Int32); // Length Bytes
             byteSize += sizeof(System.Int64); // Hash Bytes
@@ -147,6 +147,7 @@ namespace ChainsAPM.Commands.Agent
             byteSize += sizeof(System.Int64); // Hash Bytes
             byteSize += InjectionMethodName.Length; // StringLength Bytes
             byteSize += sizeof(System.Int16); // Zero Terminated String
+             byteSize += sizeof (Int32);
             byteSize += sizeof(System.Byte) * InjectionMethodILBytes.Length;
             byteSize += sizeof (short); // Length Of Terminator
             var buffer = new List<byte>(byteSize);
@@ -159,10 +160,10 @@ namespace ChainsAPM.Commands.Agent
             buffer.AddRange(sBufferAssemblyName);
             buffer.AddRange(BitConverter.GetBytes((short)0));
 
-            var sBufferTypeName = System.Text.UnicodeEncoding.Unicode.GetBytes(TypeName);
-            buffer.AddRange(BitConverter.GetBytes(TypeName.Length + 1));
-            buffer.AddRange(hashhelper.ComputeHash(sBufferTypeName));
-            buffer.AddRange(sBufferTypeName);
+            var sBufferTypeNameString = System.Text.UnicodeEncoding.Unicode.GetBytes(TypeNameString);
+            buffer.AddRange(BitConverter.GetBytes(TypeNameString.Length + 1));
+            buffer.AddRange(hashhelper.ComputeHash(sBufferTypeNameString));
+            buffer.AddRange(sBufferTypeNameString);
             buffer.AddRange(BitConverter.GetBytes((short)0));
 
             var sBufferMethodName = System.Text.UnicodeEncoding.Unicode.GetBytes(MethodName);

@@ -170,6 +170,7 @@
     <ClInclude Include="inc\infoclasses\commonstructures.h" />
     <ClInclude Include="inc\infoclasses\ContainerClass.h" />
     <ClInclude Include="inc\infoclasses\FunctionInfo.h" />
+    <ClInclude Include="inc\MetadataMerge.h" />
     <ClInclude Include="inc\Method.h" />
     <ClInclude Include="inc\ModuleMetadataHelpers.h" />
     <ClInclude Include="inc\infoclasses\ModuleInfo.h" />
@@ -187,6 +188,7 @@
     <ClCompile Include="src\infoclasses\TypeInfo.cpp" />
     <ClCompile Include="src\infoclasses\FunctionInfo.cpp" />
     <ClCompile Include="src\ILRewriter.cpp" />
+    <ClCompile Include="src\MetadataMerge.cpp" />
     <ClCompile Include="src\ModuleMetadataHelpers.cpp" />
     <ClCompile Include="src\infoclasses\ModuleInfo.cpp" />
     <ClCompile Include="src\infoclasses\ParameterInfo.cpp" />

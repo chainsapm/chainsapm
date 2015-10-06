@@ -19,7 +19,8 @@ This is the core class for the .NET profiling API.  This folder contains all of 
 - Agent Information
   - Process Information
   - Machine Information
+- IL Re-Writing
 
 ## Future
+I have a lot of features planned, however I need to solidify the ones above before I start making any other wild claims.
 
-- IL Re-Writing

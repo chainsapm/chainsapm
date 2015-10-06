@@ -87,8 +87,6 @@ namespace ChainsAPM.Server {
                         this,
                         dataadapter,
                         configadapter);
-                        throw new NotImplementedException ("");
-
                 }
 
                 protected void TurnOnGCNotification () {

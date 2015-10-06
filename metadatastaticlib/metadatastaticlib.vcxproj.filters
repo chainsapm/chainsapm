@@ -66,6 +66,9 @@
     <ClInclude Include="inc\IMetadataHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\MetadataMerge.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stdafx.cpp">
@@ -102,6 +105,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ILRewriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MetadataMerge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

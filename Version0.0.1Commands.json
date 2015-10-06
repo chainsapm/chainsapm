@@ -631,7 +631,7 @@
           },
           {
             "TypeName": "System.String",
-            "Name": "TypeName",
+            "Name": "TypeNameString",
             "IsList": false,
             "IsArray": false
           },

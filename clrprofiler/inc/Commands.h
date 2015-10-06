@@ -1,3 +1,4 @@
+#pragma once
 #include "commands\ACK.h"
 #include "commands\AgentInformation.h"
 #include "commands\DefineMethod.h"
@@ -5,6 +6,5 @@
 #include "commands\DefineModule.h"
 #include "commands\MethodEnter.h"
 #include "commands\MethodExit.h"
-#include "commands\MethodsToInstrument.h"
 #include "commands\DefineInstrumentationMethods.h"
 #include "commands\SendInjectionMetadata.h"

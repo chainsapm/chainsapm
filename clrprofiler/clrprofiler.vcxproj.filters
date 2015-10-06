@@ -106,12 +106,6 @@
     <ClCompile Include="src\helpers\srw_helper.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
-    <ClCompile Include="src\profiler\profilermain.cpp">
-      <Filter>CProfilerClass</Filter>
-    </ClCompile>
-    <ClCompile Include="src\profiler\CorProfilerCallbackImplementation.cpp">
-      <Filter>CorProfilerCallback</Filter>
-    </ClCompile>
     <ClCompile Include="src\commands\ACK.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -130,22 +124,73 @@
     <ClCompile Include="src\commands\MethodExit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\commands\MethodsToInstrument.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\commands\DefineClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\commands\commandprocessor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\tphelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\commands\DefineInstrumentationMethods.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\commands\SendInjectionMetadata.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tphelper\tphelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.threading.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.attach.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.gc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\_profilermain.cpp">
+      <Filter>CProfilerClass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\_CorProfilerCallbackImplementation.cpp">
+      <Filter>CorProfilerCallback</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.assembly_loading.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.module_loading.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.class_loading.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.function_unloading.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.jit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.rejit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.remoting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.managed_transitions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.runtime_suspensions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.object_allocation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.exceptions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.appdomain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\profilermain.init_shutdown.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -237,9 +282,6 @@
     <ClInclude Include="inc\commands\MethodExit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\commands\MethodsToInstrument.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="inc\commands\DefineClass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -256,6 +298,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inc\commands\SendInjectionMetadata.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\exported_functions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -281,6 +326,12 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="src\asm\etl_tail_x86.inc">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="src\asm\x64_external.inc">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="src\exportedfunctions\exported_functions.cpp">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

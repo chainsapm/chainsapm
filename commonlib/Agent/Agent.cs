@@ -88,10 +88,6 @@ namespace ChainsAPM.Agent {
                                                         Process (item as DefineMethod);
                                                 }
 
-                                                if ( item is DefineClass ) {
-                                                        Process (item as DefineClass);
-                                                }
-
                                                 if ( item is AgentInformation ) {
                                                         Process (item as AgentInformation);
                                                 }

@@ -143,6 +143,7 @@ namespace ChainsAPM.Commands.Agent
              byteSize += sizeof (Int64); // Length Of Timestamp
 
             byteSize += 4; // Length of Array
+			 byteSize += sizeof (Int32);
             byteSize += sizeof(Int32) * MethodPropList.Count;
             byteSize += 4; // Length of Array
             foreach (var sItem in MethodClassList)
