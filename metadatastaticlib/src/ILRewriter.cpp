@@ -114,7 +114,7 @@ HRESULT ILRewriter::Import()
 	return S_OK;
 }
 
-HRESULT ILRewriter::Import(ULONG pIL, std::shared_ptr<ModuleMetadataHelpers> mdHelper, mdSignature & LocalSig)
+HRESULT ILRewriter::Import(ULONG pIL, mdSignature & LocalSig)
 {
 	COR_ILMETHOD_DECODER decoder((COR_ILMETHOD*)pIL);
 
@@ -723,6 +723,51 @@ again:
 	return S_OK;
 }
 
+HRESULT ILRewriter::WriteILToConsole(std::shared_ptr<ModuleMetadataHelpers> mdHelper,bool ShowBytes, bool ShowTokens)
+{
+	PCCOR_SIGNATURE signature = NULL;
+	ULONG sigLen = 0;
+	for (ILInstr * pInstr = m_IL.m_pNext; pInstr != &m_IL; pInstr = pInstr->m_pNext)
+	{
+		switch (pInstr->m_opcode)
+		{
+		case CEE_BOX:
+		case CEE_CALL:
+		case CEE_CALLI:
+		case CEE_CALLVIRT:
+		case CEE_CASTCLASS:
+		case CEE_CPOBJ:
+		case CEE_INITOBJ:
+		case CEE_ISINST:
+		case CEE_JMP:
+		case CEE_LDELEM:
+		case CEE_LDFTN:
+		case CEE_LDOBJ:
+		case CEE_LDSFLD:
+		case CEE_LDSFLDA:
+		case CEE_LDTOKEN:
+		case CEE_LDVIRTFTN:
+		case CEE_NEWARR:
+		case CEE_NEWOBJ:
+		case CEE_REFANYVAL:
+		case CEE_SIZEOF:
+		case CEE_STELEM:
+		case CEE_STFLD:
+		case CEE_STOBJ:
+		case CEE_STSFLD:
+		case CEE_UNBOX:
+		case CEE_UNBOX_ANY:
+			printf("%s %S (%#010x)\n", s_OpCodeName[pInstr->m_opcode], mdHelper->GetFullyQualifiedName(pInstr->m_Arg32, &signature, &sigLen).c_str(), pInstr->m_Arg32);
+			break;
+		default:
+			printf("%s %#010x\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg64);
+			break;
+		}
+		
+	}
+	return S_OK;
+}
+
 HRESULT ILRewriter::SetILFunctionBody(unsigned size, LPBYTE pBody)
 {
 	if (m_pICorProfilerFunctionControl != NULL)
@@ -730,7 +775,7 @@ HRESULT ILRewriter::SetILFunctionBody(unsigned size, LPBYTE pBody)
 		// We're supplying IL for a rejit, so use the rejit mechanism
 		IfFailRet(m_pICorProfilerFunctionControl->SetILFunctionBody(size, pBody));
 	}
-	else
+	else if (m_pICorProfilerInfo != NULL)
 	{
 		// "classic-style" instrumentation on first JIT, so use old mechanism
 		IfFailRet(m_pICorProfilerInfo->SetILFunctionBody(m_moduleId, m_tkMethod, pBody));
@@ -748,6 +793,10 @@ LPBYTE ILRewriter::AllocateILMemory(unsigned size)
 		return new BYTE[size];
 	}
 
+	if (m_pICorProfilerInfo == NULL && m_pICorProfilerFunctionControl == NULL)
+	{
+		return new BYTE[size];
+	}
 	// Else, this is "classic-style" instrumentation on first JIT, and
 	// need to use the CLR's IL allocator
 
@@ -770,7 +819,6 @@ void ILRewriter::DeallocateILMemory(LPBYTE pBody)
 
 HRESULT ILRewriter::ReplaceTokens(std::shared_ptr<ModuleMetadataHelpers> mdHelper)
 {
-	m_tkLocalVarSig = mdHelper->GetMappedToken(m_tkLocalVarSig);
 	for (ILInstr * pInstr = m_IL.m_pNext; pInstr != &m_IL; pInstr = pInstr->m_pNext)
 	{
 		switch (pInstr->m_opcode)
@@ -811,29 +859,33 @@ HRESULT ILRewriter::ReplaceTokens(std::shared_ptr<ModuleMetadataHelpers> mdHelpe
 
 HRESULT ILRewriter::FixUpLocals(std::shared_ptr<ModuleMetadataHelpers> mdHelper, std::map<ULONG, ULONG> &localsFixup)
 {
-	m_tkLocalVarSig = mdHelper->GetMappedToken(m_tkLocalVarSig);
-	for (ILInstr * pInstr = m_IL.m_pNext; pInstr != &m_IL; pInstr = pInstr->m_pNext)
+	if (!localsFixup.empty())
 	{
-		switch (pInstr->m_opcode)
+
+		for (ILInstr * pInstr = m_IL.m_pNext; pInstr != &m_IL; pInstr = pInstr->m_pNext)
 		{
-		case CEE_LDLOC:
-		case CEE_LDLOC_0:
-		case CEE_LDLOC_1:
-		case CEE_LDLOC_2:
-		case CEE_LDLOC_3:
-		case CEE_STLOC_0:
-		case CEE_STLOC_1:
-		case CEE_STLOC_2:
-		case CEE_STLOC_3:
-		case CEE_LDLOC_S:
-		case CEE_LDLOCA_S:
-		case CEE_STLOC_S:
-			pInstr->m_Arg32 = mdHelper->GetMappedToken(pInstr->m_Arg32);
-			break;
-		default:
-			break;
+			switch (pInstr->m_opcode)
+			{
+			case CEE_LDLOC:
+			case CEE_LDLOC_0:
+			case CEE_LDLOC_1:
+			case CEE_LDLOC_2:
+			case CEE_LDLOC_3:
+			case CEE_STLOC_0:
+			case CEE_STLOC_1:
+			case CEE_STLOC_2:
+			case CEE_STLOC_3:
+			case CEE_LDLOC_S:
+			case CEE_LDLOCA_S:
+			case CEE_STLOC_S:
+				pInstr->m_Arg32 = localsFixup[pInstr->m_Arg32];
+				break;
+			default:
+				break;
+			}
 		}
 	}
+
 	return S_OK;
 }
 
@@ -897,6 +949,7 @@ HRESULT ILRewriter::FixUpTypes(std::shared_ptr<ModuleMetadataHelpers> mdHelper, 
 			std::getline(originalmemberbuffer, originalmodandtype, L':');
 			originalmemberbuffer.get();
 			std::getline(originalmemberbuffer, originalmember);
+
 			if (typeFixup.find(originalfullname) != typeFixup.end())
 			{
 				matchFound = true;
@@ -908,7 +961,7 @@ HRESULT ILRewriter::FixUpTypes(std::shared_ptr<ModuleMetadataHelpers> mdHelper, 
 					replaceAllTypes = true;
 				}
 			}
-		
+
 			if (matchFound)
 			{
 				namebuffer << typeFixup[fullname];
@@ -949,7 +1002,11 @@ HRESULT ILRewriter::FixUpTypes(std::shared_ptr<ModuleMetadataHelpers> mdHelper, 
 					}
 				}
 			}
-
+			else {
+				newTokenOut = mdHelper->GetMappedToken(pInstr->m_Arg32);
+			}
+			pInstr->m_Arg32 = newTokenOut;
+			break;
 
 		default:
 			break;
@@ -998,10 +1055,15 @@ void ILRewriter::AddILEnterProbe(ILRewriter & il) {
 			zeroStacks.emplace_back(pThisFirstIL->m_pNext);
 		}
 	}
+	pThisFirstIL = m_IL.m_pNext;
 	for (; pInstr != &il.m_IL; pInstr = pInstr->m_pNext)
 	{
-		pNewInstr = NewILInstr(*pInstr);
-		InsertBefore(pThisFirstIL, pNewInstr);
+		if (pInstr->m_opcode != CEE_RET)
+		{
+			pNewInstr = NewILInstr(*pInstr);
+			InsertBefore(pThisFirstIL, pNewInstr);
+		}
+		
 	}
 
 }
@@ -1034,7 +1096,10 @@ void ILRewriter::AddILProbe(ILInstr * pFirstIL) {
 
 	for (ILInstr * pInstr = pFirstIL; pInstr != NULL; pInstr = pInstr->m_pNext)
 	{
-		InsertBefore(pFirstIL, pInstr);
+		if (pInstr->m_opcode != CEE_RET )
+		{
+			InsertBefore(pFirstIL, pInstr);
+		}
 	}
 
 }
@@ -1068,8 +1133,11 @@ void ILRewriter::AddILExitProbe(ILRewriter & il) {
 			ILInstr * pNewInstr = NULL;
 			for (; pInstrOver != &il.m_IL; pInstrOver = pInstrOver->m_pNext)
 			{
-				pNewInstr = NewILInstr(*pInstrOver);
-				InsertBefore(pThisFirstIL, pNewInstr);
+				if (pInstrOver->m_opcode != CEE_RET)
+				{
+					pNewInstr = NewILInstr(*pInstrOver);
+					InsertBefore(pThisFirstIL, pNewInstr);
+				}
 			}
 			fAtLeastOneProbeAdded = TRUE;
 

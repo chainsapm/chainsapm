@@ -215,6 +215,36 @@ static const BYTE s_OpCodePop[] =
 };
 
 
+static char* s_OpCodeName[] =
+{
+#define Pop0    0
+#define Pop1    1
+#define PopI    1
+#define PopI4   1
+#define PopR4   1
+#define PopI8   1
+#define PopR8   1
+#define PopRef  1
+#define VarPop  1          // Test code doesn't call vararg fcns, so this should not be used
+
+#define OPDEF(c,s,pop,push,args,type,l,s1,s2,flow) {s},
+#include "opcode.def"
+#undef OPDEF
+
+#undef Pop0   
+#undef Pop1   
+#undef PopI   
+#undef PopI4  
+#undef PopR4  
+#undef PopI8  
+#undef PopR8  
+#undef PopRef 
+#undef VarPop 
+	0,                   // DUMMY TO CLEAR WARNING 
+};
+
+
+
 
 
 class ILRewriter
@@ -268,7 +298,7 @@ public:
 
 	HRESULT Import();
 
-	HRESULT Import(ULONG pIL, std::shared_ptr<ModuleMetadataHelpers> mdHelper, mdSignature & LocalSig);
+	HRESULT Import(ULONG pIL, mdSignature & LocalSig);
 
 	HRESULT ImportIL(LPCBYTE pIL);
 
@@ -296,6 +326,8 @@ public:
 
 	HRESULT Export();
 
+	HRESULT WriteILToConsole(std::shared_ptr<ModuleMetadataHelpers> mdHelper, bool ShowBytes, bool ShowTokens);
+	
 	HRESULT SetILFunctionBody(unsigned size, LPBYTE pBody);
 
 	LPBYTE AllocateILMemory(unsigned size);
