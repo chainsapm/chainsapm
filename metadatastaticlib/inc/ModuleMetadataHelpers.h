@@ -38,7 +38,6 @@ public:
 
 	mdToken DefineSigToken(mdSignature original, PCCOR_SIGNATURE pNewSig, ULONG sigLen, mdSignature & replacement);
 
-
 	//PCCOR_SIGNATURE ParseElementType(const CComPtr<IMetaDataImport>& pMDImport, PCCOR_SIGNATURE signature, std::wstring* buffer);
 
 	// Get a forward copy of all of the current assembly references in this module

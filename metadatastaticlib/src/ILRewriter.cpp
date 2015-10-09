@@ -723,47 +723,57 @@ again:
 	return S_OK;
 }
 
-HRESULT ILRewriter::WriteILToConsole(std::shared_ptr<ModuleMetadataHelpers> mdHelper,bool ShowBytes, bool ShowTokens)
+HRESULT ILRewriter::WriteILToConsole(std::shared_ptr<ModuleMetadataHelpers> mdHelper, bool ShowBytes, bool ShowTokens)
 {
 	PCCOR_SIGNATURE signature = NULL;
 	ULONG sigLen = 0;
 	for (ILInstr * pInstr = m_IL.m_pNext; pInstr != &m_IL; pInstr = pInstr->m_pNext)
 	{
-		switch (pInstr->m_opcode)
+		switch (s_OpCodeVar[pInstr->m_opcode])
 		{
-		case CEE_BOX:
-		case CEE_CALL:
-		case CEE_CALLI:
-		case CEE_CALLVIRT:
-		case CEE_CASTCLASS:
-		case CEE_CPOBJ:
-		case CEE_INITOBJ:
-		case CEE_ISINST:
-		case CEE_JMP:
-		case CEE_LDELEM:
-		case CEE_LDFTN:
-		case CEE_LDOBJ:
-		case CEE_LDSFLD:
-		case CEE_LDSFLDA:
-		case CEE_LDTOKEN:
-		case CEE_LDVIRTFTN:
-		case CEE_NEWARR:
-		case CEE_NEWOBJ:
-		case CEE_REFANYVAL:
-		case CEE_SIZEOF:
-		case CEE_STELEM:
-		case CEE_STFLD:
-		case CEE_STOBJ:
-		case CEE_STSFLD:
-		case CEE_UNBOX:
-		case CEE_UNBOX_ANY:
-			printf("%s %S (%#010x)\n", s_OpCodeName[pInstr->m_opcode], mdHelper->GetFullyQualifiedName(pInstr->m_Arg32, &signature, &sigLen).c_str(), pInstr->m_Arg32);
+
+		case InlineBrTarget:
+			printf("%15s %#010x\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_pTarget->m_offset);
+			break;
+		case 	InlineMethod:
+		case 	InlineField:
+		case 	InlineTok:
+		case 	InlineType:
+			printf("%15s %S (%#010x)\n", s_OpCodeName[pInstr->m_opcode], mdHelper->GetFullyQualifiedName(pInstr->m_Arg32, &signature, &sigLen).c_str(), pInstr->m_Arg32);
+			break;
+		case 	InlineString:
+		case 	ShortInlineI:
+		case 	InlineI:
+			printf("%15s %#010x\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg32);
+			break;
+		case 	InlineR:
+		case 	ShortInlineR:
+		case 	InlineI8:
+			printf("%15s %#08x %#08x\n", s_OpCodeName[pInstr->m_opcode], (int)((pInstr->m_Arg64 & 0xFFFFFFFF00000000) >> 32), (int)(pInstr->m_Arg64 & 0xFFFFFFFF));
+			break;
+		case 	InlineNone:
+			printf("%15s\n", s_OpCodeName[pInstr->m_opcode]);
+			break;
+		case 	InlineSig:
+			printf("%15s\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg64);
+			break;
+		case 	InlineSwitch:
+			printf("%15s\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg64);
+			break;
+		case 	InlineVar:
+			printf("%15s %#010x\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg32);
+			break;
+		case 	ShortInlineBrTarg:
+			printf("%15s %#x\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_pTarget->m_offset);
+			break;
+		case 	ShortInlineVar:
+			printf("%15s %#x\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg16);
 			break;
 		default:
-			printf("%s %#010x\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg64);
+			printf("%15s\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg64);
 			break;
 		}
-		
+
 	}
 	return S_OK;
 }
@@ -943,7 +953,7 @@ HRESULT ILRewriter::FixUpTypes(std::shared_ptr<ModuleMetadataHelpers> mdHelper, 
 		case CEE_STSFLD:
 		case CEE_UNBOX:
 		case CEE_UNBOX_ANY:
-
+			
 			originalfullname.assign(mdHelper->GetFullyQualifiedName(pInstr->m_Arg32, &signature, &sigLen));
 			originalmemberbuffer << originalfullname;
 			std::getline(originalmemberbuffer, originalmodandtype, L':');
@@ -1063,7 +1073,7 @@ void ILRewriter::AddILEnterProbe(ILRewriter & il) {
 			pNewInstr = NewILInstr(*pInstr);
 			InsertBefore(pThisFirstIL, pNewInstr);
 		}
-		
+
 	}
 
 }
@@ -1096,7 +1106,7 @@ void ILRewriter::AddILProbe(ILInstr * pFirstIL) {
 
 	for (ILInstr * pInstr = pFirstIL; pInstr != NULL; pInstr = pInstr->m_pNext)
 	{
-		if (pInstr->m_opcode != CEE_RET )
+		if (pInstr->m_opcode != CEE_RET)
 		{
 			InsertBefore(pFirstIL, pInstr);
 		}

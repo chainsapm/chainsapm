@@ -214,36 +214,80 @@ static const BYTE s_OpCodePop[] =
 	0,                   // DUMMY TO CLEAR WARNING 
 };
 
-
 static char* s_OpCodeName[] =
 {
-#define Pop0    0
-#define Pop1    1
-#define PopI    1
-#define PopI4   1
-#define PopR4   1
-#define PopI8   1
-#define PopR8   1
-#define PopRef  1
-#define VarPop  1          // Test code doesn't call vararg fcns, so this should not be used
-
-#define OPDEF(c,s,pop,push,args,type,l,s1,s2,flow) {s},
+#define OPDEF(c,s,pop,push,args,type,l,s1,s2,flow) s,
 #include "opcode.def"
 #undef OPDEF
-
-#undef Pop0   
-#undef Pop1   
-#undef PopI   
-#undef PopI4  
-#undef PopR4  
-#undef PopI8  
-#undef PopR8  
-#undef PopRef 
-#undef VarPop 
 	0,                   // DUMMY TO CLEAR WARNING 
 };
 
+typedef enum
+{
+	InlineBrTarget = 1,
+	InlineField,
+	InlineI,
+	InlineI8,
+	InlineMethod,
+	InlineNone,
+	InlineR,
+	InlineSig,
+	InlineString,
+	InlineSwitch,
+	InlineTok,
+	InlineType,
+	InlineVar,
+	ShortInlineBrTarg,
+	ShortInlineI,
+	ShortInlineR,
+	ShortInlineVar,
+	ShortInlineBrTarget
+} OPCODE_VARIABLE;
 
+static BYTE s_OpCodeVar[] =
+{
+#define InlineBrTarget   1
+#define InlineField      2
+#define InlineI          3
+#define InlineI8         4
+#define InlineMethod     5
+#define InlineNone       6
+#define InlineR          7
+#define InlineSig        8
+#define InlineString     9
+#define InlineSwitch     10
+#define InlineTok        11
+#define InlineType       12
+#define InlineVar        13
+#define ShortInlineBrTarg 14
+#define ShortInlineI     15
+#define ShortInlineR     16
+#define ShortInlineVar   17
+#define ShortInlineBrTarget 18
+
+#define OPDEF(c,s,pop,push,args,type,l,s1,s2,flow) args,
+#include "opcode.def"
+#undef OPDEF
+	0,                   // DUMMY TO CLEAR WARNING 
+#undef InlineBrTarget    
+#undef InlineField       
+#undef InlineI           
+#undef InlineI8          
+#undef InlineMethod      
+#undef InlineNone        
+#undef InlineR           
+#undef InlineSig         
+#undef InlineString      
+#undef InlineSwitch      
+#undef InlineTok         
+#undef InlineType        
+#undef InlineVar         
+#undef ShortInlineBrTarg 
+#undef ShortInlineI     
+#undef ShortInlineR     
+#undef ShortInlineVar   
+#undef ShortInlineBrTarget 
+};
 
 
 
@@ -327,7 +371,7 @@ public:
 	HRESULT Export();
 
 	HRESULT WriteILToConsole(std::shared_ptr<ModuleMetadataHelpers> mdHelper, bool ShowBytes, bool ShowTokens);
-	
+
 	HRESULT SetILFunctionBody(unsigned size, LPBYTE pBody);
 
 	LPBYTE AllocateILMemory(unsigned size);
