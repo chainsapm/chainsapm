@@ -70,8 +70,11 @@ struct ILInstr
 
 	unsigned        m_opcode;
 	unsigned        m_offset;
-	signed          m_stacklocation;
+	signed          m_alterstack;
+	signed          m_stackposition;
+	bool			m_marked;
 	bool			m_insidebranch;
+	bool			m_conditional;
 	bool			m_branchprevious;
 
 	union
@@ -342,7 +345,7 @@ public:
 
 	HRESULT Import();
 
-	HRESULT Import(ULONG pIL, mdSignature & LocalSig);
+	HRESULT Import(UINT_PTR pIL, mdSignature & LocalSig);
 
 	HRESULT ImportIL(LPCBYTE pIL);
 
@@ -397,7 +400,7 @@ public:
 
 	void AddILEnterProbe(ILRewriter & il);
 
-	void AddILEnterProbe(ILRewriter & il, bool CheckOffsetFixups, bool CheckTypeFixups);
+	void AddILEnterProbe(ILRewriter & il, int SafePointOffset);
 
 	void AddILProbe(ILInstr * pFirstIL);
 
@@ -408,6 +411,8 @@ public:
 	UINT AddNewDateTimeLocal();
 
 	WCHAR* GetNameFromToken(mdToken tk);
+
+	void RecursiveBranchCheck(ILInstr * previousInstr, ILInstr * pInstr, std::map<int, ILInstr*>& branchstack, bool conditional);
 
 	ILInstr * NewLDC(LPVOID p);
 

@@ -411,11 +411,49 @@ std::wstring ModuleMetadataHelpers::GetFullyQualifiedName(mdToken token, PCCOR_S
 	ULONG ImplementationFlags = 0;
 	ULONG TypeDefFlags = 0;
 	mdToken tkExtends = 0;
+	UVCP_CONSTANT fieldConstant;
+	ULONG fieldConstantLen;
+	ULONG StringLen = 0;
+	LPWSTR UserString;
 
 	switch (TypeFromToken(token))
 	{
-	case mdtMethodDef:
+	case mdtString:
+		pMetaDataImport->GetUserString(token, NULL, NULL, &StringLen);
+		UserString = (LPWSTR)malloc((sizeof(WCHAR) * StringLen) + sizeof(WCHAR));
+		ZeroMemory(UserString, (sizeof(WCHAR) * StringLen) + sizeof(WCHAR));
+		pMetaDataImport->GetUserString(token, UserString, StringLen, &StringLen);
+		fullname.append(UserString);
+		break;
+	case mdtFieldDef:
+		assembly.assign(GetAssemblyName());
+		pMetaDataImport->GetFieldProps(
+			token,
+			&tkClass,
+			MethodName,
+			_countof(MethodName),
+			&MethodNameLen,
+			&MethodAttributes,
+			Signature,
+			SigLength,
+			&ImplementationFlags,
+			&fieldConstant,
+			&fieldConstantLen);
+		member.assign(MethodName);
 
+		if (tkClass != mdTypeDefNil)
+		{
+			pMetaDataImport->GetTypeDefProps(
+				tkClass,
+				TypeName,
+				_countof(TypeName),
+				&TypeNameLen,
+				&TypeDefFlags,
+				&tkExtends);
+			type.assign(TypeName);
+		}
+		break;
+	case mdtMethodDef:
 		assembly.assign(GetAssemblyName());
 		pMetaDataImport->GetMethodProps(
 			token,
@@ -511,8 +549,6 @@ std::wstring ModuleMetadataHelpers::GetFullyQualifiedName(mdToken token, PCCOR_S
 		}
 
 		break;
-	case mdtFieldDef:
-		break;
 	case mdtTypeDef:
 		pMetaDataImport->GetTypeDefProps(
 			token,
@@ -567,21 +603,24 @@ std::wstring ModuleMetadataHelpers::GetFullyQualifiedName(mdToken token, PCCOR_S
 	default:
 		break;
 	}
-	fullname.append(L"[");
-	if (!module.empty())
+	if (fullname.empty())
 	{
-		fullname.append(module);
-		fullname.append(L"!");
+		fullname.append(L"[");
+		if (!module.empty())
+		{
+			fullname.append(module);
+			fullname.append(L"!");
+		}
+		fullname.append(assembly);
+		fullname.append(L"]");
+		fullname.append(type);
+		if (!member.empty())
+		{
+			fullname.append(L"::");
+			fullname.append(member);
+		}
 	}
-	fullname.append(assembly);
-	fullname.append(L"]");
-	fullname.append(type);
-	if (!member.empty())
-	{
-		fullname.append(L"::");
-		fullname.append(member);
-	}
-
+	
 	return fullname;
 }
 

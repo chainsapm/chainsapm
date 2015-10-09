@@ -114,7 +114,7 @@ HRESULT ILRewriter::Import()
 	return S_OK;
 }
 
-HRESULT ILRewriter::Import(ULONG pIL, mdSignature & LocalSig)
+HRESULT ILRewriter::Import(UINT_PTR pIL, mdSignature & LocalSig)
 {
 	COR_ILMETHOD_DECODER decoder((COR_ILMETHOD*)pIL);
 
@@ -279,79 +279,77 @@ HRESULT ILRewriter::ImportIL(LPCBYTE pIL)
 		ULONG originalMethodSignatureLen = 0;
 		ULONG RVA;
 		DWORD impFlags;
-
+		int stackPosition = 0;
+		pInstr->m_stackposition = 0;
 		switch (opcode)
 		{
 		case CEE_CALL:
 		case CEE_CALLI:
 		case CEE_CALLVIRT:
-		case CEE_NEWOBJ:
-		case CEE_RET:
-			if (opcode == CEE_RET)
+			switch (TypeFromToken(pInstr->m_Arg32))
 			{
-				stackPosition = 0;
+			case mdtMethodDef:
+				pMetaDataImport->GetMethodProps(
+					pInstr->m_Arg32,
+					&parentClass,
+					methodDefNameBuffer,
+					_countof(methodDefNameBuffer),
+					&numChars,
+					&attrFlags,
+					&originalSignature,
+					&originalMethodSignatureLen,
+					&RVA,
+					&impFlags);
+				break;
+			case mdtMemberRef:
+				pMetaDataImport->GetMemberRefProps(
+					pInstr->m_Arg32,
+					&parentClass,
+					methodDefNameBuffer,
+					_countof(methodDefNameBuffer),
+					&numChars,
+					&originalSignature,
+					&originalMethodSignatureLen);
+				break;
+			case mdtMethodSpec:
+				pMetaDataImport->GetMethodSpecProps(
+					pInstr->m_Arg32,
+					&parentClass,
+					&originalSignature,
+					&originalMethodSignatureLen);
+				break;
+			default:
+				break;
 			}
-			else {
-				switch (TypeFromToken(pInstr->m_Arg32))
+			if (originalMethodSignatureLen > 2)
+			{
+				int i = 2;
+				if ((originalSignature[0] & IMAGE_CEE_CS_CALLCONV_GENERIC) | (originalSignature[0] & IMAGE_CEE_CS_CALLCONV_GENERICINST))
 				{
-				case mdtMethodDef:
-					pMetaDataImport->GetMethodProps(
-						pInstr->m_Arg32,
-						&parentClass,
-						methodDefNameBuffer,
-						_countof(methodDefNameBuffer),
-						&numChars,
-						&attrFlags,
-						&originalSignature,
-						&originalMethodSignatureLen,
-						&RVA,
-						&impFlags);
-					break;
-				case mdtMemberRef:
-					pMetaDataImport->GetMemberRefProps(
-						pInstr->m_Arg32,
-						&parentClass,
-						methodDefNameBuffer,
-						_countof(methodDefNameBuffer),
-						&numChars,
-						&originalSignature,
-						&originalMethodSignatureLen);
-					break;
-				case mdtMethodSpec:
-					pMetaDataImport->GetMethodSpecProps(
-						pInstr->m_Arg32,
-						&parentClass,
-						&originalSignature,
-						&originalMethodSignatureLen);
-					break;
-				default:
-					break;
+					i = 3;
 				}
-				if (originalMethodSignatureLen > 2)
+				if ((attrFlags & mdStatic) != mdStatic)
 				{
-					int i = 1;
-					if ((originalSignature[0] & IMAGE_CEE_CS_CALLCONV_GENERIC) | (originalSignature[0] & IMAGE_CEE_CS_CALLCONV_GENERICINST))
-					{
-						stackPosition -= originalSignature[++i];
-					}
-					else {
-						stackPosition -= originalSignature[i];
-					}
-
-					if ((originalSignature[++i] != ELEMENT_TYPE_VOID) | (opcode == CEE_NEWOBJ))
-					{
-						stackPosition += 1;
-					}
+					stackPosition -= 1;
+				}
+				stackPosition -= (originalSignature[i - 1]);
+				if ((originalSignature[i] == ELEMENT_TYPE_VOID))
+				{
+					stackPosition += 0;
+				}
+				else {
+					stackPosition += 1;
 				}
 			}
 			break;
 		default:
-			stackPosition += (push + (-pop));
+			stackPosition = (push + (-pop));
 			break;
 		}
-		pInstr->m_stacklocation = stackPosition;
+		pInstr->m_alterstack = stackPosition;
 
 	}
+
 	assert(offset == m_CodeSize);
 	std::map<int, ILInstr*> branchStack;
 	if (fBranch)
@@ -366,9 +364,20 @@ HRESULT ILRewriter::ImportIL(LPCBYTE pIL)
 				{
 					if (branchStack.find(pInstr->m_offset) == branchStack.end())
 					{
-						branchStack.emplace(pInstr->m_offset, pInstr);
 						if (branchStack.find(pInstr->m_pTarget->m_offset) == branchStack.end())
 						{
+							switch (pInstr->m_opcode)
+							{
+							case CEE_BR:
+							case CEE_BR_S:
+							case CEE_BRTRUE:
+							case CEE_BRTRUE_S:
+								pInstr->m_pTarget->m_conditional = false;
+								break;
+							default:
+								pInstr->m_pTarget->m_conditional = true;
+								break;
+							}
 							branchStack.emplace(pInstr->m_pTarget->m_offset, pInstr->m_pTarget);
 						}
 					}
@@ -378,34 +387,96 @@ HRESULT ILRewriter::ImportIL(LPCBYTE pIL)
 			}
 
 		}
-		int branchCounter = 0;
-
+		int branchdepth = 0;
+		int stackdepth = 0;
 		for (ILInstr * pInstr = m_IL.m_pNext; pInstr != &m_IL; pInstr = pInstr->m_pNext)
 		{
+			
 			if (s_OpCodeFlags[pInstr->m_opcode] & OPCODEFLAGS_BranchTarget)
 			{
-				if ((pInstr->m_opcode != CEE_BR) | (pInstr->m_opcode != CEE_BR_S)
-					| (pInstr->m_opcode != CEE_LEAVE) | (pInstr->m_opcode != CEE_LEAVE_S))
+				if (pInstr->m_opcode != CEE_LEAVE && pInstr->m_opcode != CEE_LEAVE_S)
 				{
-					branchCounter++;
+					
+					switch (pInstr->m_opcode)
+					{
+					case CEE_BR:
+					case CEE_BR_S:
+						break;
+					default:
+						
+						stackdepth = 0;
+						branchdepth++;
+						pInstr = pInstr->m_pNext;
+						break;
+					}
+					
 				}
-
 			}
-			else if (branchStack.find(pInstr->m_offset) != branchStack.end())
+			if (branchStack.find(pInstr->m_offset) != branchStack.end())
 			{
-				if (branchCounter > 0)
+				stackdepth = 0;
+				if (!pInstr->m_conditional)
 				{
-					branchCounter--;
+					branchdepth--;
 				}
+				
 			}
-			pInstr->m_insidebranch = (branchCounter > 0);
-
+			stackdepth += pInstr->m_alterstack;
+			pInstr->m_stackposition = stackdepth;
+			pInstr->m_insidebranch = (branchdepth > 0);
 		}
 	}
 
 
 
 	return S_OK;
+}
+
+void ILRewriter::RecursiveBranchCheck(ILInstr * previousInstr, ILInstr * pInstr, std::map<int, ILInstr*>& branchStack, bool conditional)
+{
+	int	stackposition = 0;
+	bool inside = conditional;
+	bool cond = false;
+	if (previousInstr != NULL)
+	{
+		inside = true;
+	}
+	for (; pInstr != &m_IL; pInstr = pInstr->m_pNext)
+	{
+		pInstr->m_marked = true;
+		if ((s_OpCodeFlags[pInstr->m_opcode] & OPCODEFLAGS_BranchTarget))
+		{
+			switch (pInstr->m_opcode)
+			{
+			case CEE_BR:
+			case CEE_BR_S:
+				cond = false;
+				break;
+			default:
+				cond = true;
+				break;
+			}
+			if (!pInstr->m_pTarget->m_marked)
+			{
+				pInstr->m_pTarget->m_insidebranch = cond;
+				pInstr->m_pTarget->m_marked = true;
+				RecursiveBranchCheck(pInstr, pInstr->m_pTarget->m_pNext, branchStack, cond);
+			}
+			pInstr = pInstr->m_pNext;
+		}
+
+		if (branchStack.find(pInstr->m_offset) != branchStack.end())
+		{
+			pInstr->m_insidebranch = inside;
+			if (previousInstr != NULL)
+			{
+				pInstr = previousInstr;
+				return;
+			}
+
+		}
+		pInstr->m_insidebranch = inside;
+	}
 }
 
 HRESULT ILRewriter::ImportEH(const COR_ILMETHOD_SECT_EH* pILEH, unsigned nEH)
@@ -727,53 +798,113 @@ HRESULT ILRewriter::WriteILToConsole(std::shared_ptr<ModuleMetadataHelpers> mdHe
 {
 	PCCOR_SIGNATURE signature = NULL;
 	ULONG sigLen = 0;
+	bool isPrefix = false;
+	bool isPrefixMulti = false;
+	bool wasPrefix = false;
+	std::wstring prefixbuffer;
+	std::wstring beforeitall;
+	wchar_t prefixBuffer[512];
+	const wchar_t* stringout = NULL;
+
 	for (ILInstr * pInstr = m_IL.m_pNext; pInstr != &m_IL; pInstr = pInstr->m_pNext)
 	{
+		ZeroMemory(prefixBuffer, 512 * sizeof(WCHAR));
+		switch (pInstr->m_opcode)
+		{
+		case CEE_VOLATILE:
+		case CEE_TAILCALL:
+		case CEE_CONSTRAINED:
+		case CEE_UNALIGNED:
+		case CEE_READONLY:
+			wasPrefix = true;
+			if (isPrefix)
+			{
+				isPrefixMulti = true;
+			}
+			else {
+				isPrefix = true;
+			}
+
+			break;
+		default:
+			isPrefix = false;
+			isPrefixMulti = false;
+			break;
+		}
+
+		if (isPrefix && !isPrefixMulti)
+		{
+			wsprintf(prefixBuffer, L"IL_%04x:  %S", pInstr->m_offset, s_OpCodeName[pInstr->m_opcode]);
+			prefixbuffer.append(prefixBuffer);
+			continue;
+		}
+		else if (isPrefix && isPrefixMulti)
+		{
+			wsprintf(prefixBuffer, L"%S", s_OpCodeName[pInstr->m_opcode]);
+			prefixbuffer.append(prefixBuffer);
+			continue;
+		}
+		else if (wasPrefix)
+		{
+			wsprintf(prefixBuffer, L"%S", s_OpCodeName[pInstr->m_opcode]);
+			prefixbuffer.append(prefixBuffer);
+		}
+		else {
+			wsprintf(prefixBuffer, L"IL_%04x:  %S", pInstr->m_offset, s_OpCodeName[pInstr->m_opcode]);
+			prefixbuffer.append(prefixBuffer);
+		}
+		wprintf(prefixbuffer.c_str());
+
 		switch (s_OpCodeVar[pInstr->m_opcode])
 		{
 
 		case InlineBrTarget:
-			printf("%15s %#010x\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_pTarget->m_offset);
+			wprintf(L" IL_%04x\n", pInstr->m_pTarget->m_offset);
 			break;
+
 		case 	InlineMethod:
 		case 	InlineField:
 		case 	InlineTok:
 		case 	InlineType:
-			printf("%15s %S (%#010x)\n", s_OpCodeName[pInstr->m_opcode], mdHelper->GetFullyQualifiedName(pInstr->m_Arg32, &signature, &sigLen).c_str(), pInstr->m_Arg32);
+			wprintf(L" %s //(%#010x)\n", mdHelper->GetFullyQualifiedName(pInstr->m_Arg32, &signature, &sigLen).c_str(), pInstr->m_Arg32);
 			break;
 		case 	InlineString:
+			wprintf(L" \"%s\" //(%#010x)\n", mdHelper->GetFullyQualifiedName(pInstr->m_Arg32, &signature, &sigLen).c_str(), pInstr->m_Arg32);
+			break;
 		case 	ShortInlineI:
 		case 	InlineI:
-			printf("%15s %#010x\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg32);
+			wprintf(L" %#010x\n", pInstr->m_Arg32);
 			break;
 		case 	InlineR:
 		case 	ShortInlineR:
 		case 	InlineI8:
-			printf("%15s %#08x %#08x\n", s_OpCodeName[pInstr->m_opcode], (int)((pInstr->m_Arg64 & 0xFFFFFFFF00000000) >> 32), (int)(pInstr->m_Arg64 & 0xFFFFFFFF));
+			wprintf(L" %#010x %#010x\n", (int)((pInstr->m_Arg64 & 0xFFFFFFFF00000000) >> 32), (int)(pInstr->m_Arg64 & 0xFFFFFFFF));
 			break;
 		case 	InlineNone:
-			printf("%15s\n", s_OpCodeName[pInstr->m_opcode]);
+			wprintf(L"\n");
 			break;
 		case 	InlineSig:
-			printf("%15s\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg64);
+			wprintf(L" %#010x\n", pInstr->m_Arg64);
 			break;
 		case 	InlineSwitch:
-			printf("%15s\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg64);
+			wprintf(L" IL_%04x\n", pInstr->m_Arg32);
 			break;
 		case 	InlineVar:
-			printf("%15s %#010x\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg32);
+			wprintf(L" %#010x\n", pInstr->m_Arg32);
 			break;
 		case 	ShortInlineBrTarg:
-			printf("%15s %#x\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_pTarget->m_offset);
+		case    ShortInlineBrTarget:
+			wprintf(L" IL_%04x\n", pInstr->m_pTarget->m_offset);
 			break;
 		case 	ShortInlineVar:
-			printf("%15s %#x\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg16);
+			wprintf(L" %#x\n", pInstr->m_Arg16);
 			break;
 		default:
-			printf("%15s\n", s_OpCodeName[pInstr->m_opcode], pInstr->m_Arg64);
+			wprintf(L"\n");
 			break;
 		}
-
+		wasPrefix = false;
+		prefixbuffer.clear();
 	}
 	return S_OK;
 }
@@ -953,7 +1084,7 @@ HRESULT ILRewriter::FixUpTypes(std::shared_ptr<ModuleMetadataHelpers> mdHelper, 
 		case CEE_STSFLD:
 		case CEE_UNBOX:
 		case CEE_UNBOX_ANY:
-			
+
 			originalfullname.assign(mdHelper->GetFullyQualifiedName(pInstr->m_Arg32, &signature, &sigLen));
 			originalmemberbuffer << originalfullname;
 			std::getline(originalmemberbuffer, originalmodandtype, L':');
@@ -1053,46 +1184,25 @@ void __fastcall ILRewriter::Probe_SDSFLD(WCHAR * pFieldName)
 }
 
 void ILRewriter::AddILEnterProbe(ILRewriter & il) {
-	ILInstr * pThisFirstIL = m_IL.m_pNext;
-	ILInstr * pInstr = il.m_IL.m_pNext;
-	ILInstr * pNewInstr = NULL;
-
-	std::vector<ILInstr*> zeroStacks;
-	for (; pThisFirstIL != &m_IL; pThisFirstIL = pThisFirstIL->m_pNext)
-	{
-		if (pThisFirstIL->m_stacklocation == 0 && pThisFirstIL->m_insidebranch == false)
-		{
-			zeroStacks.emplace_back(pThisFirstIL->m_pNext);
-		}
-	}
-	pThisFirstIL = m_IL.m_pNext;
-	for (; pInstr != &il.m_IL; pInstr = pInstr->m_pNext)
-	{
-		if (pInstr->m_opcode != CEE_RET)
-		{
-			pNewInstr = NewILInstr(*pInstr);
-			InsertBefore(pThisFirstIL, pNewInstr);
-		}
-
-	}
-
+	AddILEnterProbe(il, 0);
 }
 
-void ILRewriter::AddILEnterProbe(ILRewriter & il, bool CheckOffsetFixups, bool CheckTypeFixups) {
+void ILRewriter::AddILEnterProbe(ILRewriter & il, int SafePointOffset) {
 	ILInstr * pThisFirstIL = m_IL.m_pNext;
 	ILInstr * pInstr = il.m_IL.m_pNext;
 	ILInstr * pNewInstr = NULL;
 
-	UNREFERENCED_PARAMETER(CheckOffsetFixups);
-	UNREFERENCED_PARAMETER(CheckTypeFixups);
-
 	std::vector<ILInstr*> zeroStacks;
 	for (; pThisFirstIL != &m_IL; pThisFirstIL = pThisFirstIL->m_pNext)
 	{
-		if (pThisFirstIL->m_stacklocation == 0 && pThisFirstIL->m_insidebranch == false)
+		if (pThisFirstIL->m_stackposition == 0 & pThisFirstIL->m_insidebranch == false)
 		{
-			zeroStacks.emplace_back(pThisFirstIL->m_pNext);
+			zeroStacks.emplace_back(pThisFirstIL);
 		}
+	}
+	if (SafePointOffset > 0 && !zeroStacks.empty() && zeroStacks.at(SafePointOffset) != NULL)
+	{
+		pThisFirstIL = zeroStacks.at(SafePointOffset);
 	}
 	for (; pInstr != &il.m_IL; pInstr = pInstr->m_pNext)
 	{
