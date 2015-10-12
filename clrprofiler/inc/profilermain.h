@@ -140,7 +140,7 @@ typedef IDToInfoMap<mdMethodDef, int> MethodDefToLatestVersionMap;
 struct ModuleInfo
 {
 	WCHAR                               m_wszModulePath[512];
-	ModuleMetadataHelpers *             m_pImport;
+	std::shared_ptr<ModuleMetadataHelpers>             m_pImport;
 	mdToken                             m_mdEnterProbeRef;
 	mdToken                             m_mdExitProbeRef;
 	mdToken                             m_mdEnterProbeRef2;
@@ -336,6 +336,8 @@ public:
 	// P-INVOKED FUNCTIONS
 	void NtvEnteredFunction(unsigned __int64 moduleIDCur, mdMethodDef mdCur, int nVersionCur);
 	void NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, int nVersionCur);
+
+	void RewriteMethodsWithSigTranslate(std::shared_ptr<ModuleMetadataHelpers> helpers, std::shared_ptr<ModuleMetadataHelpers> helpersDLL, ModuleID modID);
 
 	// Pipe operations with the GUI
 	void LaunchLogListener(LPCWSTR wszPath);

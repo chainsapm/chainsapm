@@ -5,6 +5,7 @@
 #include "profilermain.h"
 #include "srw_helper.h"
 #include "critsec_helper.h"
+#include "../../metadatastaticlib/inc/ILRewriter.h"
 #include "../../metadatastaticlib/inc/allinfo.h"
 
 // Maximum buffer size for input from file
@@ -1326,4 +1327,636 @@ void Cprofilermain::NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, i
 
 
 
+}
+
+
+void Cprofilermain::RewriteMethodsWithSigTranslate(std::shared_ptr<ModuleMetadataHelpers> helpers, 
+	std::shared_ptr<ModuleMetadataHelpers> helpersDLL,
+	ModuleID modID)
+{
+	CComPtr<IMetaDataDispenserEx> pMetaDispense;
+
+	CoCreateInstance(
+		CLSID_CorMetaDataDispenser,
+		NULL,
+		CLSCTX_INPROC,
+		IID_IMetaDataDispenser,
+		(LPVOID *)&pMetaDispense);
+	//LPWSTR fileName = L"C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\mscorlib.dll";
+
+
+	CComPtr<IMetaDataEmit2> pMetaEmitBlank;
+	CComPtr<IMetaDataAssemblyEmit> pMetaAssemblyEmitBlank;
+
+	pMetaDispense->DefineScope(CLSID_CorMetaDataRuntime, ofRead, IID_IMetaDataEmit2, (IUnknown**)&pMetaEmitBlank);
+	pMetaDispense->DefineScope(CLSID_CorMetaDataRuntime, ofRead, IID_IMetaDataAssemblyEmit, (IUnknown**)&pMetaAssemblyEmitBlank);
+
+	#define MAX_ARRAY 8192
+
+	if (helpers != NULL && helpersDLL != NULL)
+	{
+
+		// container for ICorProfilerInfo reference
+		ATL::CComPtr<IMetaDataEmit2> pMetaEmit = helpers->pMetaDataEmit;
+		ATL::CComPtr<IMetaDataImport2> pMetaImport = helpers->pMetaDataImport;
+		ATL::CComPtr<IMetaDataAssemblyEmit> pMetaAssemblyEmit = helpers->pMetaDataAssemblyEmit;
+		ATL::CComPtr<IMetaDataAssemblyImport> pMetaAssemblyImport = helpers->pMetaDataAssemblyImport;
+
+		// container for ICorProfilerInfo reference
+		ATL::CComPtr<IMetaDataEmit2> pMetaEmitDLL = helpersDLL->pMetaDataEmit;
+		ATL::CComPtr<IMetaDataImport2> pMetaImportDLL = helpersDLL->pMetaDataImport;
+		ATL::CComPtr<IMetaDataAssemblyEmit> pMetaAssemblyEmitDLL = helpersDLL->pMetaDataAssemblyEmit;
+		ATL::CComPtr<IMetaDataAssemblyImport> pMetaAssemblyImportDLL = helpersDLL->pMetaDataAssemblyImport;
+
+		ULONG RVABaseSubtract;
+
+		auto codeSection = m_InjectedMethodIL.data();
+		RVABaseSubtract = 0x2000;
+
+		HCORENUM hEnumMethods = NULL;
+		HCORENUM hEnumMethodSpecs = NULL;
+		HCORENUM hEnumTypeDefs = NULL;
+		HCORENUM hEnumTypeRefs = NULL;
+		HCORENUM hEnumTypeSpecs = NULL;
+		HCORENUM hEnumMemberRefs = NULL;
+		HCORENUM hEnumMemberDefs = NULL;
+
+		mdTypeDef rgTypeDefs[MAX_ARRAY]{ 0 };
+		mdTypeRef rgTypeRefs[MAX_ARRAY]{ 0 };
+		mdTypeRef rgTypeSpecs[MAX_ARRAY]{ 0 };
+		mdMemberRef rgMemberRefs[MAX_ARRAY]{ 0 };
+		mdMemberRef rgMemberDefs[MAX_ARRAY]{ 0 };
+		mdAssemblyRef rgMethodDefs[MAX_ARRAY]{ 0 };
+		mdAssemblyRef rgMethodSpecs[MAX_ARRAY]{ 0 };
+
+		ULONG numberOfTokens;
+		ULONG numberOfMethTokens;
+		ULONG numberOfMemberRefTokens;
+		ULONG numberOfMemberDefTokens;
+		ULONG numberOfTypeSpecTokens;
+		ULONG numberOfMethodSpecTokens;
+
+		wchar_t typeDeffNameBuffer[255];
+		wchar_t memberRefNameBuffer[255];
+		wchar_t methodDefNameBuffer[255];
+		wchar_t memberDefNameBuffer[255];
+
+		ULONG numChars = 0;
+		DWORD attrFlags = 0;
+		mdToken tkExtends = mdTokenNil;
+		mdToken resolutionScope;
+
+		PCCOR_SIGNATURE originalSignature = NULL;
+		ULONG originalMethodSignatureLen = 0;
+		ULONG RVA;
+
+
+		LPWSTR TypeDefToInjectTo = L"System.Web.Hosting.PipelineRuntime";
+		LPWSTR MethodDefToInjectTo = L"ProcessRequestNotificationHelper";
+		DWORD impFlags;
+
+		std::map<std::wstring, std::shared_ptr<ILRewriter>> ilrMap;
+
+		mdToken typeRef = mdTokenNil;
+
+		if (pMetaImport)
+		{
+			HRESULT hr;
+			HRESULT hrMemberDef;
+
+			mdToken tkResolution;
+			wchar_t refName[255]{ 0 };
+			ULONG numChars = 0;
+			char *publicKeyToken = NULL;
+			char *hashVal = NULL;
+			ULONG pktLen = 0;
+			ULONG hashLen = 0;
+			DWORD flags = 0;
+			ASSEMBLYMETADATA amd{ 0 };
+			mdMemberRef memberToken = mdMemberRefNil;
+			PCCOR_SIGNATURE originalMemberSigature = NULL;
+			ULONG originalMemberSigatureLen = 0;
+			HRESULT memberRefHR;
+
+			PCCOR_SIGNATURE typeSpecBlob = NULL;
+			ULONG typeSpecLen = NULL;
+
+
+			PCCOR_SIGNATURE methodSpecBlob = NULL;
+			ULONG methodSpecLen = NULL;
+
+			mdToken newSpecType;
+
+			PCOR_SIGNATURE newSigBuff = new COR_SIGNATURE[1024];
+			ULONG newSigBuffLen = 0;
+
+			// Get the Assembly information from this scope.  Will be used in the SigTranslation
+			mdAssembly mdAsemProp = mdAssemblyNil;
+			pMetaAssemblyImport->GetAssemblyFromScope(&mdAsemProp);
+			pMetaAssemblyImport->GetAssemblyProps(mdAsemProp, (const void**)&publicKeyToken, &pktLen,
+				&hashLen, refName, _countof(refName), &numChars, &amd, &flags);
+
+
+			// Enum and Map ALL TypeRefs
+			do {
+				hr = pMetaImport->EnumTypeRefs(
+					&hEnumTypeRefs,
+					rgTypeRefs,
+					_countof(rgTypeRefs),
+					&numberOfTokens);
+
+				for (size_t typeRefCounts = 0; typeRefCounts < numberOfTokens; typeRefCounts++)
+				{
+					// Get the properties of the TypeRef
+					pMetaImport->GetTypeRefProps(rgTypeRefs[typeRefCounts],
+						&tkResolution,
+						typeDeffNameBuffer,
+						_countof(typeDeffNameBuffer),
+						&numChars);
+
+					// Get the properties of the referenced Assembly
+					if (TypeFromToken(tkResolution) == mdtAssemblyRef)
+					{
+						pMetaAssemblyImport->GetAssemblyRefProps(tkResolution,
+							(const void**)&publicKeyToken,
+							&pktLen,
+							refName,
+							_countof(refName),
+							&numChars,
+							&amd,
+							(const void**)&hashVal,
+							&hashLen,
+							&flags);
+					}
+					// Get the properties of the referenced Assembly
+					else if (TypeFromToken(tkResolution) == mdtModuleRef)
+					{
+						pMetaImport->GetModuleRefProps(tkResolution, refName, _countof(refName), 0);
+					}
+
+					// Define a mapping between our type reference and the injected DLLs type reference.
+					helpersDLL->DefineTokenReference(refName, typeDeffNameBuffer, L"", NULL, 0, mdTokenNil, rgTypeRefs[typeRefCounts], NULL, L"");
+					// Enumerate the Member refs of the TypeDefs
+					do {
+
+						memberRefHR = pMetaImport->EnumMemberRefs(
+							&hEnumMemberRefs,
+							rgTypeRefs[typeRefCounts],
+							rgMemberRefs,
+							_countof(rgMemberRefs),
+							&numberOfMemberRefTokens);
+
+						for (size_t memberRefCounts = 0; memberRefCounts < numberOfMemberRefTokens; memberRefCounts++)
+						{
+							pMetaImport->GetMemberRefProps(rgMemberRefs[memberRefCounts],
+								&memberToken,
+								memberRefNameBuffer,
+								_countof(memberRefNameBuffer),
+								&numChars,
+								&originalMemberSigature,
+								&originalMemberSigatureLen);
+							if (originalMemberSigatureLen > 0)
+							{
+								// Translate the signatures to align with our injected DLL
+								pMetaEmitBlank->TranslateSigWithScope(pMetaAssemblyImport, hashVal, hashLen, pMetaImport, originalMemberSigature, originalMemberSigatureLen, pMetaAssemblyEmitDLL, pMetaEmitDLL, newSigBuff, 1024, &newSigBuffLen);
+								// Add our reference so we can properly map any members in our rewritten methods.
+								helpersDLL->DefineTokenReference(refName, typeDeffNameBuffer, memberRefNameBuffer, newSigBuff, newSigBuffLen, mdTokenNil, rgMemberRefs[memberRefCounts], NULL, L"");
+							}
+							else {
+								// Add our reference so we can properly map any members in our rewritten methods.
+								helpersDLL->DefineTokenReference(refName, typeDeffNameBuffer, memberRefNameBuffer, NULL, NULL, mdTokenNil, rgMemberRefs[memberRefCounts], NULL, L"");
+							}
+
+
+						}
+					} while (memberRefHR == S_OK);
+					pMetaImport->CloseEnum(hEnumMemberRefs);
+					hEnumMemberRefs = NULL;
+				}
+			} while (hr == S_OK);
+			pMetaImport->CloseEnum(hEnumTypeRefs);
+			hEnumTypeRefs = NULL;
+
+			// Enum and map ALL TypeSpecs
+			do {
+				hr = pMetaImport->EnumTypeSpecs(
+					&hEnumTypeSpecs,
+					rgTypeSpecs,
+					_countof(rgTypeSpecs),
+					&numberOfTypeSpecTokens);
+
+				if (numberOfTypeSpecTokens == 0)
+					break;
+
+				for (size_t typeSpecCounter = 0; typeSpecCounter < numberOfTypeSpecTokens; typeSpecCounter++)
+				{
+					// Look up the type spec and rewrite the signature
+					pMetaImport->GetTypeSpecFromToken(rgTypeSpecs[typeSpecCounter], &typeSpecBlob, &typeSpecLen);
+					pMetaEmitBlank->TranslateSigWithScope(pMetaAssemblyImport, hashVal, hashLen, pMetaImport, typeSpecBlob, typeSpecLen, pMetaAssemblyEmitDLL, pMetaEmitDLL, newSigBuff, 1024, &newSigBuffLen);
+					helpersDLL->DefineTokenReference(L"", L"", L"", newSigBuff, newSigBuffLen, mdTokenNil, rgTypeSpecs[typeSpecCounter], NULL, L"");
+
+					do {
+
+						memberRefHR = pMetaImport->EnumMemberRefs(
+							&hEnumMemberRefs,
+							rgTypeSpecs[typeSpecCounter],
+							rgMemberRefs,
+							_countof(rgMemberRefs),
+							&numberOfMemberRefTokens);
+
+						for (size_t memberRefsCounter = 0; memberRefsCounter < numberOfMemberRefTokens; memberRefsCounter++)
+						{
+							pMetaImport->GetMemberRefProps(rgMemberRefs[memberRefsCounter],
+								&memberToken,
+								memberRefNameBuffer,
+								_countof(memberRefNameBuffer),
+								&numChars,
+								&originalMemberSigature,
+								&originalMemberSigatureLen);
+
+							if (originalMemberSigatureLen > 0)
+							{
+								// Translate our type spec signature 
+								pMetaEmitBlank->TranslateSigWithScope(pMetaAssemblyImport, hashVal, hashLen, pMetaImport, originalMemberSigature, originalMemberSigatureLen, pMetaAssemblyEmitDLL, pMetaEmitDLL, newSigBuff, 1024, &newSigBuffLen);
+								helpersDLL->DefineTokenReference(L"", L"", memberRefNameBuffer, newSigBuff, newSigBuffLen, rgTypeSpecs[typeSpecCounter], rgMemberRefs[memberRefsCounter], NULL, L"");
+							}
+							else {
+								// Possibly never needed. Added for completeness
+								helpersDLL->DefineTokenReference(L"", L"", memberRefNameBuffer, NULL, NULL, rgTypeSpecs[typeSpecCounter], rgMemberRefs[memberRefsCounter], NULL, L"");
+							}
+
+
+						}
+					} while (memberRefHR == S_OK);
+					pMetaImport->CloseEnum(hEnumMemberRefs);
+					hEnumMemberRefs = NULL;
+				}
+			} while (hr == S_OK);
+
+			pMetaImport->CloseEnum(hEnumTypeSpecs);
+			hEnumTypeSpecs = NULL;
+
+			// Enum and map ALL MethodSpecs
+			mdToken parentToken = mdTokenNil;
+			do {
+				hr = pMetaImport->EnumMethodSpecs(
+					&hEnumMethodSpecs,
+					NULL, // All Specs
+					rgMethodSpecs,
+					_countof(rgMethodSpecs),
+					&numberOfMethodSpecTokens);
+
+				if (numberOfMethodSpecTokens == 0)
+					break;
+
+				for (size_t i = 0; i < numberOfMethodSpecTokens; i++)
+				{
+
+					pMetaImport->GetMethodSpecProps(rgMethodSpecs[i], &parentToken, &methodSpecBlob, &methodSpecLen);
+					if (typeSpecLen > 0)
+					{
+						pMetaEmitBlank->TranslateSigWithScope(pMetaAssemblyImport, hashVal, hashLen, pMetaImport, methodSpecBlob, methodSpecLen, pMetaAssemblyEmitDLL, pMetaEmitDLL, newSigBuff, 1024, &newSigBuffLen);
+
+						mdToken parentClass = mdTokenNil;
+						pMetaImport->GetMethodProps(
+							parentToken,
+							&parentClass,
+							methodDefNameBuffer,
+							_countof(methodDefNameBuffer),
+							&numChars,
+							&attrFlags,
+							&originalSignature,
+							&originalMethodSignatureLen,
+							&RVA,
+							&impFlags);
+						if (originalMethodSignatureLen > 0)
+						{
+							pMetaEmitBlank->TranslateSigWithScope(pMetaAssemblyImport, hashVal, hashLen, pMetaImport, originalSignature, originalMethodSignatureLen, pMetaAssemblyEmitDLL, pMetaEmitDLL, newSigBuff, 1024, &newSigBuffLen);
+							helpersDLL->DefineTokenReference(L"", L"", L"METHODSPECPLACEHOLDER", newSigBuff, newSigBuffLen, parentToken, rgMethodSpecs[i], NULL, L"");
+						}
+						else {
+							helpersDLL->DefineTokenReference(L"", L"", L"METHODSPECPLACEHOLDER", NULL, NULL, parentToken, rgMethodSpecs[i], NULL, L"");
+						}
+					}
+
+
+				}
+			} while (hr == S_OK);
+
+			HRESULT hrEnumTypeDef;
+			HRESULT hrEnumMethods;
+
+			// Now we can add in our TypeDefs to be sure we have all of the proper token mappings
+			do {
+				hrEnumTypeDef = pMetaImport->EnumTypeDefs(
+					&hEnumTypeDefs,
+					rgTypeDefs,
+					_countof(rgTypeDefs),
+					&numberOfTokens);
+
+				for (size_t typeDefCounts = 0; typeDefCounts < numberOfTokens; typeDefCounts++)
+				{
+					pMetaImport->GetTypeDefProps(rgTypeDefs[typeDefCounts],
+						typeDeffNameBuffer,
+						255,
+						&numChars,
+						&attrFlags,
+						&tkExtends);
+
+					// Here we check to see if we're injecting into the proper type
+					// In this method we're hard coded to System.Web.Hosting.PipelineRuntime
+					if (std::wstring(typeDeffNameBuffer).find(TypeDefToInjectTo) != std::wstring::npos)
+					{
+						do {
+							hrEnumMethods = pMetaImport->EnumMethods(
+								&hEnumMethods,
+								rgTypeDefs[typeDefCounts],
+								rgMethodDefs,
+								_countof(rgMethodDefs),
+								&numberOfMethTokens);
+
+							if (hrEnumMethods == S_OK)
+							{
+								for (size_t methodTokes = 0; methodTokes < numberOfMethTokens; methodTokes++)
+								{
+									mdToken mdClass;
+									std::wstring fullName;
+
+									pMetaImport->GetMethodProps(
+										rgMethodDefs[methodTokes],
+										&mdClass,
+										methodDefNameBuffer,
+										_countof(methodDefNameBuffer),
+										&numChars,
+										&attrFlags,
+										&originalSignature,
+										&originalMethodSignatureLen,
+										&RVA,
+										&impFlags);
+
+									// Let's remove our namespace prefix
+									auto replaceName = std::wstring(typeDeffNameBuffer);
+									auto replaceToken = std::wstring(L"injectedmethods._");
+									replaceName.replace(replaceName.find(replaceToken), replaceToken.length(), L"");
+
+									fullName.append(replaceName);
+									fullName.append(L"::");
+									fullName.append(methodDefNameBuffer);
+
+
+									// We use the TranslateSig method to properly identify our signatures
+									if (originalMethodSignatureLen > 0)
+									{
+										pMetaEmitBlank->TranslateSigWithScope(pMetaAssemblyImport, hashVal, hashLen, pMetaImport, originalSignature, originalMethodSignatureLen, pMetaAssemblyEmitDLL, pMetaEmitDLL, newSigBuff, 1024, &newSigBuffLen);
+									}
+
+									// If this is a PInvoke we need to add it to the injected DLL
+									std::wstring PInvokeName;
+									if (IsMdPinvokeImpl(attrFlags))
+									{
+										DWORD MappingFlags = 0;
+										wchar_t name[255];
+										ULONG nameLen = 0;
+										mdModuleRef modRefTk = mdModuleRefNil;
+										pMetaImport->GetPinvokeMap(rgMethodDefs[methodTokes], &MappingFlags, name, _countof(name), &nameLen, &modRefTk);
+										pMetaImport->GetModuleRefProps(modRefTk, name, _countof(name), &nameLen);
+										PInvokeName.assign(name);
+									}
+
+									// Our _Inject methods create the base of our callers 
+									// "Method_Enter_Inject" will load the arguments or parameters needed in to "Method"
+									// This will then call the Method_Enter method we're adding.
+
+									if (std::wstring(methodDefNameBuffer).find(L"_Inject") == std::wstring::npos)
+									{
+										helpersDLL->DefineTokenReference(L"System.Web", L"System.Web.Hosting.PipelineRuntime", methodDefNameBuffer, newSigBuff, newSigBuffLen, NULL, rgMethodDefs[methodTokes], attrFlags, PInvokeName);
+									}
+
+
+								}
+								if (numberOfMethTokens < 8192)
+								{
+									for (size_t methodTokes = 0; methodTokes < numberOfMethTokens; methodTokes++)
+									{
+										mdToken mdClass;
+										std::wstring fullName;
+
+										pMetaImport->GetMethodProps(
+											rgMethodDefs[methodTokes],
+											&mdClass,
+											methodDefNameBuffer,
+											_countof(methodDefNameBuffer),
+											&numChars,
+											&attrFlags,
+											&originalSignature,
+											&originalMethodSignatureLen,
+											&RVA,
+											&impFlags);
+
+										// Let's remove our namespace prefix
+										auto replaceName = std::wstring(typeDeffNameBuffer);
+										auto replaceToken = std::wstring(L"injectedmethods._");
+										replaceName.replace(replaceName.find(replaceToken), replaceToken.length(), L"");
+
+										fullName.append(replaceName);
+										fullName.append(L"::");
+										fullName.append(methodDefNameBuffer);
+
+
+										// At this point in time the method should already be defined
+										// So, here we will grab the bytes and start replacing tokens
+										// with what we've defined and mapped.
+
+										if (RVA > 0)
+										{
+											// Grab the method bytes so we can decode the local signature
+											auto pMethodBytes = ((UINT_PTR)codeSection + (RVA - RVABaseSubtract));
+
+											// Create the ILRewriter with the injected dll ModuleMetaDataHelpers
+											auto ilr = std::make_shared<ILRewriter>(helpersDLL);
+
+											ULONG localSignatureLen = 0;
+											mdToken sigToken = mdSignatureNil;
+											// Import our method bytes and get the local signature token
+											ilr->Import(pMethodBytes, sigToken);
+
+											printf("%S ===========================================\n", methodDefNameBuffer);
+											ilr->WriteILToConsole(helpers, true, true);
+											printf("%S ===========================================\n\n", methodDefNameBuffer);
+
+
+											// Get the signature of the locals from the token.
+											pMetaImport->GetSigFromToken(sigToken, &originalSignature, &localSignatureLen);
+
+											// If our injectable method has a local signature let's rewrite it.
+											if (localSignatureLen > 0)
+											{
+												// Tanslate all types into proper references
+												pMetaEmitBlank->TranslateSigWithScope(pMetaAssemblyImport, hashVal, hashLen, pMetaImport, originalSignature, localSignatureLen, pMetaAssemblyEmitDLL, pMetaEmitDLL, newSigBuff, 1024, &newSigBuffLen);
+												mdSignature newSigToken = mdSignatureNil;
+												// Either find or add our locals signature to this injected dll
+												helpersDLL->DefineSigToken(sigToken, newSigBuff, newSigBuffLen, newSigToken);
+											}
+
+
+
+											// Create dummy match table to replace a specific type
+											std::map<std::wstring, std::wstring> fixupDummy;
+											fixupDummy.emplace(L"[System.Web]System.Web.HttpWorkerRequest", L"[System.Web]System.Web.Hosting.IIS7WorkerRequest");
+											// Change any types to match 
+											ilr->FixUpTypes(helpersDLL, fixupDummy);
+
+											if (std::wstring(methodDefNameBuffer).find(L"_Inject") != std::wstring::npos)
+											{
+												std::map<ULONG, ULONG> fixupLocalsDummy;
+												ilr->FixUpLocals(helpersDLL, fixupLocalsDummy);
+												ilrMap.emplace(fullName, ilr);
+											}
+
+
+
+											printf("%S Translated ================================\n", methodDefNameBuffer);
+											ilr->WriteILToConsole(helpersDLL, true, true);
+											printf("%S Translated ================================\n\n", methodDefNameBuffer);
+										}
+									}
+								}
+							}
+							else {
+								pMetaImport->CloseEnum(hEnumMethods);
+								hEnumMethods = NULL;
+							}
+
+						} while (hrEnumMethods == S_OK);
+					}
+
+				}
+			} while (hrEnumTypeDef == S_OK);
+
+
+			pMetaImport->CloseEnum(hEnumTypeDefs);
+			pMetaImport->CloseEnum(hEnumTypeRefs);
+			pMetaImport->CloseEnum(hEnumMethodSpecs);
+
+			hEnumTypeDefs = NULL;
+			hEnumTypeRefs = NULL;
+			hEnumMethodSpecs = NULL;
+
+			// Now that we've rewritten our incoming IL, let's find our methods to rewrite
+			if (pMetaImportDLL != NULL)
+			{
+				mdToken typeToken;
+				HRESULT hrFindType;
+				HRESULT hrEnumMeth;
+				// Find the TypeDef which we want to work on
+				hrFindType = pMetaImportDLL->FindTypeDefByName(TypeDefToInjectTo,
+					NULL,
+					&typeToken);
+
+				if (hrFindType == S_OK)
+				{
+					pMetaImportDLL->GetTypeDefProps(typeToken,
+						typeDeffNameBuffer,
+						255,
+						&numChars,
+						&attrFlags,
+						&tkExtends);
+
+					do {
+						// Find the Methods inside of this type that we will work on
+						hrEnumMeth = pMetaImportDLL->EnumMethodsWithName(
+							&hEnumMethods,
+							typeToken,
+							MethodDefToInjectTo,
+							rgMethodDefs,
+							_countof(rgMethodDefs),
+							&numberOfMethTokens);
+
+						if (hrEnumMeth == S_OK)
+						{
+							mdToken typeTokenOut;
+							for (size_t methodTokes = 0; methodTokes < numberOfMethTokens; methodTokes++)
+							{
+								pMetaImportDLL->GetMethodProps(
+									rgMethodDefs[methodTokes],
+									&typeTokenOut,
+									methodDefNameBuffer,
+									_countof(methodDefNameBuffer),
+									&numChars,
+									&attrFlags,
+									&originalSignature,
+									&originalMethodSignatureLen,
+									&RVA,
+									&impFlags);
+
+								// We need to check the signature here
+								// If the method is all simple types we can do a byte comparison
+								// Otherwise we need to send over a string representation
+
+								// if (signature == correctsignatire) {
+								// ...
+								// }
+
+								ULONG methodSize = 0;
+								LPCBYTE methodBody = NULL;
+								m_pICorProfilerInfo2->GetILFunctionBody(modID, rgMethodDefs[methodTokes], &methodBody, &methodSize);
+								auto pMethodBytes = ((UINT_PTR)methodBody);
+								ULONG localSignatureLen = 0;
+
+								ILRewriter ilr(helpersDLL);
+								mdToken sigToken = mdSignatureNil;
+								ilr.Import(pMethodBytes, sigToken);
+
+								std::wstring fullName;
+								fullName.append(typeDeffNameBuffer);
+								fullName.append(L"::");
+								fullName.append(methodDefNameBuffer);
+
+								std::wstring fullNameEnter(fullName);
+								fullNameEnter.append(L"_Enter_Inject");
+
+								auto injectionILR = ilrMap.find(fullNameEnter);
+								if (injectionILR != ilrMap.end())
+								{
+									ilr.AddILEnterProbe(*injectionILR->second.get(), 1);
+								}
+
+								printf("%S_Inject_Enter ===========================================\n", methodDefNameBuffer);
+								injectionILR->second->WriteILToConsole(helpersDLL, true, true);
+								printf("%SInject_Enter ===========================================\n\n", methodDefNameBuffer);
+								std::wstring fullNameExit(fullName);
+								fullNameExit.append(L"_Exit_Inject");
+
+								injectionILR = ilrMap.find(fullNameExit);
+								if (injectionILR != ilrMap.end())
+								{
+									ilr.AddILExitProbe(*injectionILR->second.get());
+								}
+								printf("%S_Inject_Exit ===========================================\n", methodDefNameBuffer);
+								injectionILR->second->WriteILToConsole(helpersDLL, true, true);
+								printf("%S_Inject_Exit ===========================================\n\n", methodDefNameBuffer);
+
+								ilr.Export();
+
+								printf("%S ===========================================\n", methodDefNameBuffer);
+								ilr.WriteILToConsole(helpersDLL, true, true);
+								printf("%S ===========================================\n\n", methodDefNameBuffer);
+
+							}
+						}
+						else {
+							pMetaImportDLL->CloseEnum(hEnumMethods);
+							hEnumMethods = NULL;
+						}
+
+					} while (hrEnumMeth == S_OK);
+
+				}
+			}
+
+			pMetaImportDLL->CloseEnum(hEnumTypeDefs);
+			pMetaImportDLL->CloseEnum(hEnumMethods);
+
+		}
+	}
 }

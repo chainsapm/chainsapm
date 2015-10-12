@@ -47,26 +47,10 @@ STDMETHODIMP Cprofilermain::ModuleLoadFinished(ModuleID moduleID, HRESULT hrStat
 	}
 
 	//STEP 1 - Create a mapping for the ModuleMetadataHelper and this module.
-	ModuleMetadataHelpers * helper = new ModuleMetadataHelpers(m_pICorProfilerInfo, moduleID);
+	auto helper = std::make_shared<ModuleMetadataHelpers>(m_pICorProfilerInfo, moduleID);
 
 	//STEP 2 - Merge in Metadata from injected methods
-	// - Loop all methods that match [injectedmethods]injectedmethods._XXXX::XXXX_Enter
-	// - Loop all methods that match [injectedmethods]injectedmethods._XXXX::XXXX_Exit
-	// - Loop all methods that match [injectedmethods]injectedmethods._XXXX::XXXX_Info
-	// - Loop all methods that match [injectedmethods]injectedmethods._XXXX::XXXX_Inject
-	// - Find and define mappings for types and methods
-	
-	//STEP 3 - Rewrite new members to use mapped tokens
-	// - Rewrite Signatures
-	// - Rewrite Tokens in IL
-
-	//STEP 4 - Define new members (methods)
-	// - Define Signatures
-	// - Define Method Bodies
-
-	//STEP 5 - Rewite IL for methods matched in Step 1
-	// - Add Enter Probe
-	// - Add Exit Probe
+	RewriteMethodsWithSigTranslate(m_InjectedMethodHelper, helper, moduleID);
 
 	
 
