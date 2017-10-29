@@ -166,7 +166,7 @@
             <Button Content="Dn" HorizontalAlignment="Left" Margin="357,295,0,0" VerticalAlignment="Top" Width="24" Height="47" Click="MoveCommandDown_Click"/>
             <CheckBox Content="Flags" HorizontalAlignment="Left" Margin="311,497,0,0" VerticalAlignment="Top"
                       IsChecked="{Binding SelectedCommand.SelectedEnumeration.Flags, Mode=TwoWay, 
-                BindsDirectlyToSource=True, UpdateSourceTrigger=PropertyChanged}"/>
+                BindsDirectlyToSource=True, UpdateSourceTrigger=PropertyChanged}" x:Name="chkFlagsSet"/>
             <TextBlock HorizontalAlignment="Left" Margin="10,186,0,0" TextWrapping="Wrap" VerticalAlignment="Top" 
             	Text="Namespace"/>
             <TextBox HorizontalAlignment="Left" Height="23" Margin="134,183,0,0" TextWrapping="Wrap" 
@@ -175,6 +175,12 @@
             	Text="Class Name"/>
             <TextBox HorizontalAlignment="Left" Height="23" Margin="134,211,0,0" TextWrapping="Wrap" 
             	Text="{Binding SelectedCommand.ClassName, BindsDirectlyToSource=True, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Width="247"/>
+            <CheckBox Content="List" HorizontalAlignment="Left" Margin="296,368,0,0" VerticalAlignment="Top"
+            	IsChecked="{Binding IsList, BindsDirectlyToSource=True, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                      x:Name="boolIsList"/>
+            <CheckBox Content="Array" HorizontalAlignment="Left" Margin="336,368,0,0" VerticalAlignment="Top"
+            	IsChecked="{Binding IsArray, BindsDirectlyToSource=True, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            	x:Name="boolIsArray" RenderTransformOrigin="1.876,0.458"/>
         </Grid>
 
 

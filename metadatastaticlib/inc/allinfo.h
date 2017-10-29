@@ -1,7 +1,7 @@
 #pragma once
-#include "AgentInfo.h"
-#include "AssemblyInfo.h"
-#include "ClassInfo.h"
-#include "FunctionInfo.h"
-#include "ModuleInfo.h"
-#include "ParameterInfo.h"
+#include "infoclasses/AgentInfo.h"
+#include "infoclasses/AssemblyInfo.h"
+#include "infoclasses/TypeInfo.h"
+#include "infoclasses/FunctionInfo.h"
+#include "infoclasses/ModuleInfo.h"
+#include "infoclasses/ParameterInfo.h"

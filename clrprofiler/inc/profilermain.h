@@ -1,33 +1,27 @@
+#pragma once
+
 // profilermain.h : Declaration of the Cprofilermain
 #ifndef PROFILERMAIN_H
 #define PROFILERMAIN_H
 
-
-
-#pragma once
 #include "resource.h"       // main symbols
-
-#include "../../metadatastaticlib/inc/commonstructures.h"
+#include "../../metadatastaticlib/inc/infoclasses/commonstructures.h"
 #include "clrprofiler_i.h"
 #include <cor.h>
 #include <corprof.h>
-#include "../../metadatastaticlib/inc/MetadataHelpers.h"
-#include "../../metadatastaticlib/inc/FunctionInfo.h"
+#include "../../metadatastaticlib/inc/ModuleMetadataHelpers.h"
+#include "../../metadatastaticlib/inc/infoclasses/FunctionInfo.h"
 #include "stackitems.h"
 #include "CorProfilerCallbackImplementation.h"
 #include "Commands.h"
 #include "networkclient.h"
-
-
-struct ContainerClass;
-class tp_helper;
+#include "tphelper.h"
+#include "ContainerClass.h"
 
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
 #endif
-
-
 
 extern std::wofstream g_wLogFile;
 
@@ -146,7 +140,7 @@ typedef IDToInfoMap<mdMethodDef, int> MethodDefToLatestVersionMap;
 struct ModuleInfo
 {
 	WCHAR                               m_wszModulePath[512];
-	IMetaDataImport *                   m_pImport;
+	std::shared_ptr<ModuleMetadataHelpers>             m_pImport;
 	mdToken                             m_mdEnterProbeRef;
 	mdToken                             m_mdExitProbeRef;
 	mdToken                             m_mdEnterProbeRef2;
@@ -203,44 +197,6 @@ typedef std::unordered_map<ModInfoFunctionMap, FunctionID> ModFuncMap;
 
 typedef IDToInfoMap<ModuleID, ModuleInfo> ModuleIDToInfoMap;
 
-template <class MetaInterface>
-class COMPtrHolder
-{
-public:
-	COMPtrHolder()
-	{
-		m_ptr = NULL;
-	}
-
-	~COMPtrHolder()
-	{
-		if (m_ptr != NULL)
-		{
-			m_ptr->Release();
-			m_ptr = NULL;
-		}
-	}
-
-	MetaInterface* operator->()
-	{
-		return m_ptr;
-	}
-
-	MetaInterface** operator&()
-	{
-		return &m_ptr;
-	}
-
-	operator MetaInterface*()
-	{
-		return m_ptr;
-	}
-
-private:
-	MetaInterface* m_ptr;
-};
-
-
 using namespace ATL;
 
 
@@ -258,6 +214,9 @@ public:
 	void SendAgentInformation();
 	~Cprofilermain();
 
+	IDToInfoMap<ModuleID, ModuleInfo> m_moduleIDToInfoMap;
+
+	std::vector<char> m_InjectedMethodIL;
 
 	/*
 	//MgdGetRequestBasics(
@@ -311,8 +270,7 @@ public:
 	STDMETHOD(ThreadDestroyed)(ThreadID threadId);
 	STDMETHOD(ThreadNameChanged)(ThreadID threadId, ULONG cchName, _In_reads_opt_(cchName) WCHAR name[]);
 	STDMETHOD(SetMask)();
-	STDMETHOD(GetFullMethodName)(FunctionID functionID, std::wstring &methodName);
-	STDMETHOD(GetFuncArgs)(FunctionID functionID, COR_PRF_FRAME_INFO frameinfo);
+	
 	STDMETHOD(ModuleLoadStarted)(ModuleID moduleId);
 	STDMETHOD(ModuleLoadFinished)(ModuleID moduleId, HRESULT hrStatus);
 	STDMETHOD(ClassLoadFinished)(ClassID classId, HRESULT hrStatus);
@@ -356,6 +314,7 @@ public:
 	void SetProcessName();
 
 
+
 	// Attach / Embed Events
 	void AddMemberRefs(
 		IMetaDataAssemblyImport * pAssemblyImport,
@@ -364,15 +323,9 @@ public:
 		ModuleInfo * pModuleInfo);
 
 	HRESULT AddPInvoke(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdMethodDef * pmdPInvoke);
-	HRESULT AddPInvoke2(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdMethodDef * pmdPInvoke);
-	HRESULT AddPInvokeForSAMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdTypeDef tdSystemArray, mdMethodDef * pmdPInvoke);
-	HRESULT AddPInvokeAddNumbers(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdModuleRef modrefTarget, mdMethodDef * pmdPInvoke);
 	HRESULT GetSecuritySafeCriticalAttributeToken(IMetaDataImport * pImport, mdMethodDef * pmdSafeCritical);
 	HRESULT GetSystemArrayToken(IMetaDataImport * pImport, mdTypeDef * ptdSafeCritical);
 	HRESULT AddManagedHelperMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod);
-	HRESULT AddManagedHelperMethod2(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod);
-	HRESULT AddManagedHelperMethodAddNumbers(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdMethodDef * pmdHelperMethod);
-	HRESULT AddManagedHelperSAMethod(IMetaDataEmit * pEmit, mdTypeDef td, LPCWSTR wszName, mdMethodDef mdTargetPInvoke, ULONG rvaDummy, mdMethodDef mdSafeCritical, mdTypeDef tdSystemArray, mdMethodDef * pmdHelperMethod);
 	void AddHelperMethodDefs(IMetaDataImport * pImport, IMetaDataEmit * pEmit);
 	BOOL FindMscorlibReference(IMetaDataAssemblyImport * pAssemblyImport, mdAssemblyRef * rgAssemblyRefs, ULONG cAssemblyRefs, mdAssemblyRef * parMscorlib);
 
@@ -381,8 +334,10 @@ public:
 	HRESULT CallRequestRevert(UINT cFunctionsToRejit, ModuleID * rgModuleIDs, mdMethodDef * rgMethodIDs);
 
 	// P-INVOKED FUNCTIONS
-	void NtvEnteredFunction(ModuleID moduleIDCur, mdMethodDef mdCur, int nVersionCur);
+	void NtvEnteredFunction(unsigned __int64 moduleIDCur, mdMethodDef mdCur, int nVersionCur);
 	void NtvExitedFunction(ModuleID moduleIDCur, mdMethodDef mdCur, int nVersionCur);
+
+	void RewriteMethodsWithSigTranslate(std::shared_ptr<ModuleMetadataHelpers> helpers, std::shared_ptr<ModuleMetadataHelpers> helpersDLL, ModuleID modID);
 
 	// Pipe operations with the GUI
 	void LaunchLogListener(LPCWSTR wszPath);
@@ -419,7 +374,18 @@ public:
 	static std::map<UINT_PTR, Cprofilermain*> * g_StaticContainerClass;
 	static CRITICAL_SECTION g_StaticContainerClassCritSec;
 
-	NetworkClient *m_NetworkClient = NULL;
+	NetworkClient* m_NetworkClient = NULL;
+
+	// This is the all encompasing container class used by this class
+	ContainerClass * m_Container;
+
+	// Handles to continue loading the CLR profiler when all data has been received
+	HANDLE ReceievedMethodsToInstrument;
+	HANDLE ReceievedILForInjection;
+	HANDLE ReceievedMetaDataForInjection;
+
+	// Injected Method metadata helper
+	std::shared_ptr<ModuleMetadataHelpers> m_InjectedMethodHelper;
 
 	/************************************************************************************
 	!!!NOTE!!!!
@@ -440,18 +406,18 @@ private:
 	// Highest available API
 	byte m_HighestProfileInfo;
 	// container for ICorProfilerInfo reference
-	std::shared_ptr<ICorProfilerInfo> m_pICorProfilerInfo;
+	CComPtr<ICorProfilerInfo> m_pICorProfilerInfo;
 	// container for ICorProfilerInfo2 reference
-	std::shared_ptr<ICorProfilerInfo2> m_pICorProfilerInfo2;
+	CComPtr<ICorProfilerInfo2> m_pICorProfilerInfo2;
 	// container for ICorProfilerInfo3 reference
-	std::shared_ptr<ICorProfilerInfo3> m_pICorProfilerInfo3;
+	CComPtr<ICorProfilerInfo3> m_pICorProfilerInfo3;
 	// container for ICorProfilerInfo4 reference
-	std::shared_ptr<ICorProfilerInfo4> m_pICorProfilerInfo4;
+	CComPtr<ICorProfilerInfo4> m_pICorProfilerInfo4;
 
 
 	ModFuncMap m_ModFuncMap;
 	// container for IL allocation
-	std::shared_ptr<IMethodMalloc> m_pIMethodMalloc;
+	CComPtr<IMethodMalloc> m_pIMethodMalloc;
 	//std::map<FunctionID, FunctionInfo> m_FunctionInfoMap;
 	COR_PRF_SUSPEND_REASON m_CurrentSuspendReason;
 	COR_PRF_GC_REASON m_CurrentGCReason;
@@ -471,8 +437,7 @@ private:
 
 	HMODULE m_webengineHandle;
 
-	// This is the all encompasing container class used by this class
-	ContainerClass * m_Container;
+	
 
 	//Thread Pool Helper
 	tp_helper * tp = nullptr;
@@ -501,79 +466,6 @@ private:
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(profilermain), Cprofilermain)
-
-
-
-class tp_helper
-{
-
-private:
-	static Cprofilermain * m_cprof;
-
-	PTP_POOL m_customThreadPool = nullptr;
-	PTP_CALLBACK_ENVIRON m_ptpcbe = nullptr;
-	PTP_CLEANUP_GROUP m_ptpcug = nullptr;
-
-	template <class C>
-	static VOID CALLBACK SendEventCallBack(PTP_CALLBACK_INSTANCE Instance, PVOID Parameter, PTP_WORK Work)
-	{
-		UNREFERENCED_PARAMETER(Instance);
-		UNREFERENCED_PARAMETER(Work);
-		m_cprof->m_NetworkClient->SendCommand(std::make_shared<C>(*(C*)Parameter));
-	}
-
-
-
-public:
-
-	tp_helper(Cprofilermain * profiler, int min, int max);
-	~tp_helper();
-
-	template <class C>
-	void SendEvent(C *param)
-	{
-		auto tpw = CreateThreadpoolWork(&tp_helper::SendEventCallBack<C>, param, m_ptpcbe);
-		SubmitThreadpoolWork(tpw);
-	}
-
-	void CreateNetworkIoThreadPool(NetworkClient* NetClient);
-	
-
-
-
-
-
-	
-};
-
-
-
-Cprofilermain * tp_helper::m_cprof = nullptr;
-
-tp_helper::tp_helper(Cprofilermain * cpmain, int min, int max)
-{
-	tp_helper::m_cprof = cpmain;
-	m_ptpcbe = new TP_CALLBACK_ENVIRON();
-	InitializeThreadpoolEnvironment(m_ptpcbe);
-	m_customThreadPool = CreateThreadpool(NULL);
-	SetThreadpoolThreadMinimum(m_customThreadPool, min);
-	SetThreadpoolThreadMaximum(m_customThreadPool, max);
-	m_ptpcug = CreateThreadpoolCleanupGroup();
-	SetThreadpoolCallbackPool(m_ptpcbe, m_customThreadPool);
-	SetThreadpoolCallbackCleanupGroup(m_ptpcbe, m_ptpcug, NULL);
-}
-
-
-void tp_helper::CreateNetworkIoThreadPool(NetworkClient* NetClient)
-{
-	 NetClient->SetPTPIO(CreateThreadpoolIo(reinterpret_cast<HANDLE>(NetworkClient::m_SocketConnection),
-			&NetworkClient::IoCompletionCallback, NetClient, nullptr));
-}
-
-
-tp_helper::~tp_helper()
-{
-}
 
 EXTERN_C void FunctionEnter2_Wrapper_x64(FunctionID funcId, UINT_PTR clientData, COR_PRF_FRAME_INFO func, COR_PRF_FUNCTION_ARGUMENT_RANGE *argumentInfo);
 

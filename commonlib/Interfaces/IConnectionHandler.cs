@@ -1,13 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChainsAPM.Interfaces
 {
-    public interface IConnectionHandler
+    public delegate void HasDataEvent(object sender);
+    public delegate void DisconnectedEvent(object sender);
+
+    public interface IConnectionHandler : IDisposable
     {
+        
+        event HasDataEvent HasData;
+        event DisconnectedEvent Disconnected;
+
+        void SendCommand(ICommand<byte> command);
+        void SendCommands(ICommand<byte>[] command);
+
+        ICommand<byte>[] GetCommands();
+        ICommand<byte> GetCommand();
+
+        void SetProcessor(ICommandLocator<byte> processor);
+
+        void Start();
         bool Disconnect();
         bool Recycle();
         bool Flush();

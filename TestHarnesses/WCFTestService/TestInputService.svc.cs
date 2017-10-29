@@ -13,6 +13,9 @@ namespace WCFTestService
     {
         public void DoWork()
         {
-        }
+                        if ( System.Diagnostics.Debugger.IsAttached ) {
+                                System.Diagnostics.Debugger.Break ();
+                        }
+                }
     }
 }

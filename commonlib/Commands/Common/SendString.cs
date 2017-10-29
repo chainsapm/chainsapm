@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChainsAPM.Commands.Common
 {
@@ -14,6 +11,12 @@ namespace ChainsAPM.Commands.Common
         private Helpers.Fnv1a64 hashhelper;
 
         private byte[] m_hash;
+
+        public SendString() : this("")
+        {
+
+        }
+
         public SendString(string data)
         {
             m_string = data;
@@ -73,7 +76,7 @@ namespace ChainsAPM.Commands.Common
         {
             byte[] sBuffer = System.Text.UnicodeEncoding.Unicode.GetBytes(m_string);
             var buffer = new List<byte>();
-            buffer.AddRange(BitConverter.GetBytes((sBuffer.Length * 2) + 20)); // 4 bytes for size, 2 byte for code, 4 bytes for strlen, 8 bytes for hash, Xbytes for string 2 bytes for term
+            buffer.AddRange(BitConverter.GetBytes((sBuffer.Length) + 20)); // 4 bytes for size, 2 byte for code, 4 bytes for strlen, 8 bytes for hash, Xbytes for string 2 bytes for term
             buffer.AddRange(BitConverter.GetBytes((short)3));
             if (m_hash == null)
             {

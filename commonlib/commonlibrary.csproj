@@ -49,8 +49,56 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MongoDB.Bson, Version=2.0.1.27, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MongoDB.Bson.2.0.1\lib\net45\MongoDB.Bson.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="MongoDB.Driver, Version=2.0.1.27, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MongoDB.Driver.2.0.1\lib\net45\MongoDB.Driver.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="MongoDB.Driver.Core, Version=2.0.1.27, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MongoDB.Driver.Core.2.0.1\lib\net45\MongoDB.Driver.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mono.Cecil.Mdb, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.Mdb.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mono.Cecil.Pdb, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.Pdb.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Mono.Cecil.Rocks, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mono.Cecil.0.9.6.1\lib\net45\Mono.Cecil.Rocks.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Interfaces.2.2.5\lib\net45\System.Reactive.Interfaces.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Linq, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Linq.2.2.5\lib\net45\System.Reactive.Linq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-PlatformServices.2.2.5\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -58,18 +106,66 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Agent\Agent.cs" />
+    <Compile Include="Agent\AgentProcessorImpl.cs" />
+    <Compile Include="Commands\Agent\ACK.cs" />
     <Compile Include="Commands\Agent\AgentInformation.cs" />
-    <Compile Include="Commands\Agent\DefineFunction.cs" />
-    <Compile Include="Commands\Agent\FunctionTailQuick.cs" />
-    <Compile Include="Commands\Agent\FunctionLeaveQuick.cs" />
-    <Compile Include="Commands\Agent\FunctionEnterQuick.cs" />
-    <Compile Include="Commands\Agent\FunctionsToProfile.cs" />
+    <Compile Include="Commands\Agent\DefineInstrumentationMethods.cs" />
+    <Compile Include="Commands\Agent\DefineMethod.cs" />
+    <Compile Include="Commands\Agent\DefineModule.cs" />
+    <Compile Include="Commands\Agent\MethodEnter.cs" />
+    <Compile Include="Commands\Agent\MethodExit.cs" />
+    <Compile Include="Commands\Agent\MethodsToInstrument.cs" />
+    <Compile Include="Commands\Agent\SendInjectionMetadata.cs" />
+    <Compile Include="Commands\Locator.cs" />
+    <Compile Include="Data\DefaultConfigAdapter.cs" />
+    <Compile Include="Interfaces\Config\IBaseConfig.cs" />
+    <Compile Include="Interfaces\Config\IInstrumentationMethodConfig.cs" />
+    <Compile Include="Interfaces\Config\IInstrumentationMethodGroupConfig.cs" />
+    <Compile Include="Interfaces\Config\IInstrumentationPointConfig.cs" />
+    <Compile Include="Models\Instrumentation\InstrumentationGroup.cs" />
+    <Compile Include="Models\Instrumentation\InstrumentationMethod.cs" />
+    <Compile Include="Models\Instrumentation\InstrumentationPoint.cs" />
+    <Compile Include="Data\InMemoryStorageAdapter.cs" />
+    <Compile Include="Data\MongoConfigDataAdapter.cs" />
+    <Compile Include="Data\MongoDataStorageAdapter.cs" />
+    <Compile Include="Interfaces\Data\IConfigDataAdapter.cs" />
+    <Compile Include="Interfaces\ICommandProcessor.cs" />
+    <Compile Include="Config\AgentConfig.cs" />
+    <Compile Include="Config\AgentGroupConfig.cs" />
+    <Compile Include="Config\AggregatorConfig.cs" />
+    <Compile Include="Config\ApplicationConfig.cs" />
+    <Compile Include="Config\ApplicationGroupConfig.cs" />
+    <Compile Include="Config\GlobalConfig.cs" />
+    <Compile Include="Config\MachineConfig.cs" />
+    <Compile Include="Config\ResourceConfig.cs" />
+    <Compile Include="Config\ResourceGroupConfig.cs" />
+    <Compile Include="Config\ServerConfig.cs" />
+    <Compile Include="Interfaces\IAgentEvents.cs" />
+    <Compile Include="Interfaces\IConnectedObject.cs" />
+    <Compile Include="Interfaces\Data\IDataAdapter.cs" />
+    <Compile Include="Interfaces\IServerEvents.cs" />
+    <Compile Include="Interfaces\IStackItem.cs" />
+    <Compile Include="Interfaces\IUniqueID.cs" />
+    <Compile Include="Models\Application\Application.cs" />
+    <Compile Include="Models\Definitions\Assembly.cs" />
+    <Compile Include="Models\Definitions\Class.cs" />
+    <Compile Include="Models\EntryPoint.cs" />
+    <Compile Include="Models\Instrumentation\TokenReplacement.cs" />
+    <Compile Include="Models\Resource\Machine.cs" />
+    <Compile Include="Models\Definitions\Method.cs" />
+    <Compile Include="Models\Definitions\Module.cs" />
+    <Compile Include="Models\Definitions\Parameter.cs" />
+    <Compile Include="Models\Resource\Resource.cs" />
+    <Compile Include="Models\Definitions\Signature.cs" />
+    <Compile Include="Models\Resource\ResourceGroup.cs" />
+    <Compile Include="Models\StackItemBase.cs" />
     <Compile Include="Commands\Common\SendString.cs" />
     <Compile Include="Commands\Common\GetString.cs" />
     <Compile Include="Helpers\ArraySegmentStream.cs" />
     <Compile Include="Helpers\FNV1a.cs" />
     <Compile Include="Interfaces\ICommand.cs" />
-    <Compile Include="Interfaces\ICommandProcessor.cs" />
+    <Compile Include="Interfaces\ICommandLocator.cs" />
     <Compile Include="Interfaces\IConnectionHandler.cs" />
     <Compile Include="Interfaces\IPacketAssembler.cs" />
     <Compile Include="Interfaces\IPacketDisassembler.cs" />
@@ -77,10 +173,15 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Communication\Tcp\TcpByteAgentHandler.cs" />
     <Compile Include="Communication\Tcp\TcpByteTransport.cs" />
+    <Compile Include="Server\Server.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Commands\Aggregator\" />
     <Folder Include="Commands\Server\" />
+    <Folder Include="Models\Agent\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

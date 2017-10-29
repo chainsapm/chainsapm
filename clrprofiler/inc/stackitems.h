@@ -1,5 +1,5 @@
 #pragma once
-#include "../../metadatastaticlib/inc/commonstructures.h"
+#include "../../metadatastaticlib/inc/infoclasses/commonstructures.h"
 
 
 class IStackItem

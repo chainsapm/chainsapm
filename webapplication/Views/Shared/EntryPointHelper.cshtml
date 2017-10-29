@@ -1,0 +1,10 @@
+﻿@model ChainsAPM.Interfaces.IStackItem
+
+<ul>
+    <li>
+        @Html.LabelFor(x => x.Name)
+        @if ( Model.Children != null ) {
+                @Html.EditorFor(x => x.Children)
+        }
+    </li>
+</ul>

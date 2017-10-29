@@ -1,0 +1,277 @@
+﻿<#@ template language="C#" #> 
+<#@ import namespace="System.Collections.Generic" #>
+<#+
+protected string TypeMapper(string typeName, Dictionary<string, string> TypeMapping) {
+
+	if (TypeMapping.ContainsKey(typeName)) 
+		return TypeMapping[typeName].ToString(); 
+
+	return typeName; 
+}
+
+private void CreateStringListing(string varName, bool isForLoop, bool isForLength) 
+{
+	var szt = isForLoop ? string.Empty : "size_t ";
+	varName = isForLoop ? varName + "item" : varName;
+	var varData = isForLength ? "len" : "data";
+	if (isForLoop)
+		WriteLine("{0}strlen_{1}{2} = item.length();", szt, varName, varData);
+	else
+		WriteLine("{0}strlen_{1}{2} = {1}.length();", szt, varName, varData);
+	WriteLine("{0}strbytes_{1}{2} = (strlen_{1}{2} * sizeof(wchar_t)) + sizeof(wchar_t);", szt, varName, varData);
+#>
+size += sizeof(__int32); // String Length 
+size += sizeof(__int64); // String Hash
+size += strbytes_<#= varName + varData #>; // String Bytes
+<#+
+}
+
+protected void CreateCppLength(ClassProperty cpItem, Dictionary<string, string> TypeMapping)
+{
+	string typeName = TypeMapper(cpItem.TypeName, TypeMapping);
+	
+	if (typeName.ToLower() == "std::wstring")
+	{ 	
+		CreateStringListing(cpItem.Name, false, true);
+		WriteLine("");
+	} else { 
+#>
+size += sizeof(<#= typeName #>); // Size of <#= cpItem.Name #>
+
+<#+
+	}
+}
+
+protected void CreateForLoopForString(string varName, bool isForLength) {
+	string varNameItm = varName + "item";
+	varNameItm = isForLength ? varNameItm + "len" : varNameItm + "data";
+#>
+
+size_t strlen_<#= varNameItm #> = 0;
+size_t strbytes_<#= varNameItm #> = 0;
+for (auto item : <#= varName #>) {
+<#+
+}
+
+
+protected void CreateForLoopForTypeData(string varName) {
+#>
+
+for (auto item : <#= varName #>) {
+<#+
+}
+
+protected void CreateCppLengthListOrArray(ClassProperty cpItem, Dictionary<string, string> TypeMapping) 
+{
+	string typeName = TypeMapper(cpItem.TypeName, TypeMapping);
+
+	if (typeName.ToLower() == "std::wstring")
+	{ 	
+		CreateForLoopForString(cpItem.Name, true);
+		PushIndent("    "); 
+		CreateStringListing(cpItem.Name, true, true);
+		PopIndent(); 
+		WriteLine("}"); // Terminating brace for for loop
+		WriteLine(""); // Extra space for clarity
+	} else { 
+#>
+size += sizeof(<#= typeName #>) * <#= cpItem.Name #>.size(); // Size of <#= cpItem.Name #> vector
+
+<#+
+	}
+}
+
+protected void CreateCppStringData(string varName, bool isForLoop, bool isForLength)
+{
+	var szt = isForLoop ? string.Empty : "size_t ";
+	varName = isForLoop ? varName + "item" : varName;
+	var varData = isForLength ? "len" : "data";
+	if (isForLoop)
+		WriteLine("{0}strlen_{1}{2} = item.length();", szt, varName, varData);
+	else
+		WriteLine("{0}strlen_{1}{2} = {1}.length();", szt, varName, varData);
+	WriteLine("{0}strbytes_{1}{2} = (strlen_{1}{2} * sizeof(wchar_t)) + sizeof(wchar_t);", szt, varName, varData);
+
+	if (isForLoop)
+		WriteLine("hashout = hash(item);");
+	else
+		WriteLine("hashout = hash({0});", varName);
+#> 
+
+memcpy(v2, &strlen_<#= varName + varData #>, sizeof(__int32));
+v2 += sizeof(__int32);
+memcpy(v2, &hashout, sizeof(size_t));
+v2 += sizeof(__int64);
+<#+
+if (isForLoop)
+		WriteLine("memcpy(v2, item.data(), strbytes_{0}{1});", varName, varData);
+	else
+		WriteLine("memcpy(v2, {0}.data(), strbytes_{0}{1});", varName, varData);
+#>
+v2 += strbytes_<#= varName + varData #>;
+<#+
+}
+
+
+
+
+
+protected void CreateCppTypeData(string typeName, string varName, bool isForLoop) {
+if (isForLoop)
+	{ #> 
+memcpy(v2, &<#= varName #>, sizeof(<#= typeName #>)); <#+
+	} else {
+#>
+memcpy(v2, &<#= varName #>, sizeof(<#= typeName #>)); <#+
+	}
+#> 
+v2 += sizeof(<#= typeName #>); <#+
+}
+
+protected void CreateCppDataInsert(ClassProperty cpItem, Dictionary<string, string> TypeMapping) {
+
+	string typeName = TypeMapper(cpItem.TypeName, TypeMapping);
+	if (typeName.ToLower() == "std::wstring") {
+		CreateCppStringData(cpItem.Name, false, false);
+	} else { 
+		CreateCppTypeData(typeName, cpItem.Name, false);
+	} 
+}
+
+protected void ExtractCppDataForList(ClassProperty cpItem, Dictionary<string, string> TypeMapping) {
+
+	string typeName = TypeMapper(cpItem.TypeName, TypeMapping);
+	ExtractForLoop(cpItem.Name, typeName);
+	PushIndent("    "); 
+	if (typeName.ToLower() == "std::wstring") {
+		ExtractCppStringData(cpItem.Name, true, false);
+	} else { 
+		
+		ExtractCppTypeData(typeName, cpItem.Name, true);
+	} 
+	PopIndent(); 
+	WriteLine("}"); // Terminating brace for for loop
+	WriteLine(""); // Extra space for clarity
+}
+
+
+protected void ExtractCppData(ClassProperty cpItem, Dictionary<string, string> TypeMapping) {
+
+	string typeName = TypeMapper(cpItem.TypeName, TypeMapping);
+	if (typeName.ToLower() == "std::wstring") {
+		ExtractCppStringData(cpItem.Name, false, false);
+	} else { 
+		ExtractCppTypeData(typeName, cpItem.Name, false); 
+	} 
+}
+
+protected void ExtractCppStringData(string varName, bool isForLoop, bool isForLength) {  
+#>
+
+auto strlen<#= varName #> = *(__int32*)ptr;
+ptr += sizeof(__int32);
+
+auto hash<#= varName #> = *(__int64*)ptr;
+ptr += sizeof(__int64);
+
+<#+
+if (isForLoop) {
+#>
+auto str = (wchar_t*)ptr;
+local_<#= varName #>.emplace_back(str);
+ptr += strlen<#= varName #> * 2;
+<#+
+} else {
+#>
+auto local_<#= varName #> = (wchar_t*)ptr;
+ptr += strlen<#= varName #> * 2;
+<#+
+}
+}
+
+protected void ExtractForLoop(string varName, string typeName) {
+#>
+
+size_t <#= varName #>_count = *(__int32*)ptr;
+ptr += sizeof(__int32);
+
+auto local_<#= varName #> = std::vector<<#= typeName #>>();
+
+for (size_t i<#= varName #> = 0; i<#= varName #> < <#= varName #>_count; i<#= varName #>++) {
+<#+
+}
+
+
+protected void ExtractCppTypeData(string typeName, string varName, bool isForLoop) {
+if (isForLoop) {
+#>
+auto value = *(<#= typeName #>*)ptr;
+<#+
+} else {
+#>
+auto local_<#= varName #> = *(<#= typeName #>*)ptr;  
+<#+
+}
+#>
+ptr += sizeof(<#= typeName #>); 
+<#+
+if (isForLoop) {
+#>
+local_<#= varName #>.emplace_back(value);
+<#+
+}
+}
+
+protected void CreateCppDataInsertForList(ClassProperty cpItem, Dictionary<string, string> TypeMapping) {
+
+	string typeName = TypeMapper(cpItem.TypeName, TypeMapping);
+	if (typeName.ToLower() == "std::wstring") {
+		CreateForLoopForString(cpItem.Name, false);
+		PushIndent("    "); 
+		CreateCppStringData(cpItem.Name, true, false);
+	} else { 
+		
+		CreateForLoopForTypeData(cpItem.Name);
+		PushIndent("    "); 
+		CreateCppTypeData(typeName, "item", true);
+	} 
+	PopIndent(); 
+	WriteLine("}"); // Terminating brace for for loop
+	WriteLine(""); // Extra space for clarity
+}
+
+protected void CreateCppSignature(ClassProperty cpItem, Dictionary<string, string> TypeMapping, bool isNotLast) 
+{
+	string typeName = TypeMapper(cpItem.TypeName, TypeMapping);
+	if (cpItem.IsList == true | cpItem.IsArray == true) {
+		CreateCppVariable(string.Format("std::vector<{0}>", typeName), cpItem.Name.ToLower());
+	} else {
+		CreateCppVariable(typeName, cpItem.Name.ToLower());
+	}
+	if (isNotLast)
+		Write(", ");
+	
+}
+
+protected void CreateCppDeclaration(ClassProperty cpItem, Dictionary<string, string> TypeMapping) 
+{
+	string typeName = TypeMapper(cpItem.TypeName, TypeMapping);
+	if (cpItem.IsList == true | cpItem.IsArray == true) {
+		CreateCppVariable(string.Format("std::vector<{0}>", typeName), cpItem.Name); 
+	} else {
+		CreateCppVariable(typeName, cpItem.Name);
+	}
+	WriteLine(";");
+}
+
+protected void CreateCppVariable(string typeName, string varName) 
+{
+	Write (string.Format("{0} {1}", typeName, varName)); 
+}
+
+protected void CreateCppInitializers(ClassProperty cpItem, bool isNotLast) {
+	Write("{0}({1})", cpItem.Name, cpItem.Name.ToLower());
+	if (isNotLast)
+		Write(", ");
+}
+#>

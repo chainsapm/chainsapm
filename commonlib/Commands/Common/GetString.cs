@@ -1,14 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChainsAPM.Commands.Common
 {
-    class GetString : Interfaces.ICommand<byte>
+    class GetString // : Interfaces.ICommand<byte>
 
     {
+        public GetString() 
+        {
+
+        }
+
         public string Name
         {
             get { throw new NotImplementedException(); }

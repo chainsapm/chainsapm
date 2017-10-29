@@ -10,7 +10,4 @@ EXPORTS
 	DllInstall		PRIVATE
 	NtvEnteredFunction
 	NtvExitedFunction
-	NtvEnteredFunction2
-	NtvExitedFunction2
-	NtvEnteredFunctionAdd
-	NtvExitedFunctionAdd
+	NtvEnteredHttp

@@ -41,7 +41,7 @@ namespace ChainsAPM
                     var port = int.Parse(System.Configuration.ConfigurationManager.AppSettings["port"]);
                     System.Net.Sockets.TcpClient tcpC = new System.Net.Sockets.TcpClient(hostname, port);
                     TcpByteAgentHandler tcbah = new TcpByteAgentHandler(new TcpByteTransport(tcpC), TcpByteAgentHandler.HandlerType.SendHeavy);
-                    tcbah.AddCommand(new ChainsAPM.Commands.Common.SendString(""));
+                    
                     itemCounter.GetOrAdd(tcbah.GetHashCode(), System.Threading.Interlocked.Increment(ref counter2));
                     System.Threading.Interlocked.Increment(ref counter3);
                     tcbah.HasData += tcbah_HasData;

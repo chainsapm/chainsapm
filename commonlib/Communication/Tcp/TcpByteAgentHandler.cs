@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ChainsAPM.Commands.Agent;
 using ChainsAPM.Interfaces;
-using ChainsAPM.Commands.Common;
-using ChainsAPM.Commands.Agent;
+using System;
+using System.Collections.Generic;
 using System.Runtime.Remoting.Messaging;
+using System.Threading.Tasks;
 
 
 namespace ChainsAPM.Communication.Tcp
@@ -20,32 +16,21 @@ namespace ChainsAPM.Communication.Tcp
             ReceiveHeavy,
             Balanced
         }
-        public AgentInformation AgentInfo { get; set; }
-        public DateTime ConnectedTime { get; set; }
-        public DateTime DisconnectedTime { get; set; }
+        
 
-        private Dictionary<int, Interfaces.ICommand<byte>> CommandList;
         private object cmdListLock;
-
-        public Dictionary<long, string> StringList;
-        public Dictionary<long, string> FunctionList;
-
-        public Dictionary<long, long> ThreadDepth;
-
-        // Thread Id, sequence, threadid
-        public Dictionary<long, List<Tuple<long, long>>> ThreadEntryPoint;
+        private ICommandLocator<byte> CommandLocator;
+       
 
         private ITransport<byte[]> m_PacketHandler;
         
         private object lockingOutbound;
         private object lockingInbound;
         private Queue<byte[]> blockingOutboundQueue;
+
         private System.Threading.Timer sendTimer; // Let's keep this guy around
         private System.Threading.Timer recvTimer; // Let's keep this guy around
-        public delegate void HasDataEvent(object sender);
-        public event HasDataEvent HasData;
-        public delegate void DisconnectedEvent(object sender);
-        public event DisconnectedEvent Disconnected;
+        
         object timerLock = new object();
         public int messagesSent = 0;
         int MAX_SENDBUFFER = 1024 * 70; // Keep this out of the LOH
@@ -61,6 +46,9 @@ namespace ChainsAPM.Communication.Tcp
         private bool inRecv = false;
         private List<byte> chunkList;
 
+        public event HasDataEvent HasData;
+        public event DisconnectedEvent Disconnected;
+
         public TcpByteAgentHandler(ITransport<byte[]> packethand, HandlerType handType = HandlerType.Balanced)
         {
             m_PacketHandler = packethand;
@@ -72,16 +60,7 @@ namespace ChainsAPM.Communication.Tcp
             chunkList = new List<byte>(MAX_SENDBUFFER);
             int sendTimerInterval = 250;
             int recvTimerInterval = 250;
-            CommandList = CallContext.LogicalGetData("CommandProviders") as Dictionary<int, Interfaces.ICommand<byte>>;
             cmdListLock = new object();
-
-            StringList = new Dictionary<long, string>();
-            FunctionList = new Dictionary<long, string>();
-
-            ThreadDepth = new Dictionary<long, long>();
-
-            // Thread Id, sequence, threadid
-            ThreadEntryPoint = new Dictionary<long, List<Tuple<long, long>>>();
 
             switch (handType)
             {
@@ -96,28 +75,7 @@ namespace ChainsAPM.Communication.Tcp
                 default:
                     break;
             }
-            sendTimer = new System.Threading.Timer(new System.Threading.TimerCallback(async (object o) =>
-            {
-                if (!inSend)
-                {
-                    inSend = true;
-                    await SendData();
-                    inSend = false;
-                }
-
-
-            }), null, sendTimerInterval, sendTimerInterval);
-
-            recvTimer = new System.Threading.Timer(new System.Threading.TimerCallback(async (object o) =>
-            {
-                if (!inRecv)
-                {
-                    inRecv = true;
-                    await RecvData();
-                    ExtractData();
-                    inRecv = false;
-                }
-            }), null, recvTimerInterval, recvTimerInterval);
+            
         }
 
         public void PauseTimers()
@@ -252,19 +210,7 @@ namespace ChainsAPM.Communication.Tcp
                 }
             }
         }
-
-        public void AddCommand(ICommand<byte> command)
-        {
-            lock (cmdListLock)
-            {
-                if (!CommandList.ContainsKey(command.Code))
-                {
-                    CommandList.Add(command.Code, command);
-                }
-
-            }
-
-        }
+    
         public void SendCommand(ICommand<byte> command)
         {
             lock (lockingOutbound)
@@ -283,9 +229,7 @@ namespace ChainsAPM.Communication.Tcp
             }
             if (command != null)
             {
-                var size = BitConverter.ToInt32(command.Array, command.Offset);
-                var code = command.Array[command.Offset + 4];
-                return CommandList[code].Decode(command);
+                return CommandLocator.ProcessData(command);
             }
             return null;
 
@@ -316,9 +260,7 @@ namespace ChainsAPM.Communication.Tcp
 
                     if (command != null)
                     {
-                        var size = BitConverter.ToInt32(command.Array, command.Offset);
-                        var code = command.Array[command.Offset + 4];
-                        outList.Add(CommandList[code].Decode(command));
+                        outList.Add(CommandLocator.ProcessData(command));
                     }
                 }
             }
@@ -466,6 +408,37 @@ namespace ChainsAPM.Communication.Tcp
         public void Sent()
         {
             throw new NotImplementedException();
+        }
+
+        public void SetProcessor(ICommandLocator<byte> processor)
+        {
+            CommandLocator = processor;
+        }
+
+        public void Start()
+        {
+            sendTimer = new System.Threading.Timer(new System.Threading.TimerCallback(async (object o) =>
+            {
+                if (!inSend)
+                {
+                    inSend = true;
+                    await SendData();
+                    inSend = false;
+                }
+
+
+            }), null, sendTimerInterval, sendTimerInterval);
+
+            recvTimer = new System.Threading.Timer(new System.Threading.TimerCallback(async (object o) =>
+            {
+                if (!inRecv)
+                {
+                    inRecv = true;
+                    await RecvData();
+                    ExtractData();
+                    inRecv = false;
+                }
+            }), null, recvTimerInterval, recvTimerInterval);
         }
     }
 }

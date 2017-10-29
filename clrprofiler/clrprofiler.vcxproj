@@ -29,6 +29,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{5195A31F-EAD5-4BCF-9F41-706BB0D89D18}</ProjectGuid>
     <Keyword>AtlProj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -183,6 +184,9 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AssemblerOutput>All</AssemblerOutput>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -205,7 +209,9 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>.\defs\clrprofiler.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <RegisterOutput>true</RegisterOutput>
+      <RegisterOutput>false</RegisterOutput>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'">
@@ -219,6 +225,8 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <AssemblerOutput>All</AssemblerOutput>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -242,7 +250,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>.\defs\clrprofiler.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <RegisterOutput>true</RegisterOutput>
+      <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -260,6 +268,8 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -281,8 +291,10 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>.\defs\clrprofiler.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <RegisterOutput>true</RegisterOutput>
+      <RegisterOutput>false</RegisterOutput>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <Profile>true</Profile>
     </Link>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
@@ -301,6 +313,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -322,7 +335,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>.\defs\clrprofiler.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <RegisterOutput>true</RegisterOutput>
+      <RegisterOutput>false</RegisterOutput>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <MASM>
@@ -340,6 +353,8 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <AssemblerOutput>All</AssemblerOutput>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -364,7 +379,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <RegisterOutput>true</RegisterOutput>
+      <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -378,6 +393,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -401,25 +417,22 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <RegisterOutput>true</RegisterOutput>
+      <RegisterOutput>false</RegisterOutput>
       <AdditionalDependencies>corguids.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\commands\GetFunctionsToInstrument.cpp" />
-    <ClCompile Include="src\helpers\bit_converter.cpp" />
-    <ClCompile Include="src\commands\DefineAssembly.cpp" />
+    <ClCompile Include="src\commands\ACK.cpp" />
+    <ClCompile Include="src\commands\AgentInformation.cpp" />
+    <ClCompile Include="src\commands\commandprocessor.cpp" />
     <ClCompile Include="src\commands\DefineClass.cpp" />
-    <ClCompile Include="src\commands\DefineFunction.cpp" />
+    <ClCompile Include="src\commands\DefineInstrumentationMethods.cpp" />
+    <ClCompile Include="src\commands\DefineMethod.cpp" />
     <ClCompile Include="src\commands\DefineModule.cpp" />
-    <ClCompile Include="src\commands\FunctionLeaveQuick.cpp" />
-    <ClCompile Include="src\commands\FunctionTailQuick.cpp" />
-    <ClCompile Include="src\commands\SendPackedStructure.cpp" />
-    <ClCompile Include="src\infoclasses\AgentInfo.cpp" />
-    <ClCompile Include="src\commands\AssemblyDefinition.cpp" />
-    <ClCompile Include="src\infoclasses\AssemblyInfo.cpp" />
-    <ClCompile Include="src\commands\ClassDefinition.cpp" />
-    <ClCompile Include="src\infoclasses\ClassInfo.cpp" />
+    <ClCompile Include="src\commands\MethodEnter.cpp" />
+    <ClCompile Include="src\commands\MethodExit.cpp" />
+    <ClCompile Include="src\commands\SendInjectionMetadata.cpp" />
+    <ClCompile Include="src\helpers\bit_converter.cpp" />
     <ClCompile Include="src\dllmain\clrprofiler.cpp" />
     <ClCompile Include="src\clrprofiler_i.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -442,7 +455,20 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\common\ContainerClass.cpp" />
-    <ClCompile Include="src\profiler\CorProfilerCallbackImplementation.cpp" />
+    <ClCompile Include="src\profiler\profilermain.appdomain.cpp" />
+    <ClCompile Include="src\profiler\profilermain.assembly_loading.cpp" />
+    <ClCompile Include="src\profiler\profilermain.class_loading.cpp" />
+    <ClCompile Include="src\profiler\profilermain.exceptions.cpp" />
+    <ClCompile Include="src\profiler\profilermain.function_unloading.cpp" />
+    <ClCompile Include="src\profiler\profilermain.init_shutdown.cpp" />
+    <ClCompile Include="src\profiler\profilermain.jit.cpp" />
+    <ClCompile Include="src\profiler\profilermain.managed_transitions.cpp" />
+    <ClCompile Include="src\profiler\profilermain.module_loading.cpp" />
+    <ClCompile Include="src\profiler\profilermain.object_allocation.cpp" />
+    <ClCompile Include="src\profiler\profilermain.rejit.cpp" />
+    <ClCompile Include="src\profiler\profilermain.remoting.cpp" />
+    <ClCompile Include="src\profiler\profilermain.runtime_suspensions.cpp" />
+    <ClCompile Include="src\profiler\_CorProfilerCallbackImplementation.cpp" />
     <ClCompile Include="src\helpers\critsec_helper.cpp" />
     <ClCompile Include="src\dllmain\dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -464,25 +490,15 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\commands\FunctionEnterLong.cpp" />
-    <ClCompile Include="src\commands\FunctionEnterQuick.cpp" />
-    <ClCompile Include="src\infoclasses\FunctionInfo.cpp" />
-    <ClCompile Include="src\commands\FunctionLeaveLong.cpp" />
-    <ClCompile Include="src\commands\FunctionStackItem.cpp" />
-    <ClCompile Include="src\commands\GarbageCollectionFinished.cpp" />
     <ClCompile Include="src\common\GarbageCollectionStackItem.cpp" />
-    <ClCompile Include="src\commands\GarbageCollectionStarted.cpp" />
-    <ClCompile Include="src\commands\GetString.cpp" />
-    <ClCompile Include="src\infoclasses\ModuleInfo.cpp" />
     <ClCompile Include="src\network\networkclient.cpp" />
-    <ClCompile Include="src\infoclasses\ParameterInfo.cpp" />
-    <ClCompile Include="src\infoclasses\ProcessInfo.cpp" />
-    <ClCompile Include="src\profiler\profilermain.cpp" />
+    <ClCompile Include="src\profiler\profilermain.attach.cpp" />
+    <ClCompile Include="src\profiler\_profilermain.cpp" />
     <ClCompile Include="src\common\RuntimeSuspensionStackItem.cpp" />
-    <ClCompile Include="src\commands\SendString.cpp" />
-    <ClCompile Include="src\commands\SetFunctionsToMonitor.cpp" />
     <ClCompile Include="src\helpers\srw_helper.cpp" />
     <ClCompile Include="src\common\StackItemBase.cpp" />
+    <ClCompile Include="src\profiler\profilermain.gc.cpp" />
+    <ClCompile Include="src\profiler\profilermain.threading.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'">Create</PrecompiledHeader>
@@ -492,6 +508,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\common\ThreadStackItem.cpp" />
+    <ClCompile Include="src\tphelper\tphelper.cpp" />
     <ClCompile Include="src\xdlldata.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='DebugMVC|Win32'">false</CompileAsManaged>
@@ -514,47 +531,42 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="inc\AssemblyDefinition.h" />
     <ClInclude Include="inc\AssemblyInfo.h" />
     <ClInclude Include="inc\bit_converter.h" />
-    <ClInclude Include="inc\ClassDefinition.h" />
     <ClInclude Include="inc\ClassInfo.h" />
     <ClInclude Include="inc\clrprofiler_i.h" />
+    <ClInclude Include="inc\commands\commandprocessor.h" />
     <ClInclude Include="inc\Commands.h" />
+    <ClInclude Include="inc\commands\ACK.h" />
+    <ClInclude Include="inc\commands\AgentInformation.h" />
+    <ClInclude Include="inc\commands\DefineClass.h" />
+    <ClInclude Include="inc\commands\DefineInstrumentationMethods.h" />
+    <ClInclude Include="inc\commands\DefineMethod.h" />
+    <ClInclude Include="inc\commands\DefineModule.h" />
+    <ClInclude Include="inc\commands\MethodEnter.h" />
+    <ClInclude Include="inc\commands\MethodExit.h" />
+    <ClInclude Include="inc\commands\SendInjectionMetadata.h" />
     <ClInclude Include="inc\commonstructures.h" />
     <ClInclude Include="inc\ContainerClass.h" />
     <ClInclude Include="inc\CorProfilerCallbackImplementation.h" />
     <ClInclude Include="inc\critsec_helper.h" />
-    <ClInclude Include="inc\DefineAssembly.h" />
-    <ClInclude Include="inc\DefineClass.h" />
-    <ClInclude Include="inc\DefineFunction.h" />
-    <ClInclude Include="inc\DefineModule.h" />
     <ClInclude Include="inc\dllmain.h" />
-    <ClInclude Include="inc\FunctionEnterLong.h" />
-    <ClInclude Include="inc\FunctionEnterQuick.h" />
+    <ClInclude Include="inc\exported_functions.h" />
     <ClInclude Include="inc\FunctionInfo.h" />
-    <ClInclude Include="inc\FunctionLeaveLong.h" />
-    <ClInclude Include="inc\FunctionLeaveQuick.h" />
-    <ClInclude Include="inc\FunctionTailQuick.h" />
-    <ClInclude Include="inc\GarbageCollectionFinished.h" />
-    <ClInclude Include="inc\GarbageCollectionStarted.h" />
-    <ClInclude Include="inc\GetFunctionsToInstrument.h" />
-    <ClInclude Include="inc\GetString.h" />
     <ClInclude Include="inc\ICommand.h" />
     <ClInclude Include="inc\INetworkClient.h" />
+    <ClInclude Include="inc\ItemMapping.h" />
     <ClInclude Include="inc\ModuleInfo.h" />
     <ClInclude Include="inc\networkclient.h" />
     <ClInclude Include="inc\ParameterInfo.h" />
     <ClInclude Include="inc\profilermain.h" />
     <ClInclude Include="inc\Resource.h" />
-    <ClInclude Include="inc\SendString.h" />
-    <ClInclude Include="inc\SetFunctionsToMonitor.h" />
     <ClInclude Include="inc\srw_helper.h" />
     <ClInclude Include="inc\stdafx.h" />
     <ClInclude Include="inc\targetver.h" />
     <ClInclude Include="inc\stackitems.h" />
+    <ClInclude Include="inc\tphelper.h" />
     <ClInclude Include="inc\xdlldata.h" />
-    <ClInclude Include="inc\SendPackedStructure.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="rsrc\clrprofiler.rc" />
@@ -575,6 +587,8 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <None Include="README.md" />
     <None Include="src\asm\etl_leave_x86.inc" />
     <None Include="src\asm\etl_tail_x86.inc" />
+    <None Include="src\asm\x64_external.inc" />
+    <None Include="src\exportedfunctions\exported_functions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="defs\clrprofiler.idl" />

@@ -3,45 +3,53 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - My ASP.NET Application</title>
+    <title>ChainsAPM - @ViewBag.Title</title>
     @Styles.Render("~/Content/css")
+    @Styles.Render("~/Content/fontawesomecss")
     @Scripts.Render("~/bundles/modernizr")
+    <link rel="icon"
+          type="image/png"
+          href="~/Content/img/chainslogo_25.png">
 
-<script type="text/javascript">
-    window.appInsights={queue:[],applicationInsightsId:null,accountId:null,appUserId:null,configUrl:null,start:function(n){function u(n){t[n]=function(){var i=arguments;t.queue.push(function(){t[n].apply(t,i)})}}function f(n,t){if(n){var u=r.createElement(i);u.type="text/javascript";u.src=n;u.async=!0;u.onload=t;u.onerror=t;r.getElementsByTagName(i)[0].parentNode.appendChild(u)}else t()}var r=document,t=this,i;t.applicationInsightsId=n;u("logEvent");u("logPageView");i="script";f(t.configUrl,function(){f("//az416426.vo.msecnd.net/scripts/a/ai.0.7.js")});t.start=function(){}}};
 
-    appInsights.start("07669186-ee7b-4039-b6c0-e1a745215fc1");
-    appInsights.logPageView();
-</script></head>
+    <script type="text/javascript">
+        window.appInsights = { queue: [], applicationInsightsId: null, accountId: null, appUserId: null, configUrl: null, start: function (n) { function u(n) { t[n] = function () { var i = arguments; t.queue.push(function () { t[n].apply(t, i) }) } } function f(n, t) { if (n) { var u = r.createElement(i); u.type = "text/javascript"; u.src = n; u.async = !0; u.onload = t; u.onerror = t; r.getElementsByTagName(i)[0].parentNode.appendChild(u) } else t() } var r = document, t = this, i; t.applicationInsightsId = n; u("logEvent"); u("logPageView"); i = "script"; f(t.configUrl, function () { f("//az416426.vo.msecnd.net/scripts/a/ai.0.7.js") }); t.start = function () { } } };
+
+        appInsights.start("07669186-ee7b-4039-b6c0-e1a745215fc1");
+        appInsights.logPageView();
+    </script>
+</head>
 <body>
-    <div class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
-            </div>
-            <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li>@Html.ActionLink("Home", "Index", "Home")</li>
-                    <li>@Html.ActionLink("About", "About", "Home")</li>
-                    <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
-                </ul>
-                @Html.Partial("_LoginPartial")
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar-wrapper">
+            <ul class="sidebar-nav">
+                <li class="sidebar-brand">
+                    <a href="#"><img src="~/Content/img/chainslogo_50.png" style="padding-right:1em" />ChainsAPM</a>
+                </li>
+                <li style="font-size:1.25em"><a href="@Url.Action("Index","Analysis")"><i class="fa fa-flask" ></i>Analysis</a></li>
+                <li style="font-size:1.25em"><a href="@Url.Action("Index","Dashboard")"><i class="fa fa-dashboard"></i>Dashboards</a></li>
+                <li style="font-size:1.25em"><a href="@Url.Action("Index","Alert")"><i class="fa fa-bell"></i>Alerts</a></li>
+                <li style="font-size:1.25em"><a href="@Url.Action("Index","Error")"><i class="fa fa-exclamation-circle"></i>Errors</a></li>
+                <li style="font-size:1.25em"><a href="@Url.Action("Index","Error")"><i class="fa fa-file"></i>Logs</a></li>
+                <li style="font-size:1.25em"><a href="@Url.Action("Index","Error")"><i class="fa fa-database"></i>Database</a></li>
+            </ul>
+        </div>
+
+        <div id="page-content-wrapper">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12">
+                        @RenderBody()
+                        <hr />
+                        <footer>
+                            <p>&copy; @DateTime.Now.Year - ChainsAPM</p>
+                        </footer>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="container body-content">
-        @RenderBody()
-        <hr />
-        <footer>
-            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
-        </footer>
-    </div>
-
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)

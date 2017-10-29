@@ -1,42 +1,4 @@
-struct ItemMapping
-{
-	enum class MatchType
-	{
-		FullyQualified,				// System.Console::WriteLine(string)
-		FunctionAndSignature,		// WriteLine(string)
-		FunctionAndClass,			// System.Console::WriteLine
-		FunctionOnly,				// WriteLine
-		FullyQualifiedDerivesFrom,	// System.Data.IDbCommand::.ctor(System.Data.IDbConnection)
-		DerivesFrom,				// System.Data.IDbCommand::Execute
-		AllInModule,				// EVERYTHING in the specified Module
-		AllInClass,					// EVERYTHING in the specified Class
-		AllInAssembly				// EVERYTHING in the specified Assembly
-	};
-
-	enum class StringMatchMethod
-	{
-		BEGIN,
-		CONTAINS,
-		END
-	};
-
-	std::wstring FunctionName;
-	std::wstring ClassName;
-	std::wstring AssemblyName;
-	std::wstring ModuleName;
-	std::wstring DerivesFrom;
-	std::wstring Signature;
-
-	std::wstring HashString;
-
-	StringMatchMethod Compare;
-	MatchType Match;
-
-	bool operator == (const std::wstring &strCompare);
-
-	bool IgnoreGetters;
-	bool IgnoreSetters;
-};
+#include "ItemMapping.h"
 
 class LessFunctionIDFn
 {
@@ -59,13 +21,12 @@ public:
 // a new profiler.  This container simplifies the process of mapping the proper profiler to the static method
 //class Cprofilermain;
 #pragma once
-#include "../../metadatastaticlib/inc/FunctionInfo.h"
+#include "../../metadatastaticlib/inc/infoclasses/FunctionInfo.h"
 
 class StackItemBase;
 class MetadataHelpers;
 
 _ALLOCATOR_DECL(CACHE_FREELIST(stdext::allocators::max_fixed_size<50000>), stdext::allocators::sync_none, ALLOC_500);
-
 
 
 namespace std {
@@ -206,7 +167,6 @@ namespace std {
 	};
 }
 
-
 struct  ContainerClass
 {
 
@@ -219,7 +179,7 @@ struct  ContainerClass
 	// As a function is mapped we want to keep a reference to it's specific details so we can 
 	// use it again when generating the call stack.
 	std::map<FunctionID, std::unique_ptr<InformationClasses::FunctionInfo>> * g_FunctionSet;
-	std::map<ClassID, std::unique_ptr<InformationClasses::ClassInfo>> * g_ClassSet;
+	std::map<ClassID, std::unique_ptr<InformationClasses::TypeInfo>> * g_ClassSet;
 	std::map<AssemblyID, std::unique_ptr<InformationClasses::AssemblyInfo>> * g_AssemblySet;
 	std::map<ModuleID, std::unique_ptr<InformationClasses::ModuleInfo>> * g_ModuleSet;
 	std::unordered_multiset<ItemMapping> * g_FullyQualifiedMethodsToProfile;
