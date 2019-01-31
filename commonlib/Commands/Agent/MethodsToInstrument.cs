@@ -15,9 +15,9 @@ namespace ChainsAPM.Commands.Agent
     public class MethodsToInstrument : Interfaces.ICommand<byte>
     {
 
-         private Helpers.Fnv1a64 hashhelper;
+        private Helpers.Fnv1a64 hashhelper;
 
-         public DateTime TimeStamp { get; set; }
+        public DateTime TimeStamp { get; set; }
         public enum MethodProperties
         {
             Public = 0x00000001,
@@ -75,49 +75,49 @@ namespace ChainsAPM.Commands.Agent
                     short code = segstream.GetInt16();
                     if (code == Code)
                     {
-                    var timestamp = segstream.GetInt64();
+                        var timestamp = segstream.GetInt64();
 
-                    var numberOfMethodPropList = segstream.GetInt32();
-                      var listOfMethodPropList = new List<MethodProperties>();
-                      for (int iMethodPropList = 0; iMethodPropList < numberOfMethodPropList; iMethodPropList++)
-                    {
-                    var decodeMethodPropList = (MethodProperties)segstream.GetInt32();
+                        var numberOfMethodPropList = segstream.GetInt32();
+                        var listOfMethodPropList = new List<MethodProperties>();
+                        for (int iMethodPropList = 0; iMethodPropList < numberOfMethodPropList; iMethodPropList++)
+                        {
+                            var decodeMethodPropList = (MethodProperties)segstream.GetInt32();
 
-                    listOfMethodPropList.Add(decodeMethodPropList);
-                    }
-     
+                            listOfMethodPropList.Add(decodeMethodPropList);
+                        }
 
-                    var numberOfMethodClassList = segstream.GetInt32();
-                      var listOfMethodClassList = new List<System.String>();
-                      for (int iMethodClassList = 0; iMethodClassList < numberOfMethodClassList; iMethodClassList++)
-                    {
-                    var stringlenMethodClassList = segstream.GetInt32();
-                    var decodeMethodClassListHash = segstream.GetInt64();
-                    var decodeMethodClassList = segstream.GetUnicode(stringlenMethodClassList + 1);
 
-                    listOfMethodClassList.Add(decodeMethodClassList);
-                    }
-     
+                        var numberOfMethodClassList = segstream.GetInt32();
+                        var listOfMethodClassList = new List<System.String>();
+                        for (int iMethodClassList = 0; iMethodClassList < numberOfMethodClassList; iMethodClassList++)
+                        {
+                            var stringlenMethodClassList = segstream.GetInt32();
+                            var decodeMethodClassListHash = segstream.GetInt64();
+                            var decodeMethodClassList = segstream.GetUnicode(stringlenMethodClassList + 1);
 
-                    var numberOfMethodList = segstream.GetInt32();
-                      var listOfMethodList = new List<System.String>();
-                      for (int iMethodList = 0; iMethodList < numberOfMethodList; iMethodList++)
-                    {
-                    var stringlenMethodList = segstream.GetInt32();
-                    var decodeMethodListHash = segstream.GetInt64();
-                    var decodeMethodList = segstream.GetUnicode(stringlenMethodList + 1);
+                            listOfMethodClassList.Add(decodeMethodClassList);
+                        }
 
-                    listOfMethodList.Add(decodeMethodList);
-                    }
-     
-                       
-                    var term = segstream.GetInt16();
 
-                    if (term != 0)
-                    {
-                        throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
-                    }
-                    return new MethodsToInstrument(timestamp, listOfMethodPropList, listOfMethodClassList, listOfMethodList);
+                        var numberOfMethodList = segstream.GetInt32();
+                        var listOfMethodList = new List<System.String>();
+                        for (int iMethodList = 0; iMethodList < numberOfMethodList; iMethodList++)
+                        {
+                            var stringlenMethodList = segstream.GetInt32();
+                            var decodeMethodListHash = segstream.GetInt64();
+                            var decodeMethodList = segstream.GetUnicode(stringlenMethodList + 1);
+
+                            listOfMethodList.Add(decodeMethodList);
+                        }
+
+
+                        var term = segstream.GetInt16();
+
+                        if (term != 0)
+                        {
+                            throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
+                        }
+                        return new MethodsToInstrument(timestamp, listOfMethodPropList, listOfMethodClassList, listOfMethodList);
                     }
                     else
                     {
@@ -138,32 +138,32 @@ namespace ChainsAPM.Commands.Agent
         {
             int byteSize = 0;
 
-             byteSize += sizeof (Int32); // Length Of Command
-             byteSize += sizeof (Int16); // Length Of Code
-             byteSize += sizeof (Int64); // Length Of Timestamp
+            byteSize += sizeof(Int32); // Length Of Command
+            byteSize += sizeof(Int16); // Length Of Code
+            byteSize += sizeof(Int64); // Length Of Timestamp
 
             byteSize += 4; // Length of Array
-			 byteSize += sizeof (Int32);
+            byteSize += sizeof(Int32);
             byteSize += sizeof(Int32) * MethodPropList.Count;
             byteSize += 4; // Length of Array
             foreach (var sItem in MethodClassList)
             {
-               var sBufferListOfMethods_item = System.Text.UnicodeEncoding.Unicode.GetBytes (sItem);
-               byteSize += sizeof(System.Int32); // Length Bytes
-               byteSize += sizeof(System.Int64); // Hash Bytes
-               byteSize += sBufferListOfMethods_item.Length; // StringLength Bytes
-               byteSize += sizeof(System.Int16); // Zero Terminated String
+                var sBufferListOfMethods_item = System.Text.UnicodeEncoding.Unicode.GetBytes(sItem);
+                byteSize += sizeof(System.Int32); // Length Bytes
+                byteSize += sizeof(System.Int64); // Hash Bytes
+                byteSize += sBufferListOfMethods_item.Length; // StringLength Bytes
+                byteSize += sizeof(System.Int16); // Zero Terminated String
             }
             byteSize += 4; // Length of Array
             foreach (var sItem in MethodList)
             {
-               var sBufferListOfMethods_item = System.Text.UnicodeEncoding.Unicode.GetBytes (sItem);
-               byteSize += sizeof(System.Int32); // Length Bytes
-               byteSize += sizeof(System.Int64); // Hash Bytes
-               byteSize += sBufferListOfMethods_item.Length; // StringLength Bytes
-               byteSize += sizeof(System.Int16); // Zero Terminated String
+                var sBufferListOfMethods_item = System.Text.UnicodeEncoding.Unicode.GetBytes(sItem);
+                byteSize += sizeof(System.Int32); // Length Bytes
+                byteSize += sizeof(System.Int64); // Hash Bytes
+                byteSize += sBufferListOfMethods_item.Length; // StringLength Bytes
+                byteSize += sizeof(System.Int16); // Zero Terminated String
             }
-            byteSize += sizeof (short); // Length Of Terminator
+            byteSize += sizeof(short); // Length Of Terminator
             var buffer = new List<byte>(byteSize);
             buffer.AddRange(BitConverter.GetBytes(byteSize)); // 4 bytes for size, 2 byte for code, 8 bytes for data, 8 bytes for data, 8 bytes for TS, 2 bytes for term
             buffer.AddRange(BitConverter.GetBytes(Code));
@@ -171,7 +171,7 @@ namespace ChainsAPM.Commands.Agent
             buffer.AddRange(BitConverter.GetBytes(MethodPropList.Count)); // Count of List
             foreach (var MethodPropList_item in MethodPropList)
             {
-                buffer.AddRange(BitConverter.GetBytes((int)MethodPropList_item)); 
+                buffer.AddRange(BitConverter.GetBytes((int)MethodPropList_item));
             }
 
             buffer.AddRange(BitConverter.GetBytes(MethodClassList.Count)); // Count of List
@@ -198,6 +198,6 @@ namespace ChainsAPM.Commands.Agent
             return buffer.ToArray();
         }
     }
-    
+
 }
 

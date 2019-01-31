@@ -5,7 +5,7 @@ namespace ChainsAPM.Interfaces
 {
     public interface ITransport<Tdata> : IDisposable
     {
-        System.Net.Sockets.Socket Socket { get;}
+        System.Net.Sockets.Socket Socket { get; }
         bool HasData { get; }
         Task<bool> Send(Tdata data);
         Task<Tdata> Receive();

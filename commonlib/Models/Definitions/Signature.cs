@@ -2,7 +2,8 @@
 using System.Linq;
 using System.Text;
 
-namespace ChainsAPM.Models.Definitions {
+namespace ChainsAPM.Models.Definitions
+{
     public class Signature
     {
         public List<Parameter> Parameters { get; set; }
@@ -13,7 +14,7 @@ namespace ChainsAPM.Models.Definitions {
             foreach (var item in Parameters)
             {
                 if (Parameters.Last() == item)
-                    sb.Append(string.Format("{0}, ",item));
+                    sb.Append(string.Format("{0}, ", item));
                 else
                     sb.Append(string.Format("{0}", item));
 

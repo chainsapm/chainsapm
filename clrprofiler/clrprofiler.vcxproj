@@ -123,7 +123,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir).output\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files %28x86%29\Windows Kits\NETFXSDK\4.6.1\Include\um;$(SolutionDir);$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(SolutionDir).output\$(Configuration)\$(Platform)\</LibraryPath>
   </PropertyGroup>
@@ -132,7 +132,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir).output\Debug\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\Debug\</IntDir>
-    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files %28x86%29\Windows Kits\NETFXSDK\4.6.1\Include\um;$(SolutionDir);$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
   </PropertyGroup>
@@ -141,7 +141,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir).output\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files %28x86%29\Windows Kits\NETFXSDK\4.6.1\Include\um;$(SolutionDir);$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath);$(SolutionDir).output\$(Configuration)\$(Platform)\</LibraryPath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
@@ -151,7 +151,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir).output\Debug\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\Debug\</IntDir>
-    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files %28x86%29\Windows Kits\NETFXSDK\4.6.1\Include\um;$(SolutionDir);$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
   </PropertyGroup>
@@ -160,14 +160,14 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\.output\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)\.build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files %28x86%29\Windows Kits\NETFXSDK\4.6.1\Include\um;$(SolutionDir);$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(SolutionDir).output\$(Configuration)\$(Platform)\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files %28x86%29\Windows Kits\NETFXSDK\4.6.1\Include\um;$(SolutionDir);$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath);$(SolutionDir).output\$(Configuration)\$(Platform)\</LibraryPath>
     <OutDir>$(SolutionDir).output\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>

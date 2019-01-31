@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChainsAPM.Models.Resource {
-        class ResourceGroup {
-        }
+namespace ChainsAPM.Models.Resource
+{
+    class ResourceGroup
+    {
+    }
 }

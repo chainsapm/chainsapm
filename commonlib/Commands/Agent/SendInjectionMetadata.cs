@@ -10,110 +10,132 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChainsAPM.Commands.Agent {
-        public class SendInjectionMetadata : Interfaces.ICommand<byte> {
+namespace ChainsAPM.Commands.Agent
+{
+    public class SendInjectionMetadata : Interfaces.ICommand<byte>
+    {
 
-                private Helpers.Fnv1a64 hashhelper;
+        private Helpers.Fnv1a64 hashhelper;
 
-                public DateTime TimeStamp { get; set; }
+        public DateTime TimeStamp { get; set; }
 
-                public System.Byte [] InjectionMetadata { get; set; }
-                public System.Byte [] InjectionIL { get; set; }
+        public System.Byte[] InjectionMetadata { get; set; }
+        public System.Byte[] InjectionIL { get; set; }
 
-                public SendInjectionMetadata () {
-                        hashhelper = new Helpers.Fnv1a64 ();
-                }
-
-                public SendInjectionMetadata (System.Int64 timestamp, System.Byte [] _injectionmetadata, System.Byte [] _injectionil) : this () {
-                        TimeStamp = timestamp == 0 ? DateTime.Now : DateTime.FromFileTimeUtc (timestamp);
-                        InjectionMetadata = _injectionmetadata;
-                        InjectionIL = _injectionil;
-                }
-
-                public string Name {
-                        get { return "Send Injection Metadata"; }
-                }
-                public ushort Code {
-                        get { return 0x0009; }
-                }
-                public string Description {
-                        get { return "Sends the Metadata blob across the wire"; }
-                }
-                public Type CommandType {
-                        get { return typeof (System.String); }
-                }
-                public Interfaces.ICommand<byte> Decode (ArraySegment<byte> input) {
-
-                        if ( input.Count != 0 ) {
-                                Helpers.ArraySegmentStream segstream = new Helpers.ArraySegmentStream (input);
-                                int size = segstream.GetInt32 ();
-                                if ( input.Count == size ) {
-                                        short code = segstream.GetInt16 ();
-                                        if ( code == Code ) {
-                                                var timestamp = segstream.GetInt64 ();
-
-                                                var numberOfInjectionMetadata = segstream.GetInt32 ();
-                                                var arrayOfInjectionMetadata = new System.Byte [numberOfInjectionMetadata];
-                                                for ( int iInjectionMetadata = 0; iInjectionMetadata < numberOfInjectionMetadata; iInjectionMetadata++ ) {
-                                                        var decodeInjectionMetadata = segstream.GetByte ();
-
-                                                        arrayOfInjectionMetadata [iInjectionMetadata] = decodeInjectionMetadata;
-                                                }
-
-
-                                                var numberOfInjectionIL = segstream.GetInt32 ();
-                                                var arrayOfInjectionIL = new System.Byte [numberOfInjectionIL];
-                                                for ( int iInjectionIL = 0; iInjectionIL < numberOfInjectionIL; iInjectionIL++ ) {
-                                                        var decodeInjectionIL = segstream.GetByte ();
-
-                                                        arrayOfInjectionIL [iInjectionIL] = decodeInjectionIL;
-                                                }
-
-
-                                                var term = segstream.GetInt16 ();
-
-                                                if ( term != 0 ) {
-                                                        throw new System.Runtime.Serialization.SerializationException ("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
-                                                }
-                                                return new SendInjectionMetadata (timestamp, arrayOfInjectionMetadata, arrayOfInjectionIL);
-                                        } else {
-                                                throw new System.Runtime.Serialization.SerializationException ("Invalid command code detected. Please check the incoming byte stream for possible errors.");
-                                        }
-                                } else {
-                                        throw new System.Runtime.Serialization.SerializationException ("Size of message does not match size of byte stream. Please check the incoming byte stream for possible errors.");
-                                }
-                        } else {
-                                throw new System.Runtime.Serialization.SerializationException ("Size of message is zero. Please check the incoming byte stream for possible errors. ");
-                        }
-                }
-                public byte [] Encode () {
-                        int byteSize = 0;
-
-                        byteSize += sizeof (Int32); // Length Of Command
-                        byteSize += sizeof (Int16); // Length Of Code
-                        byteSize += sizeof (Int64); // Length Of Timestamp
-
-                        byteSize += sizeof (Int32);
-                        byteSize += sizeof (System.Byte) * InjectionMetadata.Length;
-                        byteSize += sizeof (Int32);
-                        byteSize += sizeof (System.Byte) * InjectionIL.Length;
-                        byteSize += sizeof (short); // Length Of Terminator
-                        var buffer = new List<byte> (byteSize);
-                        buffer.AddRange (BitConverter.GetBytes (byteSize)); // 4 bytes for size, 2 byte for code, 8 bytes for data, 8 bytes for data, 8 bytes for TS, 2 bytes for term
-                        buffer.AddRange (BitConverter.GetBytes (Code));
-                        buffer.AddRange (BitConverter.GetBytes (TimeStamp.ToFileTimeUtc ()));
-                        buffer.AddRange (BitConverter.GetBytes (InjectionMetadata.Length)); // Length of Array
-                        buffer.AddRange (InjectionMetadata);  // Add raw bytes to stream
-
-
-                        buffer.AddRange (BitConverter.GetBytes (InjectionIL.Length)); // Length of Array
-                        buffer.AddRange (InjectionIL);  // Add raw bytes to stream
-
-
-                        buffer.AddRange (BitConverter.GetBytes ((short)0));
-                        return buffer.ToArray ();
-                }
+        public SendInjectionMetadata()
+        {
+            hashhelper = new Helpers.Fnv1a64();
         }
+
+        public SendInjectionMetadata(System.Int64 timestamp, System.Byte[] _injectionmetadata, System.Byte[] _injectionil) : this()
+        {
+            TimeStamp = timestamp == 0 ? DateTime.Now : DateTime.FromFileTimeUtc(timestamp);
+            InjectionMetadata = _injectionmetadata;
+            InjectionIL = _injectionil;
+        }
+
+        public string Name
+        {
+            get { return "Send Injection Metadata"; }
+        }
+        public ushort Code
+        {
+            get { return 0x0009; }
+        }
+        public string Description
+        {
+            get { return "Sends the Metadata blob across the wire"; }
+        }
+        public Type CommandType
+        {
+            get { return typeof(System.String); }
+        }
+        public Interfaces.ICommand<byte> Decode(ArraySegment<byte> input)
+        {
+
+            if (input.Count != 0)
+            {
+                Helpers.ArraySegmentStream segstream = new Helpers.ArraySegmentStream(input);
+                int size = segstream.GetInt32();
+                if (input.Count == size)
+                {
+                    short code = segstream.GetInt16();
+                    if (code == Code)
+                    {
+                        var timestamp = segstream.GetInt64();
+
+                        var numberOfInjectionMetadata = segstream.GetInt32();
+                        var arrayOfInjectionMetadata = new System.Byte[numberOfInjectionMetadata];
+                        for (int iInjectionMetadata = 0; iInjectionMetadata < numberOfInjectionMetadata; iInjectionMetadata++)
+                        {
+                            var decodeInjectionMetadata = segstream.GetByte();
+
+                            arrayOfInjectionMetadata[iInjectionMetadata] = decodeInjectionMetadata;
+                        }
+
+
+                        var numberOfInjectionIL = segstream.GetInt32();
+                        var arrayOfInjectionIL = new System.Byte[numberOfInjectionIL];
+                        for (int iInjectionIL = 0; iInjectionIL < numberOfInjectionIL; iInjectionIL++)
+                        {
+                            var decodeInjectionIL = segstream.GetByte();
+
+                            arrayOfInjectionIL[iInjectionIL] = decodeInjectionIL;
+                        }
+
+
+                        var term = segstream.GetInt16();
+
+                        if (term != 0)
+                        {
+                            throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
+                        }
+                        return new SendInjectionMetadata(timestamp, arrayOfInjectionMetadata, arrayOfInjectionIL);
+                    }
+                    else
+                    {
+                        throw new System.Runtime.Serialization.SerializationException("Invalid command code detected. Please check the incoming byte stream for possible errors.");
+                    }
+                }
+                else
+                {
+                    throw new System.Runtime.Serialization.SerializationException("Size of message does not match size of byte stream. Please check the incoming byte stream for possible errors.");
+                }
+            }
+            else
+            {
+                throw new System.Runtime.Serialization.SerializationException("Size of message is zero. Please check the incoming byte stream for possible errors. ");
+            }
+        }
+        public byte[] Encode()
+        {
+            int byteSize = 0;
+
+            byteSize += sizeof(Int32); // Length Of Command
+            byteSize += sizeof(Int16); // Length Of Code
+            byteSize += sizeof(Int64); // Length Of Timestamp
+
+            byteSize += sizeof(Int32);
+            byteSize += sizeof(System.Byte) * InjectionMetadata.Length;
+            byteSize += sizeof(Int32);
+            byteSize += sizeof(System.Byte) * InjectionIL.Length;
+            byteSize += sizeof(short); // Length Of Terminator
+            var buffer = new List<byte>(byteSize);
+            buffer.AddRange(BitConverter.GetBytes(byteSize)); // 4 bytes for size, 2 byte for code, 8 bytes for data, 8 bytes for data, 8 bytes for TS, 2 bytes for term
+            buffer.AddRange(BitConverter.GetBytes(Code));
+            buffer.AddRange(BitConverter.GetBytes(TimeStamp.ToFileTimeUtc()));
+            buffer.AddRange(BitConverter.GetBytes(InjectionMetadata.Length)); // Length of Array
+            buffer.AddRange(InjectionMetadata);  // Add raw bytes to stream
+
+
+            buffer.AddRange(BitConverter.GetBytes(InjectionIL.Length)); // Length of Array
+            buffer.AddRange(InjectionIL);  // Add raw bytes to stream
+
+
+            buffer.AddRange(BitConverter.GetBytes((short)0));
+            return buffer.ToArray();
+        }
+    }
 
 }
 

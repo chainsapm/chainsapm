@@ -15,9 +15,9 @@ namespace ChainsAPM.Commands.Agent
     public class ACK : Interfaces.ICommand<byte>
     {
 
-         private Helpers.Fnv1a64 hashhelper;
+        private Helpers.Fnv1a64 hashhelper;
 
-         public DateTime TimeStamp { get; set; }
+        public DateTime TimeStamp { get; set; }
 
         public System.Int64 CommandTimeStamp { get; set; }
         public System.Int16 CommandNumber { get; set; }
@@ -62,21 +62,21 @@ namespace ChainsAPM.Commands.Agent
                     short code = segstream.GetInt16();
                     if (code == Code)
                     {
-                    var timestamp = segstream.GetInt64();
-                    var decodeCommandTimeStamp = segstream.GetInt64();
+                        var timestamp = segstream.GetInt64();
+                        var decodeCommandTimeStamp = segstream.GetInt64();
 
-     
-                    var decodeCommandNumber = segstream.GetInt16();
 
-     
-                       
-                    var term = segstream.GetInt16();
+                        var decodeCommandNumber = segstream.GetInt16();
 
-                    if (term != 0)
-                    {
-                        throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
-                    }
-                    return new ACK(timestamp, decodeCommandTimeStamp, decodeCommandNumber);
+
+
+                        var term = segstream.GetInt16();
+
+                        if (term != 0)
+                        {
+                            throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
+                        }
+                        return new ACK(timestamp, decodeCommandTimeStamp, decodeCommandNumber);
                     }
                     else
                     {
@@ -97,27 +97,27 @@ namespace ChainsAPM.Commands.Agent
         {
             int byteSize = 0;
 
-             byteSize += sizeof (Int32); // Length Of Command
-             byteSize += sizeof (Int16); // Length Of Code
-             byteSize += sizeof (Int64); // Length Of Timestamp
+            byteSize += sizeof(Int32); // Length Of Command
+            byteSize += sizeof(Int16); // Length Of Code
+            byteSize += sizeof(Int64); // Length Of Timestamp
 
-            
+
             byteSize += sizeof(System.Int64);
-	        
+
             byteSize += sizeof(System.Int16);
-            byteSize += sizeof (short); // Length Of Terminator
+            byteSize += sizeof(short); // Length Of Terminator
             var buffer = new List<byte>(byteSize);
             buffer.AddRange(BitConverter.GetBytes(byteSize)); // 4 bytes for size, 2 byte for code, 8 bytes for data, 8 bytes for data, 8 bytes for TS, 2 bytes for term
             buffer.AddRange(BitConverter.GetBytes(Code));
             buffer.AddRange(BitConverter.GetBytes(TimeStamp.ToFileTimeUtc()));
-            buffer.AddRange(BitConverter.GetBytes(CommandTimeStamp)); 
+            buffer.AddRange(BitConverter.GetBytes(CommandTimeStamp));
 
-            buffer.AddRange(BitConverter.GetBytes(CommandNumber)); 
+            buffer.AddRange(BitConverter.GetBytes(CommandNumber));
 
             buffer.AddRange(BitConverter.GetBytes((short)0));
             return buffer.ToArray();
         }
     }
-    
+
 }
 

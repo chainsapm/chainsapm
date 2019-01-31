@@ -67,7 +67,7 @@
             <div class="panel-body">
                 <ul class="fa-ul callstack" style="margin-left : 1em">
                     @foreach ( ChainsAPM.Interfaces.IStackItem child in Model.Children ) {
-                            @RenderTree(child)
+                    @RenderTree(child)
                     }
 
                 </ul>
@@ -78,12 +78,12 @@
 </div>
 
 @helper RenderTree(ChainsAPM.Interfaces.IStackItem node) {
-        <li><i class="fa fa-globe" style="padding-right: .25em"></i>@node.Name</li>
+<li><i class="fa fa-globe" style="padding-right: .25em"></i>@node.Name</li>
 if ( node.Children != null && node.Children.Any() ) {
-                <ul class="fa-ul callstack" style="margin-left : 1em">
-                    @foreach ( ChainsAPM.Interfaces.IStackItem child in node.Children ) {
-                            @RenderTree(child);
+<ul class="fa-ul callstack" style="margin-left : 1em">
+    @foreach ( ChainsAPM.Interfaces.IStackItem child in node.Children ) {
+    @RenderTree(child);
                     }
-                </ul>
+</ul>
 }
 }

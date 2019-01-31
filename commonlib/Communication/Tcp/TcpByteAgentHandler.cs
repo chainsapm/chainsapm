@@ -16,21 +16,21 @@ namespace ChainsAPM.Communication.Tcp
             ReceiveHeavy,
             Balanced
         }
-        
+
 
         private object cmdListLock;
         private ICommandLocator<byte> CommandLocator;
-       
+
 
         private ITransport<byte[]> m_PacketHandler;
-        
+
         private object lockingOutbound;
         private object lockingInbound;
         private Queue<byte[]> blockingOutboundQueue;
 
         private System.Threading.Timer sendTimer; // Let's keep this guy around
         private System.Threading.Timer recvTimer; // Let's keep this guy around
-        
+
         object timerLock = new object();
         public int messagesSent = 0;
         int MAX_SENDBUFFER = 1024 * 70; // Keep this out of the LOH
@@ -75,7 +75,7 @@ namespace ChainsAPM.Communication.Tcp
                 default:
                     break;
             }
-            
+
         }
 
         public void PauseTimers()
@@ -210,7 +210,7 @@ namespace ChainsAPM.Communication.Tcp
                 }
             }
         }
-    
+
         public void SendCommand(ICommand<byte> command)
         {
             lock (lockingOutbound)
@@ -352,7 +352,7 @@ namespace ChainsAPM.Communication.Tcp
                     chunkList.Clear();
                     queueToBreak = new byte[queueChunk.Length];
                     segmentList = new List<ArraySegment<byte>>();
-                    for (int i = 0; i < queueChunk.Length; )
+                    for (int i = 0; i < queueChunk.Length;)
                     {
                         int size = 0;
                         if (queueChunk.Length - 4 >= i + 4)
@@ -384,7 +384,7 @@ namespace ChainsAPM.Communication.Tcp
                     Array.Resize(ref queueToBreak, finalSize);
                     foreach (var item in segmentList)
                     {
-                        for (int i = 0; i < item.Count; )
+                        for (int i = 0; i < item.Count;)
                         {
                             var startOffset = i + item.Offset;
                             int size = BitConverter.ToInt32(item.Array, startOffset);

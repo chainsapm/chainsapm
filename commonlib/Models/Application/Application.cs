@@ -1,6 +1,6 @@
 ﻿namespace ChainsAPM.Models
 {
-    public  class Application
+    public class Application
     {
     }
 }

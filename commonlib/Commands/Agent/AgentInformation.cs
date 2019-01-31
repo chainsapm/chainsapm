@@ -15,9 +15,9 @@ namespace ChainsAPM.Commands.Agent
     public class AgentInformation : Interfaces.ICommand<byte>
     {
 
-         private Helpers.Fnv1a64 hashhelper;
+        private Helpers.Fnv1a64 hashhelper;
 
-         public DateTime TimeStamp { get; set; }
+        public DateTime TimeStamp { get; set; }
 
         public System.String AgentName { get; set; }
         public System.String MachineName { get; set; }
@@ -72,48 +72,48 @@ namespace ChainsAPM.Commands.Agent
                     short code = segstream.GetInt16();
                     if (code == Code)
                     {
-                    var timestamp = segstream.GetInt64();
-                    var stringlenAgentName = segstream.GetInt32();
-                    var decodeAgentNameHash = segstream.GetInt64();
-                    var decodeAgentName = segstream.GetUnicode(stringlenAgentName + 1);
+                        var timestamp = segstream.GetInt64();
+                        var stringlenAgentName = segstream.GetInt32();
+                        var decodeAgentNameHash = segstream.GetInt64();
+                        var decodeAgentName = segstream.GetUnicode(stringlenAgentName + 1);
 
-     
-                    var stringlenMachineName = segstream.GetInt32();
-                    var decodeMachineNameHash = segstream.GetInt64();
-                    var decodeMachineName = segstream.GetUnicode(stringlenMachineName + 1);
 
-     
-                    var stringlenWorkingDirectory = segstream.GetInt32();
-                    var decodeWorkingDirectoryHash = segstream.GetInt64();
-                    var decodeWorkingDirectory = segstream.GetUnicode(stringlenWorkingDirectory + 1);
+                        var stringlenMachineName = segstream.GetInt32();
+                        var decodeMachineNameHash = segstream.GetInt64();
+                        var decodeMachineName = segstream.GetUnicode(stringlenMachineName + 1);
 
-     
-                    var stringlenCommandLine = segstream.GetInt32();
-                    var decodeCommandLineHash = segstream.GetInt64();
-                    var decodeCommandLine = segstream.GetUnicode(stringlenCommandLine + 1);
 
-     
-                    var stringlenProcessName = segstream.GetInt32();
-                    var decodeProcessNameHash = segstream.GetInt64();
-                    var decodeProcessName = segstream.GetUnicode(stringlenProcessName + 1);
+                        var stringlenWorkingDirectory = segstream.GetInt32();
+                        var decodeWorkingDirectoryHash = segstream.GetInt64();
+                        var decodeWorkingDirectory = segstream.GetUnicode(stringlenWorkingDirectory + 1);
 
-     
-                    var decodeProcessPID = segstream.GetInt16();
 
-     
-                    var stringlenNETVersion = segstream.GetInt32();
-                    var decodeNETVersionHash = segstream.GetInt64();
-                    var decodeNETVersion = segstream.GetUnicode(stringlenNETVersion + 1);
+                        var stringlenCommandLine = segstream.GetInt32();
+                        var decodeCommandLineHash = segstream.GetInt64();
+                        var decodeCommandLine = segstream.GetUnicode(stringlenCommandLine + 1);
 
-     
-                       
-                    var term = segstream.GetInt16();
 
-                    if (term != 0)
-                    {
-                        throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
-                    }
-                    return new AgentInformation(timestamp, decodeAgentName, decodeMachineName, decodeWorkingDirectory, decodeCommandLine, decodeProcessName, decodeProcessPID, decodeNETVersion);
+                        var stringlenProcessName = segstream.GetInt32();
+                        var decodeProcessNameHash = segstream.GetInt64();
+                        var decodeProcessName = segstream.GetUnicode(stringlenProcessName + 1);
+
+
+                        var decodeProcessPID = segstream.GetInt16();
+
+
+                        var stringlenNETVersion = segstream.GetInt32();
+                        var decodeNETVersionHash = segstream.GetInt64();
+                        var decodeNETVersion = segstream.GetUnicode(stringlenNETVersion + 1);
+
+
+
+                        var term = segstream.GetInt16();
+
+                        if (term != 0)
+                        {
+                            throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
+                        }
+                        return new AgentInformation(timestamp, decodeAgentName, decodeMachineName, decodeWorkingDirectory, decodeCommandLine, decodeProcessName, decodeProcessPID, decodeNETVersion);
                     }
                     else
                     {
@@ -134,9 +134,9 @@ namespace ChainsAPM.Commands.Agent
         {
             int byteSize = 0;
 
-             byteSize += sizeof (Int32); // Length Of Command
-             byteSize += sizeof (Int16); // Length Of Code
-             byteSize += sizeof (Int64); // Length Of Timestamp
+            byteSize += sizeof(Int32); // Length Of Command
+            byteSize += sizeof(Int16); // Length Of Code
+            byteSize += sizeof(Int64); // Length Of Timestamp
 
             byteSize += sizeof(System.Int32); // Length Bytes
             byteSize += sizeof(System.Int64); // Hash Bytes
@@ -158,13 +158,13 @@ namespace ChainsAPM.Commands.Agent
             byteSize += sizeof(System.Int64); // Hash Bytes
             byteSize += ProcessName.Length; // StringLength Bytes
             byteSize += sizeof(System.Int16); // Zero Terminated String
-	        
+
             byteSize += sizeof(System.Int16);
             byteSize += sizeof(System.Int32); // Length Bytes
             byteSize += sizeof(System.Int64); // Hash Bytes
             byteSize += NETVersion.Length; // StringLength Bytes
             byteSize += sizeof(System.Int16); // Zero Terminated String
-            byteSize += sizeof (short); // Length Of Terminator
+            byteSize += sizeof(short); // Length Of Terminator
             var buffer = new List<byte>(byteSize);
             buffer.AddRange(BitConverter.GetBytes(byteSize)); // 4 bytes for size, 2 byte for code, 8 bytes for data, 8 bytes for data, 8 bytes for TS, 2 bytes for term
             buffer.AddRange(BitConverter.GetBytes(Code));
@@ -199,7 +199,7 @@ namespace ChainsAPM.Commands.Agent
             buffer.AddRange(sBufferProcessName);
             buffer.AddRange(BitConverter.GetBytes((short)0));
 
-            buffer.AddRange(BitConverter.GetBytes(ProcessPID)); 
+            buffer.AddRange(BitConverter.GetBytes(ProcessPID));
 
             var sBufferNETVersion = System.Text.UnicodeEncoding.Unicode.GetBytes(NETVersion);
             buffer.AddRange(BitConverter.GetBytes(NETVersion.Length + 1));
@@ -211,6 +211,6 @@ namespace ChainsAPM.Commands.Agent
             return buffer.ToArray();
         }
     }
-    
+
 }
 

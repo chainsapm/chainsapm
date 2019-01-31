@@ -142,7 +142,7 @@ namespace ChainsAPM.Communication.Tcp
             {
 
                 // Reusable SocketAsyncEventArgs and awaitable wrapper 
-                
+
 
 
                 try

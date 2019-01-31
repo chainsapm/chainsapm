@@ -7,7 +7,7 @@ namespace ChainsAPM.Interfaces
 
     public interface IConnectionHandler : IDisposable
     {
-        
+
         event HasDataEvent HasData;
         event DisconnectedEvent Disconnected;
 

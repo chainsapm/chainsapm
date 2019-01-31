@@ -5,7 +5,7 @@ namespace ChainsAPM.Commands.Common
     class GetString // : Interfaces.ICommand<byte>
 
     {
-        public GetString() 
+        public GetString()
         {
 
         }

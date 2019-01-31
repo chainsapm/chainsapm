@@ -1,9 +1,10 @@
 ﻿namespace ChainsAPM.Config
 {
-    public  class AggregatorConfig : Interfaces.Config.IBaseConfig
+    public class AggregatorConfig : Interfaces.Config.IBaseConfig
     {
-                public string ConfigName {
-                        get; set;
-                }
+        public string ConfigName
+        {
+            get; set;
         }
+    }
 }

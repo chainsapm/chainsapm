@@ -15,9 +15,9 @@ namespace ChainsAPM.Commands.Agent
     public class DefineModule : Interfaces.ICommand<byte>
     {
 
-         private Helpers.Fnv1a64 hashhelper;
+        private Helpers.Fnv1a64 hashhelper;
 
-         public DateTime TimeStamp { get; set; }
+        public DateTime TimeStamp { get; set; }
 
         public System.Int64 ModuleID { get; set; }
         public System.String ModuleName { get; set; }
@@ -62,23 +62,23 @@ namespace ChainsAPM.Commands.Agent
                     short code = segstream.GetInt16();
                     if (code == Code)
                     {
-                    var timestamp = segstream.GetInt64();
-                    var decodeModuleID = segstream.GetInt64();
+                        var timestamp = segstream.GetInt64();
+                        var decodeModuleID = segstream.GetInt64();
 
-     
-                    var stringlenModuleName = segstream.GetInt32();
-                    var decodeModuleNameHash = segstream.GetInt64();
-                    var decodeModuleName = segstream.GetUnicode(stringlenModuleName + 1);
 
-     
-                       
-                    var term = segstream.GetInt16();
+                        var stringlenModuleName = segstream.GetInt32();
+                        var decodeModuleNameHash = segstream.GetInt64();
+                        var decodeModuleName = segstream.GetUnicode(stringlenModuleName + 1);
 
-                    if (term != 0)
-                    {
-                        throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
-                    }
-                    return new DefineModule(timestamp, decodeModuleID, decodeModuleName);
+
+
+                        var term = segstream.GetInt16();
+
+                        if (term != 0)
+                        {
+                            throw new System.Runtime.Serialization.SerializationException("Terminator is a non zero value. Please check the incoming byte stream for possible errors.");
+                        }
+                        return new DefineModule(timestamp, decodeModuleID, decodeModuleName);
                     }
                     else
                     {
@@ -99,22 +99,22 @@ namespace ChainsAPM.Commands.Agent
         {
             int byteSize = 0;
 
-             byteSize += sizeof (Int32); // Length Of Command
-             byteSize += sizeof (Int16); // Length Of Code
-             byteSize += sizeof (Int64); // Length Of Timestamp
+            byteSize += sizeof(Int32); // Length Of Command
+            byteSize += sizeof(Int16); // Length Of Code
+            byteSize += sizeof(Int64); // Length Of Timestamp
 
-            
+
             byteSize += sizeof(System.Int64);
             byteSize += sizeof(System.Int32); // Length Bytes
             byteSize += sizeof(System.Int64); // Hash Bytes
             byteSize += ModuleName.Length; // StringLength Bytes
             byteSize += sizeof(System.Int16); // Zero Terminated String
-            byteSize += sizeof (short); // Length Of Terminator
+            byteSize += sizeof(short); // Length Of Terminator
             var buffer = new List<byte>(byteSize);
             buffer.AddRange(BitConverter.GetBytes(byteSize)); // 4 bytes for size, 2 byte for code, 8 bytes for data, 8 bytes for data, 8 bytes for TS, 2 bytes for term
             buffer.AddRange(BitConverter.GetBytes(Code));
             buffer.AddRange(BitConverter.GetBytes(TimeStamp.ToFileTimeUtc()));
-            buffer.AddRange(BitConverter.GetBytes(ModuleID)); 
+            buffer.AddRange(BitConverter.GetBytes(ModuleID));
 
             var sBufferModuleName = System.Text.UnicodeEncoding.Unicode.GetBytes(ModuleName);
             buffer.AddRange(BitConverter.GetBytes(ModuleName.Length + 1));
@@ -126,6 +126,6 @@ namespace ChainsAPM.Commands.Agent
             return buffer.ToArray();
         }
     }
-    
+
 }
 

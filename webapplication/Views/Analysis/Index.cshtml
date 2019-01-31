@@ -7,97 +7,97 @@
 <h4>
     There are @Model.Count entry points.
 </h4>
-    <table class="table table-condensed table-striped">
-        <thead>
-            <tr>
-                <th>Element Name</th>
-                <th>Agent Name</th>
-                <th>Mahcine Name</th>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Elapsed</th>
-            </tr>
-        </thead>
-        @foreach ( ChainsAPM.Models.EntryPoint item in Model ) {
-                <tbody>
-                    @RenderEntryPoint(item)
-                </tbody>
+<table class="table table-condensed table-striped">
+    <thead>
+        <tr>
+            <th>Element Name</th>
+            <th>Agent Name</th>
+            <th>Mahcine Name</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Elapsed</th>
+        </tr>
+    </thead>
+    @foreach ( ChainsAPM.Models.EntryPoint item in Model ) {
+    <tbody>
+        @RenderEntryPoint(item)
+    </tbody>
         }
 
 
-    </table>
+</table>
 
 @helper RenderEntryPoint(ChainsAPM.Models.EntryPoint node) {
-        <tr style="overflow: hidden; white-space:nowrap">
-            <td>
-                <div>
-                    <a href="@Url.Action("Details","Analysis",new { id = node._id })">@node.Name</a>
-                </div>
-                <div style="line-height: 1.25em">
-                    <span class="fa-stack"><i class="fa fa-globe fa-2x" style="padding-right : 0.5em"></i></span>
-                    <span class="fa-stack"><i class="fa fa-dashboard fa-2x" style="padding-right : 0.5em"></i></span>
-                    <span class="fa-stack"><i class="fa fa-database fa-stack-1x"></i><i class="fa fa-ban fa-stack-2x text-danger" ></i></span>
-                    <span class="fa-stack"><i class="fa fa-list fa-2x" style="padding-right : 0.5em"></i></span>
-                </div>
-            </td>
-            <td>@node.AgentName</td>
-            <td>@node.MachineName</td>
-            <td>@node.Started.ToLocalTime().ToString("G")</td>
-            <td>@node.Finished.ToLocalTime().ToString("G")</td>
-            <td>@System.TimeSpan.FromTicks(node.Elapsed).TotalMilliseconds.ToString("0.000 ms")</td>
-        </tr>
-        <tr style="overflow: hidden; white-space:nowrap; display: none">
-            <td colspan="6">
-                <div style="display: none">
-                    <p style="height:4em">
-                        Content to fill in for HTTP requests
-                    </p>
-                </div>
-            </td>
-        </tr>
-        <tr style="overflow: hidden; white-space:nowrap; display: none">
-            <td colspan="6">
-                <div style="display: none">
-                    <p style="height:4em">
-                        Content to fill in for SQL elements
-                    </p>
-                </div>
-            </td>
-        </tr>
-        <tr style="overflow: hidden; white-space:nowrap; display: none">
-            <td colspan="6">
-                <div style="display: none">
-                    <p style="height:4em">
-                        Content to fill in for Web Requests elements
-                    </p>
-                </div>
-            </td>
-        </tr>
+<tr style="overflow: hidden; white-space:nowrap">
+    <td>
+        <div>
+            <a href="@Url.Action("Details","Analysis",new { id = node._id })">@node.Name</a>
+        </div>
+        <div style="line-height: 1.25em">
+            <span class="fa-stack"><i class="fa fa-globe fa-2x" style="padding-right : 0.5em"></i></span>
+            <span class="fa-stack"><i class="fa fa-dashboard fa-2x" style="padding-right : 0.5em"></i></span>
+            <span class="fa-stack"><i class="fa fa-database fa-stack-1x"></i><i class="fa fa-ban fa-stack-2x text-danger"></i></span>
+            <span class="fa-stack"><i class="fa fa-list fa-2x" style="padding-right : 0.5em"></i></span>
+        </div>
+    </td>
+    <td>@node.AgentName</td>
+    <td>@node.MachineName</td>
+    <td>@node.Started.ToLocalTime().ToString("G")</td>
+    <td>@node.Finished.ToLocalTime().ToString("G")</td>
+    <td>@System.TimeSpan.FromTicks(node.Elapsed).TotalMilliseconds.ToString("0.000 ms")</td>
+</tr>
+<tr style="overflow: hidden; white-space:nowrap; display: none">
+    <td colspan="6">
+        <div style="display: none">
+            <p style="height:4em">
+                Content to fill in for HTTP requests
+            </p>
+        </div>
+    </td>
+</tr>
+<tr style="overflow: hidden; white-space:nowrap; display: none">
+    <td colspan="6">
+        <div style="display: none">
+            <p style="height:4em">
+                Content to fill in for SQL elements
+            </p>
+        </div>
+    </td>
+</tr>
+<tr style="overflow: hidden; white-space:nowrap; display: none">
+    <td colspan="6">
+        <div style="display: none">
+            <p style="height:4em">
+                Content to fill in for Web Requests elements
+            </p>
+        </div>
+    </td>
+</tr>
 
 @*if ( node.Children != null && node.Children.Any() ) {
-                <tr style="overflow: hidden; white-space:nowrap; display: none">
-                    <td colspan="6">
-                        <div style="display: none">
-                            <ul class="fa-ul" style="margin-left : 1em">
-                                @foreach ( ChainsAPM.Interfaces.IStackItem child in node.Children ) {
-                                        @RenderTree(child)
-                                }
+    <tr style="overflow: hidden; white-space:nowrap; display: none">
+        <td colspan="6">
+            <div style="display: none">
+                <ul class="fa-ul" style="margin-left : 1em">
+                    @foreach ( ChainsAPM.Interfaces.IStackItem child in node.Children ) {
+                            @RenderTree(child)
+                    }
 
-                            </ul>
-                        </div>
-                    </td>
-                </tr>*@
+                </ul>
+            </div>
+        </td>
+    </tr>*@
 }
 }
 
 @helper RenderTree(ChainsAPM.Interfaces.IStackItem node) {
-        <li><i class="fa fa-globe" style="padding-right: .25em"></i>@node.Name</li>
+<li><i class="fa fa-globe" style="padding-right: .25em"></i>@node.Name</li>
 if ( node.Children != null && node.Children.Any() ) {
-                <ul class="fa-ul" style="margin-left : 1em">
-                    @foreach ( ChainsAPM.Interfaces.IStackItem child in node.Children ) {
-                            @RenderTree(child);
+<ul class="fa-ul" style="margin-left : 1em">
+    @foreach ( ChainsAPM.Interfaces.IStackItem child in node.Children ) {
+    @RenderTree(child);
                     }
-                </ul>
+</ul>
 }
 }
 

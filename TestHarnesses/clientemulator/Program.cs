@@ -41,12 +41,12 @@ namespace ChainsAPM
                     var port = int.Parse(System.Configuration.ConfigurationManager.AppSettings["port"]);
                     System.Net.Sockets.TcpClient tcpC = new System.Net.Sockets.TcpClient(hostname, port);
                     TcpByteAgentHandler tcbah = new TcpByteAgentHandler(new TcpByteTransport(tcpC), TcpByteAgentHandler.HandlerType.SendHeavy);
-                    
+
                     itemCounter.GetOrAdd(tcbah.GetHashCode(), System.Threading.Interlocked.Increment(ref counter2));
                     System.Threading.Interlocked.Increment(ref counter3);
                     tcbah.HasData += tcbah_HasData;
                     tcbah.Disconnected += tcbah_Disconnected;
-                    
+
                     tcpC.NoDelay = true;
                     int counter = 0;
                     int msgCounter = 0;

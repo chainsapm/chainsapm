@@ -68,25 +68,25 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir)inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)inc;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\Include\um;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
     <OutDir>$(SolutionDir).output\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir)inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)inc;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\Include\um;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
     <OutDir>$(SolutionDir).output\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir)inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)inc;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\Include\um;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
     <OutDir>$(SolutionDir).output\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir)inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)inc;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\Include\um;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)src;$(SourcePath)</SourcePath>
     <OutDir>$(SolutionDir).output\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir).build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
